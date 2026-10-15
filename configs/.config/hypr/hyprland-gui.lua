@@ -12,7 +12,8 @@ hl.config({
             size = 2,
             vibrancy = 0.0,
         },
-        rounding = 0,
+        rounding = 8,
+        rounding_power = 4.7,
     },
     general = {
         border_size = 0,

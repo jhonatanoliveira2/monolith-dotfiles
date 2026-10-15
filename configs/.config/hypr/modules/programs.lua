@@ -1,6 +1,6 @@
 -- Programas usados diretamente pelos atalhos.
 local terminal = "ghostty"
-local fileManager = "thunar"
+local fileManager = "nautilus"
 local ide = "code"
 
 -- Disponibiliza os comandos para os módulos de atalhos.

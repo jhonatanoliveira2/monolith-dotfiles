@@ -21,7 +21,7 @@ window {
     background-color: @bg;
     border:           0px;
     border-color:     @line;
-    border-radius:    0px;
+    border-radius:    8px;
     padding:          0px;
 }
 
@@ -31,7 +31,7 @@ mainbox {
 }
 
 inputbar {
-    children:     [ "prompt", "entry" ];
+    children:     [ "entry" ];
     spacing:      10px;
     padding:      12px 14px;
     border:       0px 0px 1px 0px;
@@ -43,7 +43,7 @@ prompt {
 }
 
 entry {
-    placeholder:       "Pesquisar aplicativos";
+    placeholder:       "Search apps";
     placeholder-color: @fg-dim;
     text-color:        @fg-sel;
     cursor-width:      1px;

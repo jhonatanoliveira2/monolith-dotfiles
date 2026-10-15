@@ -24,33 +24,7 @@ hl.bind(mainMod .. " + SHIFT + Delete", hl.dsp.exec_cmd(
 ))
 
 -- GPU Screen Recorder
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(
-    "bash -c 'PIDFILE=/tmp/osu-gsr.pid; " ..
-    "if [ -f \"$PIDFILE\" ] && kill -0 \"$(cat \"$PIDFILE\")\" 2>/dev/null; then " ..
-        "pid=$(cat \"$PIDFILE\"); " ..
-        "kill -INT \"$pid\"; " ..
-        "rm -f \"$PIDFILE\"; " ..
-        "notify-send -a GPU-Screen-Recorder \"Gravação\" \"Encerrando gravação...\"; " ..
-    "else " ..
-        "mkdir -p \"$HOME/Videos\"; " ..
-        "file=\"$HOME/Videos/$(date +%Y-%m-%d_%H-%M-%S).mp4\"; " ..
-        "cursor=$(hyprctl -j cursorpos); " ..
-        "monitor=$(hyprctl -j monitors | jq -r --argjson c \"$cursor\" " ..
-            "'''.[] | select($c.x >= .x and $c.x < (.x + .width) and $c.y >= .y and $c.y < (.y + .height)) | .name'''); " ..
-        "if [ -z \"$monitor\" ]; then " ..
-            "notify-send -u critical \"Gravação\" \"Não foi possível identificar o monitor\"; exit 1; " ..
-        "fi; " ..
-        "gpu-screen-recorder -w \"$monitor\" -f 60 -k hevc -q ultra -bm qp -a default_output -o \"$file\" & " ..
-        "pid=$!; echo \"$pid\" > \"$PIDFILE\"; " ..
-        "sleep 1; " ..
-        "if kill -0 \"$pid\" 2>/dev/null; then " ..
-            "notify-send -a GPU-Screen-Recorder \"Gravação iniciada\" \"$monitor · HEVC · 60 FPS · Qualidade ultra\"; " ..
-        "else " ..
-            "rm -f \"$PIDFILE\"; notify-send -u critical \"Gravação\" \"Falha ao iniciar o gravador\"; " ..
-        "fi; " ..
-    "fi'"
-))
-
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-gsr.sh"))
 
 
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("swaync-client -t -sw"))
@@ -58,6 +32,14 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(programs.terminal))
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd(programs.fileManager))
 hl.bind(mainMod .. " + TAB", hl.dsp.exec_cmd("zen-browser"))
+
+-- Keyboard Move windows
+
+hl.bind(mainMod .. " + SHIFT + LEFT", hl.dsp.window.move({direction = "l", group_aware = true, window = "activewindow"}))
+hl.bind(mainMod .. " + SHIFT + RIGHT", hl.dsp.window.move({direction = "r", group_aware = true, window = "activewindow"}))
+hl.bind(mainMod .. " + SHIFT + UP", hl.dsp.window.move({direction = "u", group_aware = true, window = "activewindow"}))
+hl.bind(mainMod .. " + SHIFT + DOWN", hl.dsp.window.move({direction = "d", group_aware = true, window = "activewindow"}))
+
 
 hl.bind(mainMod .. " + Space", function()
     hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
@@ -109,14 +91,10 @@ hl.bind(
     })
 )
 
-hl.bind(
-    mainMod .. " + Z",
-    hl.dsp.exec_cmd("~/.local/bin/wallpaper-random &")
-)
 
 hl.bind(
     mainMod .. " + D",
-    hl.dsp.exec_cmd("matuwall --background none -b awww -p center")
+    hl.dsp.exec_cmd("~/.local/bin/wallpaper-menu &")
 )
 
 hl.bind(
