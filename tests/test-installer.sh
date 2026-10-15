@@ -21,6 +21,7 @@ check() { # check <description> <command...>
 
 new_env() { # new_env <name>: fresh fixtures + empty home
     local n=$1
+    CUR_ENV=$n
     export MONOLITH_TARGET_HOME="$TMP/$n/home"
     export MONOLITH_CONFIGS_DIR="$TMP/$n/configs"
     unset XDG_CONFIG_HOME XDG_STATE_HOME XDG_DATA_HOME MONOLITH_TEST_FAIL_AT
@@ -34,9 +35,25 @@ new_env() { # new_env <name>: fresh fixtures + empty home
     printf '#!/bin/sh\necho tool\n' >"$MONOLITH_CONFIGS_DIR/.local/bin/tool"
     chmod 755 "$MONOLITH_CONFIGS_DIR/.local/bin/tool"
     : >"$MONOLITH_CONFIGS_DIR/.config/app/.gitkeep"
+    # wallpapers shipped with the repository + a stub gsettings (state kept in a file)
+    export MONOLITH_WALLPAPERS_DIR="$TMP/$n/wallpapers"
+    mkdir -p "$MONOLITH_WALLPAPERS_DIR/static" "$MONOLITH_WALLPAPERS_DIR/live" "$TMP/$n/bin"
+    printf 'png-data\n' >"$MONOLITH_WALLPAPERS_DIR/static/landscape.png"
+    printf 'mp4-data\n' >"$MONOLITH_WALLPAPERS_DIR/live/loop.mp4"
+    : >"$MONOLITH_WALLPAPERS_DIR/static/.gitkeep"
+    cat >"$TMP/$n/bin/gsettings" <<'STUB'
+#!/bin/bash
+state="${GSETTINGS_STATE:?}"
+case $1 in
+    get) grep "^$2 $3=" "$state" 2>/dev/null | sed "s/^$2 $3=//" | tail -n1 | grep . || echo "''" ;;
+    set) echo "$2 $3='$4'" >>"$state"; echo "set $3 $4" >>"$state.calls" ;;
+esac
+STUB
+    chmod +x "$TMP/$n/bin/gsettings"
+    export GSETTINGS_STATE="$TMP/$n/gsettings.state"
 }
 
-inst() { bash "$ROOT/scripts/install.sh" --lang en --yes --no-deps --no-color --no-clear "$@" </dev/null; }
+inst() { PATH="$TMP/${CUR_ENV:-x}/bin:$PATH" MONOLITH_APPLY_GSETTINGS=1 bash "$ROOT/scripts/install.sh" --lang en --yes --no-deps --no-color --no-clear "$@" </dev/null; }
 home_files() { (cd "$MONOLITH_TARGET_HOME" && find .config .local/bin -type f 2>/dev/null | LC_ALL=C sort); }
 backups() { find "$MONOLITH_TARGET_HOME/.local/share/monolith-dotfiles/backups" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | LC_ALL=C sort; }
 
@@ -76,7 +93,8 @@ new_env dry
 inst --dry-run >/dev/null 2>&1; rc=$?
 [[ $rc == 0 ]] && ok "dry-run succeeds" || ko "dry-run exit $rc"
 [[ -z $(home_files) ]] && ok "dry-run created no files" || ko "dry-run changed the home"
-check "dry-run creates no wallpaper folders" test ! -e "$MONOLITH_TARGET_HOME/Pictures"
+check "dry-run creates no folders or wallpapers" test ! -e "$MONOLITH_TARGET_HOME/Pictures"
+check "dry-run does not touch gsettings" test ! -e "$GSETTINGS_STATE.calls"
 
 echo "== fresh installation"
 new_env fresh
@@ -91,13 +109,21 @@ check "no temporary files left behind" bash -c '! find "$0" -name "*.monolith-*"
 check "technical log is in English" grep -q "plan: new=5" "$MONOLITH_TARGET_HOME/.local/state/monolith-dotfiles/"install-*.log
 n_before=$(backups | wc -l)
 
-check "wallpaper folders were created" bash -c 'test -d "$0/Pictures/Wallpapers" && test -d "$0/Videos/wallpaper-live"' "$MONOLITH_TARGET_HOME"
+check "wallpaper and config folders were created" bash -c 'for d in Pictures/Wallpapers Videos/wallpaper-live .config/nwg-look .config/wpg; do test -d "$0/$d" || exit 1; done' "$MONOLITH_TARGET_HOME"
+check "static wallpaper copied to ~/Pictures/Wallpapers" cmp -s "$MONOLITH_WALLPAPERS_DIR/static/landscape.png" "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/landscape.png"
+check "live wallpaper copied to ~/Videos/wallpaper-live" cmp -s "$MONOLITH_WALLPAPERS_DIR/live/loop.mp4" "$MONOLITH_TARGET_HOME/Videos/wallpaper-live/loop.mp4"
+check ".gitkeep is not copied as a wallpaper" test ! -e "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/.gitkeep"
+check "GTK theme set to Materia-dark" grep -q "gtk-theme='Materia-dark'" "$GSETTINGS_STATE"
+check "dark color scheme set" grep -q "color-scheme='prefer-dark'" "$GSETTINGS_STATE"
+printf 'my own edit\n' >"$MONOLITH_TARGET_HOME/Pictures/Wallpapers/landscape.png"
 touch "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/keep.png"
 
 echo "== idempotency"
 inst >"$TMP/second.out" 2>&1; rc=$?
 [[ $rc == 0 ]] && ok "second run exits 0" || ko "second run exit $rc"
 check "existing wallpapers are left alone" test -f "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/keep.png"
+check "a wallpaper you changed is never overwritten" grep -qx "my own edit" "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/landscape.png"
+check "gsettings is not rewritten when already set" test "$(wc -l <"$GSETTINGS_STATE.calls")" = 2
 check "second run reports nothing to copy" grep -q "Nothing to copy" "$TMP/second.out"
 [[ $(backups | wc -l) == "$n_before" ]] && ok "second run created no new backup" || ko "second run created a backup"
 
