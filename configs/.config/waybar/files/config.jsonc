@@ -1,0 +1,162 @@
+{
+    "modules-left": [
+        "custom/power",
+        "hyprland/workspaces",
+        "custom/player-prev",
+        "custom/player-toggle",
+        "custom/player-next",
+        "custom/player"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "tray",
+        "custom/sysmon",
+        "custom/network",
+        "bluetooth",
+        "battery",
+        "backlight",
+        "pulseaudio"
+    ],
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true,
+        "warp-on-scroll": false,
+        "format": "●",
+        "format-icons": {
+            "active": "●"
+        },
+        "cursor": true
+    },
+    "bluetooth": {
+        "format": "{icon}",
+        "format-disabled": "󰂲",
+        "format-off": "󰂲",
+        "format-on": "󰂯",
+        "format-connected": "󰂱",
+        "format-no-controller": "",
+        "tooltip": true,
+        "on-click": "blueman-manager & sleep 1 && pkill blueman-tray"
+    },
+    "custom/network": {
+        "exec": "~/.config/waybar/scripts/network-status.sh",
+        "return-type": "json",
+        "format": "{}",
+        "restart-interval": 5,
+        "tooltip": true,
+        "on-click": "nm-connection-editor"
+    },
+    "custom/sysmon": {
+        "exec": "~/.config/waybar/scripts/sysmon.sh",
+        "return-type": "json",
+        "format": "{}",
+        "interval": 3,
+        "tooltip": true
+    },
+    "battery": {
+        "states": {
+            "warning": 30,
+            "critical": 20
+        },
+        "format": "{icon} {capacity}%",
+        "format-full": "{icon}{capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-alt": "{icon}{capacity}%",
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+        "tooltip-format": "{time}",
+        "interval": 30,
+        "cursor": false
+    },
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "{icon} {percent}%",
+        "format-icons": [
+            "",
+            ""
+        ]
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": " {volume}%",
+        "format-bluetooth": "󰂯{volume}%",
+        "format-bluetooth-muted": " {volume}%",
+        "format-icons": {
+            "headphone": "",
+            "headset": "",
+            "default": [
+                ""
+            ]
+        },
+        "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+        "on-click-right": "~/.config/waybar/scripts/audio-menu.sh"
+    },
+    "tray": {
+        "icon-size": 16,
+        "spacing": 6,
+        "cursor": true
+    },
+    "custom/power": {
+        "format": " ",
+        "tooltip": false,
+        "on-click": "hyprctl dispatch exit"
+    },
+    "custom/player-prev": {
+        "exec": "~/.config/waybar/scripts/player.sh button prev",
+        "return-type": "json",
+        "format": "{}",
+        "interval": "once",
+        "signal": 10,
+        "tooltip": false,
+        "on-click": "~/.config/waybar/scripts/player.sh ctl prev"
+    },
+    "custom/player-toggle": {
+        "exec": "~/.config/waybar/scripts/player.sh button toggle",
+        "return-type": "json",
+        "format": "{}",
+        "interval": "once",
+        "signal": 10,
+        "tooltip": false,
+        "on-click": "~/.config/waybar/scripts/player.sh ctl toggle"
+    },
+    "custom/player-next": {
+        "exec": "~/.config/waybar/scripts/player.sh button next",
+        "return-type": "json",
+        "format": "{}",
+        "interval": "once",
+        "signal": 10,
+        "tooltip": false,
+        "on-click": "~/.config/waybar/scripts/player.sh ctl next"
+    },
+    "custom/player": {
+        "exec": "~/.config/waybar/scripts/player.sh text",
+        "return-type": "json",
+        "format": "{}",
+        "restart-interval": 5,
+        "tooltip": true,
+        "on-click": "~/.config/waybar/scripts/player.sh ctl toggle",
+        "on-scroll-up": "~/.config/waybar/scripts/player.sh ctl seek+",
+        "on-scroll-down": "~/.config/waybar/scripts/player.sh ctl seek-"
+    },
+    "clock": {
+        "format": "{:%a %d/%m/%Y ~ %H:%M}",
+        "tooltip-format": "<span size='11000' font-family='Awaita Mono' line_height='1'><tt>{calendar}</tt></span>",
+        "calendar": {
+            "mode": "month",
+            "format": {
+                "months": "<span color='#777777'>{}</span>",
+                "weekdays": "<span color='#999999'>{}</span>",
+                "days": "<span color='#555555'>{}</span>",
+                "today": "<span color='#FFFFFF'>{}</span>"
+            }
+        },
+        "on-click": "swaync-client -t -sw"
+    }
+}

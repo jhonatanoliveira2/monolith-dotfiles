@@ -1,0 +1,24 @@
+/* Nautilus: fundo translúcido */
+.nautilus-window {
+    background-color: transparent;
+}
+
+/* Barra lateral */
+.nautilus-window .sidebar-pane,
+.nautilus-window .sidebar,
+.nautilus-window .navigation-sidebar {
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* Área dos arquivos */
+.nautilus-window .content-pane,
+.nautilus-window .content-view,
+.nautilus-window .view {
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* Menus e popovers permanecem opacos */
+popover,
+popover > contents {
+    opacity: 1;
+}

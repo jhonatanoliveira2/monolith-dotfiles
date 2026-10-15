@@ -1,0 +1,89 @@
+# MONOLITH Dotfiles - package manifest
+#
+# Derived from the configuration files. A program is listed as
+# "required" only when an ACTIVE binding, autostart entry, script or module calls it.
+# Commented-out or unused entries were deliberately NOT promoted (see docs/DEPENDENCIAS.md).
+#
+# Format
+#   [<source>:<scope>]      source = official | aur ; scope = required | optional
+#   package-name  # why it is needed
+#   [manual]                software that is not available as a package, or user-owned files
+#                           that must be copied by hand
+#
+# Notes
+#   * "official" = Arch repositories (core/extra/multilib). The installer never runs
+#     'pacman -Sy' (partial upgrades are unsupported on Arch): run 'sudo pacman -Syu' first
+#     if a package is reported as not found.
+#   * "aur" entries are only built when an AUR helper (paru / yay) is available. Some of
+#     them may already exist in the official repositories; the installer checks
+#     'pacman -Si' first and uses pacman when the package is there.
+#   * Parsed by scripts/lib/packages.sh - keep one package per line.
+
+[official:required]
+# --- compositor, session, lock screen ---
+hyprland                    # hyprland.lua (Lua configuration entry point) and start-hyprland
+hyprlock                    # SUPER+Z binding and hypr/hyprlock.conf
+xdg-desktop-portal-hyprland # hypr/xdph.conf (screen sharing portal)
+lxqt-policykit              # autostart: /usr/bin/lxqt-policykit-agent
+qt6ct                       # environment.lua: QT_QPA_PLATFORMTHEME=qt6ct
+# --- bar, notifications, launcher ---
+waybar                      # autostart + waybar/ scripts and modules
+swaync                      # autostart + SUPER+C (swaync-client)
+rofi                        # SUPER+A launcher and waybar audio menu (needs a Wayland-capable build)
+# --- terminal and shell (fish/starship/atuin run on every interactive shell) ---
+ghostty                     # programs.lua terminal + ghostty/config.ghostty
+fish                        # ghostty 'command = fish' and fish/config.fish
+starship                    # fish/config.fish: starship init fish
+atuin                       # fish/config.fish: atuin init fish
+# --- files, theming, fonts ---
+nautilus                    # programs.lua file manager (SUPER+X)
+ttf-jetbrains-mono-nerd     # waybar and rofi themes: "JetBrainsMono Nerd Font"
+# --- screenshots / clipboard / notifications ---
+grim                        # screenshot bindings (SUPER+Delete)
+slurp                       # area screenshot (SUPER+SHIFT+Delete)
+wl-clipboard                # wl-copy after screenshots
+libnotify                   # notify-send in bindings
+jq                          # screen recorder binding and wallpaper-menu parse hyprctl JSON
+ffmpeg                      # wallpaper-menu: previews of images and videos
+# --- audio, media, brightness, network ---
+pipewire                    # audio stack
+pipewire-pulse              # pactl used by waybar (mute, sink menu)
+wireplumber                 # wpctl used by media-keys.lua
+libpulse                    # pactl binary
+playerctl                   # media keys, waybar player, hyprlock now-playing
+brightnessctl               # media-keys.lua brightness keys
+networkmanager              # waybar network module and nm-connection-editor
+network-manager-applet      # nm-connection-editor (waybar network click)
+blueman                     # waybar bluetooth click (blueman-manager)
+curl                        # waybar network-status.sh connectivity probe
+
+[official:optional]
+# Standalone apps: their configuration is included, but nothing in the environment launches them
+# (no autostart, binding or script calls them), so they are not required.
+fastfetch                   # fastfetch/config.jsonc (the call in fish/config.fish is commented out)
+btop                        # btop/btop.conf
+micro                       # micro/ settings and colour scheme
+neovim                      # nvim/ (LazyVim starter)
+git                         # lazy.nvim bootstrap clones plugins with git
+gcc                         # nvim-treesitter builds parsers
+tree-sitter-cli             # required by nvim-treesitter (main branch)
+ripgrep                     # LazyVim: live grep (recommended)
+fd                          # LazyVim: file finder (recommended)
+nwg-look                    # nwg-look/config (GTK settings manager, run by hand)
+python-pywal                # wpg backend (wpg.conf: backend = wal); only used when wpg is run
+# Features that only matter for some machines
+power-profiles-daemon       # waybar power-profile module (laptop only)
+xorg-xwayland               # X11 applications (window-rules.lua has an xwayland rule)
+
+[aur:required]
+awww                        # autostart: awww-daemon; static wallpapers in wallpaper-menu (may be in official repos)
+mpvpaper                    # wallpaper-menu: animated wallpapers (may be in official repos)
+
+[aur:optional]
+zen-browser-bin             # SUPER+TAB launches "zen-browser"
+gpu-screen-recorder         # SUPER+R recording binding (may be in official repos)
+hyprshutdown                # SUPER+X uses it when present, else falls back to 'hyprctl dispatch exit'
+wpgtk                       # wpg command used by wpg/wp_init.sh and wpg/ settings
+
+[manual]
+# (no manual entries at the moment)

@@ -1,0 +1,5 @@
+background-opacity = 0.55
+background = 000000
+command = fish 
+
+custom-shader = shaders/ghostty/cursor_tail.glsl

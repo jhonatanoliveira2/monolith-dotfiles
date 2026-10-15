@@ -1,0 +1,90 @@
+/* launcher.rasi — lançador de apps no mesmo estilo da Waybar:
+   fundo #111111 a 70%, borda de 1px quase transparente, cantos retos, só cinzas e branco. */
+* {
+    font:     "JetBrainsMono Nerd Font Bold 12";
+    bg:       #111111b3;
+    fg:       #cccccc;
+    fg-dim:   #888888;
+    fg-sel:   #ffffff;
+    sel:      #ffffff1a;
+    line:     #c8c8c840;
+
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    location:         center;
+    anchor:           center;
+    y-offset:         -60px;
+    width:            520px;
+    background-color: @bg;
+    border:           0px;
+    border-color:     @line;
+    border-radius:    0px;
+    padding:          0px;
+}
+
+mainbox {
+    children: [ "inputbar", "listview" ];
+    spacing:  0px;
+}
+
+inputbar {
+    children:     [ "prompt", "entry" ];
+    spacing:      10px;
+    padding:      12px 14px;
+    border:       0px 0px 1px 0px;
+    border-color: @line;
+}
+
+prompt {
+    text-color: @fg-dim;
+}
+
+entry {
+    placeholder:       "Pesquisar aplicativos";
+    placeholder-color: @fg-dim;
+    text-color:        @fg-sel;
+    cursor-width:      1px;
+}
+
+listview {
+    lines:        8;
+    columns:      1;
+    dynamic:      true;
+    fixed-height: false;
+    scrollbar:    false;
+    spacing:      2px;
+    padding:      6px;
+}
+
+element {
+    padding:       8px 10px;
+    border-radius: 0px;
+}
+
+element selected.normal {
+    background-color: @sel;
+    text-color:       @fg-sel;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    highlight:        bold #ffffff;
+    vertical-align:   0.5;
+}
+
+element-icon {
+    size:             1.2em;
+    background-color: transparent;
+    margin:           0px 10px 0px 0px;
+}
+
+message {
+    padding: 8px 14px;
+}
+textbox {
+    text-color: @fg-sel;
+}

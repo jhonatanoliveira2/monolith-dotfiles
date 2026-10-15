@@ -1,0 +1,52 @@
+# ───────────────────────────────────────────────────────────────────────────
+# MONOLITH Dotfiles - what must never be published
+# Rationale for every group: docs/CONFIGURACAO.md (section "Arquivos deixados de fora")
+# ───────────────────────────────────────────────────────────────────────────
+
+# --- secrets and credentials -------------------------------------------------
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*.gpg
+id_rsa*
+id_ed25519*
+.netrc
+.npmrc
+auth.json
+credentials*
+*.token
+secrets.*
+
+# --- machine-specific or generated files inside configs/ -----------------------
+configs/.config/micro/backups/
+configs/.config/fish/fish_variables
+configs/.config/fish/conf.d/*.env.fish
+configs/.config/wpg/schemes/
+configs/.config/wpg/sequences
+configs/.config/wpg/samples/
+configs/.config/wal/colors*
+configs/.config/wal/sequences
+
+# --- backups, caches, editor and OS leftovers -----------------------------------
+*.bak
+*.swp
+*.swo
+*~
+*.tmp
+*.log
+*.typescript
+__pycache__/
+*.pyc
+.cache/
+node_modules/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- local state created by the scripts ------------------------------------------
+.local/state/
+.local/share/monolith-dotfiles/

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# messages.sh - user-facing strings. Format: _m <key> "<English>" "<Português (Brasil)>"
+# Keys, comments and code stay in English; only the two quoted strings are translated.
+# Every key must exist in both languages (tests/test-installer.sh checks this).
+# Strings are printf formats: keep the %s placeholders in the same order in both languages.
+
+# ---- common -----------------------------------------------------------------------------
+_m banner.tagline "Arch Linux + Hyprland · dotfiles installer" "Arch Linux + Hyprland · instalador de dotfiles"
+_m common.aborted "Aborted. Nothing was changed." "Cancelado. Nada foi alterado."
+_m common.interrupted "Interrupted by the user." "Interrompido pelo usuário."
+_m common.locked "Another MONOLITH script is already running." "Outro script do MONOLITH já está em execução."
+_m common.log_hint "Technical log: %s" "Log técnico: %s"
+_m common.need_yes "No interactive terminal detected. Re-run with --yes to accept the defaults." "Nenhum terminal interativo detectado. Execute novamente com --yes para aceitar os padrões."
+_m common.unexpected "Unexpected failure (line %s)." "Falha inesperada (linha %s)."
+_m prompt.yes_hint "Y/n" "S/n"
+_m prompt.no_hint "y/N" "s/N"
+
+# ---- welcome ----------------------------------------------------------------------------
+_m welcome.title "Welcome" "Boas-vindas"
+_m welcome.intro "This installer will, in order:" "Este instalador vai, nesta ordem:"
+_m welcome.dry_run "Dry-run mode: nothing will be changed." "Modo de simulação: nada será alterado."
+_m welcome.safe "Existing files are always backed up before being replaced." "Arquivos existentes sempre recebem backup antes de serem substituídos."
+_m welcome.continue "Start the installation?" "Iniciar a instalação?"
+
+# ---- steps ------------------------------------------------------------------------------
+_m step.preflight "Check the system and the repository" "Verificar o sistema e o repositório"
+_m step.deps "Review dependencies" "Revisar dependências"
+_m step.packages "Install packages" "Instalar pacotes"
+_m step.plan "Plan the changes" "Planejar as alterações"
+_m step.backup "Back up existing files" "Fazer backup dos arquivos existentes"
+_m step.deploy "Copy configurations" "Copiar configurações"
+_m step.verify "Verify the result" "Verificar o resultado"
+
+# ---- pre-flight -------------------------------------------------------------------------
+_m preflight.no_root "Do not run this installer as root. Use your regular user (sudo is requested only for pacman)." "Não execute este instalador como root. Use seu usuário comum (o sudo é pedido apenas para o pacman)."
+_m preflight.bash_old "Bash 4.4 or newer is required (found %s)." "É necessário Bash 4.4 ou superior (encontrado %s)."
+_m preflight.user "Running as user: %s" "Executando como usuário: %s"
+_m preflight.arch "Arch Linux detected." "Arch Linux detectado."
+_m preflight.not_arch "This does not look like Arch Linux: package installation will be skipped." "Isto não parece ser o Arch Linux: a instalação de pacotes será ignorada."
+_m preflight.home_not_writable "Target directory is not writable: %s" "O diretório de destino não é gravável: %s"
+_m preflight.no_configs "No configuration files found in: %s" "Nenhum arquivo de configuração encontrado em: %s"
+_m preflight.no_configs_hint "Copy your folders from ~/.config into configs/.config first (see docs/INSTALACAO.en.md)." "Copie suas pastas de ~/.config para configs/.config antes (veja docs/INSTALACAO.md)."
+_m preflight.configs "%s configuration files found in the repository." "%s arquivos de configuração encontrados no repositório."
+_m preflight.symlink_dir "Refusing to write through a symlinked directory: %s" "Recusando gravar através de um diretório que é link simbólico: %s"
+_m preflight.symlink_hint "Use --force-symlinks only if you are sure (the link target would be modified)." "Use --force-symlinks apenas se tiver certeza (o destino do link seria modificado)."
+_m preflight.symlink_allowed "Writing through symlinked directory (allowed): %s" "Gravando através de diretório com link simbólico (permitido): %s"
+_m preflight.log "Technical log: %s" "Log técnico: %s"
+
+# ---- dependency report ------------------------------------------------------------------
+_m deps.no_pacman "pacman not found: package status cannot be verified on this system." "pacman não encontrado: não é possível verificar os pacotes neste sistema."
+_m deps.group_ok "%s / %s: all %s installed" "%s / %s: todos os %s instalados"
+_m deps.group_missing "%s / %s: %s of %s missing" "%s / %s: faltam %s de %s"
+_m deps.manual_list "Manual items (no package): %s" "Itens manuais (sem pacote): %s"
+_m deps.files_where_repo "Checking referenced files in configs/ ..." "Verificando arquivos referenciados em configs/ ..."
+_m deps.files_where_target "Checking referenced files in your home ..." "Verificando arquivos referenciados na sua home ..."
+_m deps.file_missing "Not found: ~/%s" "Não encontrado: ~/%s"
+_m deps.files_ok "All referenced files are present." "Todos os arquivos referenciados estão presentes."
+_m deps.locale_missing "Locale pt_BR.UTF-8 is not generated; hypr/modules/environment.lua sets LANG=pt_BR.UTF-8 (see /etc/locale.gen)." "O locale pt_BR.UTF-8 não está gerado; hypr/modules/environment.lua define LANG=pt_BR.UTF-8 (veja /etc/locale.gen)."
+_m deps.shell_note "Your login shell is %s. The Hyprland autostart in fish/config.fish only runs under fish on tty1." "Seu shell de login é %s. O autostart do Hyprland em fish/config.fish só funciona no fish, no tty1."
+_m deps.service_note "Service not enabled: %s (needed by the matching waybar module)." "Serviço não habilitado: %s (necessário para o módulo correspondente da waybar)."
+
+# ---- packages ---------------------------------------------------------------------------
+_m pkg.skipped_flag "Package installation skipped (--no-deps)." "Instalação de pacotes ignorada (--no-deps)."
+_m pkg.no_pacman "pacman not available: install the packages from packages.txt manually." "pacman indisponível: instale manualmente os pacotes de packages.txt."
+_m pkg.ask_optional "Also install the optional packages?" "Instalar também os pacotes opcionais?"
+_m pkg.all_present "All required packages are already installed." "Todos os pacotes necessários já estão instalados."
+_m pkg.official_list "%s package(s) from the official repositories:" "%s pacote(s) dos repositórios oficiais:"
+_m pkg.no_sudo "sudo is not available: run the command below yourself." "sudo não está disponível: execute o comando abaixo por conta própria."
+_m pkg.confirm_install "Install them with pacman?" "Instalar com o pacman?"
+_m pkg.pacman_failed "pacman failed. No configuration was touched. Fix the problem (try: sudo pacman -Syu) and run again." "O pacman falhou. Nenhuma configuração foi alterada. Corrija o problema (tente: sudo pacman -Syu) e execute de novo."
+_m pkg.official_done "Official packages installed." "Pacotes oficiais instalados."
+_m pkg.declined "Package installation was declined: some features may not work." "Instalação de pacotes recusada: alguns recursos podem não funcionar."
+_m pkg.aur_list "%s package(s) from the AUR:" "%s pacote(s) do AUR:"
+_m pkg.no_aur_helper "No AUR helper (paru/yay) available: install the AUR packages manually." "Nenhum auxiliar do AUR (paru/yay) disponível: instale os pacotes do AUR manualmente."
+_m pkg.confirm_aur "Build and install them with %s?" "Compilar e instalar com %s?"
+_m pkg.aur_done "AUR packages installed." "Pacotes do AUR instalados."
+_m pkg.aur_failed "Some AUR packages failed to install; continuing with the configuration." "Alguns pacotes do AUR falharam; continuando com a configuração."
+
+# ---- plan -------------------------------------------------------------------------------
+_m plan.new "New files" "Arquivos novos"
+_m plan.changed "Files to replace" "Arquivos a substituir"
+_m plan.same "Already up to date" "Já atualizados"
+_m plan.will_replace "These existing files will be replaced (after a backup):" "Estes arquivos existentes serão substituídos (após o backup):"
+_m plan.and_more "... and %s more" "... e mais %s"
+_m plan.conflict "A directory exists where a file is expected: %s" "Existe um diretório onde deveria haver um arquivo: %s"
+
+# ---- backup -----------------------------------------------------------------------------
+_m backup.not_needed "Nothing to back up." "Nada para fazer backup."
+_m backup.confirm "%s existing file(s) will be backed up and replaced. Continue?" "%s arquivo(s) existente(s) receberão backup e serão substituídos. Continuar?"
+_m backup.dry_run "Would back up %s file(s) into %s" "Faria backup de %s arquivo(s) em %s"
+_m backup.created "Backed up %s file(s) to %s" "Backup de %s arquivo(s) criado em %s"
+_m backup.failed_abort "Backup failed. Nothing was changed." "O backup falhou. Nada foi alterado."
+_m backup.failed "Backup failed: %s" "Falha no backup: %s"
+_m backup.nothing "Nothing to back up." "Nada para fazer backup."
+_m backup.plan_unreadable "Cannot read the plan file: %s" "Não foi possível ler o arquivo de plano: %s"
+_m backup.none_found "No backups found in %s" "Nenhum backup encontrado em %s"
+_m backup.list_header "Backups in %s" "Backups em %s"
+_m backup.list_entry "%s file(s) saved" "%s arquivo(s) salvo(s)"
+
+# ---- deploy / rollback / verify ---------------------------------------------------------
+_m deploy.nothing "Everything is already up to date. Nothing to copy." "Tudo já está atualizado. Nada para copiar."
+_m deploy.dry_run "Would copy %s file(s)." "Copiaria %s arquivo(s)."
+_m deploy.done "Copied %s file(s)." "%s arquivo(s) copiado(s)."
+_m deploy.failed "Failed to copy: %s" "Falha ao copiar: %s"
+_m deploy.exec_fixed "Restored the executable bit on %s script(s)." "Bit de execução restaurado em %s script(s)."
+_m rollback.start "Something went wrong. Rolling back the changes ..." "Algo deu errado. Desfazendo as alterações ..."
+_m rollback.done "Rollback complete: your files are back to how they were." "Reversão concluída: seus arquivos voltaram ao estado anterior."
+_m rollback.file_failed "Could not restore: %s" "Não foi possível restaurar: %s"
+_m verify.dry_run "Verification skipped (dry-run)." "Verificação ignorada (simulação)."
+_m verify.mismatch "Content differs: %s" "Conteúdo diferente: %s"
+_m verify.failed "%s file(s) differ from the repository after copying." "%s arquivo(s) diferem do repositório após a cópia."
+_m verify.ok "%s file(s) verified: identical to the repository." "%s arquivo(s) verificado(s): idênticos ao repositório."
+
+_m wallpapers.created "Created %s wallpaper folder(s): ~/Pictures/Wallpapers (static) and ~/Videos/wallpaper-live (animated)." "%s pasta(s) de wallpaper criada(s): ~/Pictures/Wallpapers (estáticos) e ~/Videos/wallpaper-live (animados)."
+_m wallpapers.would_create "Would create ~/%s" "Criaria ~/%s"
+
+# ---- restore ----------------------------------------------------------------------------
+_m restore.bad_id "Backup not found: %s (use --list)." "Backup não encontrado: %s (use --list)."
+_m restore.snapshot "Backup: %s" "Backup: %s"
+_m restore.files_back "Files to restore" "Arquivos a restaurar"
+_m restore.files_remove "New files to remove" "Arquivos novos a remover"
+_m restore.dry_run "Dry-run: nothing was changed." "Simulação: nada foi alterado."
+_m restore.confirm "Restore these files? Current versions are backed up first." "Restaurar estes arquivos? As versões atuais recebem backup antes."
+_m restore.pre_backup "Current state saved to %s" "Estado atual salvo em %s"
+_m restore.missing_in_backup "Not found in the backup: %s" "Não encontrado no backup: %s"
+_m restore.done "Restored %s file(s), removed %s." "%s arquivo(s) restaurado(s), %s removido(s)."
+
+# ---- summary ----------------------------------------------------------------------------
+_m summary.title "Summary" "Resumo"
+_m summary.dry_run "Dry-run finished. No file was changed." "Simulação concluída. Nenhum arquivo foi alterado."
+_m summary.deployed "New: %s   Replaced: %s   Unchanged: %s" "Novos: %s   Substituídos: %s   Inalterados: %s"
+_m summary.backup "Backup: %s" "Backup: %s"
+_m summary.log "Log: %s" "Log: %s"
+_m summary.warnings "Warnings: %s (listed below)" "Avisos: %s (listados abaixo)"
+_m summary.next "Next steps:" "Próximos passos:"
+_m summary.next1 "Log out and start Hyprland again (or reload your session)." "Saia da sessão e inicie o Hyprland de novo (ou recarregue a sessão)."
+_m summary.next2 "Review monitors and hardware settings in ~/.config/hypr/modules/." "Revise monitores e ajustes de hardware em ~/.config/hypr/modules/."
+_m summary.next3 "To undo: ./scripts/restore.sh (see docs/INSTALACAO.en.md)." "Para desfazer: ./scripts/restore.sh (veja docs/INSTALACAO.md)."
+
+# ---- import-configs.sh --------------------------------------------------------------------
+_m import.no_source "Source directory not found: %s" "Diretório de origem não encontrado: %s"
+_m import.start "Importing from %s into %s" "Importando de %s para %s"
+_m import.confirm "Copy your configuration folders into the repository?" "Copiar suas pastas de configuração para o repositório?"
+_m import.missing "Not found, skipped: %s" "Não encontrado, ignorado: %s"
+_m import.would_copy "Would copy %s (%s files)" "Copiaria %s (%s arquivos)"
+_m import.copied "Copied %s (%s files)" "Copiado %s (%s arquivos)"
+_m import.local_bin "Copied ~/.local/bin/%s" "Copiado ~/.local/bin/%s"
+_m import.excluded "Left out on purpose: %s" "Deixado de fora de propósito: %s"
+_m import.excluded_note "Machine-specific or private files are not imported (see docs/CONFIGURACAO.en.md)." "Arquivos específicos da máquina ou privados não são importados (veja docs/CONFIGURACAO.md)."
+_m import.done "Import finished: %s folder(s) copied, %s not found." "Importação concluída: %s pasta(s) copiada(s), %s não encontrada(s)."

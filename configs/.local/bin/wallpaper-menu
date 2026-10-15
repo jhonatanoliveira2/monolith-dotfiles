@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+# wallpaper-menu — MONOLITH wallpaper picker
+#   static wallpapers : awww        live wallpapers : mpvpaper        menu : rofi (with previews)
+#
+# Usage:  wallpaper-menu              open the menu (run it again to close it)
+#         wallpaper-menu --restore    re-apply the last choice (put it in your autostart)
+#         wallpaper-menu --clear-cache   delete the generated previews
+#
+# Dependencies: rofi hyprctl jq awww mpvpaper  |  previews: ffmpeg  |  notifications: libnotify (optional)
+# Theme: ~/.config/hypr/rofi/wallpaper-menu.rasi (colours and border are variables at its top)
+set -uo pipefail
+
+# ───────────────────────────── configuration ─────────────────────────────
+STATIC_DIR="${WALLPAPER_STATIC_DIR:-$HOME/Pictures/Wallpapers}"
+
+# Folders scanned for live wallpapers (not recursive) ...
+LIVE_DIRS=(
+    "${WALLPAPER_LIVE_DIR:-$HOME/Videos/wallpaper-live}"
+    "$HOME/dotfiles/home/pictures/wallpaper-live"
+)
+# ... plus individual files (no need to scan their whole folder, e.g. ~/Downloads).
+LIVE_FILES=(
+    "$HOME/Downloads/bliss-windows-xp.mp4"
+)
+
+THEME="${WALLPAPER_ROFI_THEME:-${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/wallpaper-menu.rasi}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/wallpaper-menu"
+STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper-menu/last"
+
+THUMB_W=480 THUMB_H=270                 # preview size (16:9)
+GRID_COLUMNS=4 GRID_LINES=3             # wallpaper grid
+
+AWWW_ARGS=(--transition-type fade --transition-duration 0.7)
+MPVPAPER_FLAGS=(-p)                     # -p: pause playback while the wallpaper is fully covered
+MPV_OPTIONS="no-audio loop-file=inf hwdec=auto-safe panscan=1.0"
+
+IMG_EXT=(jpg jpeg png webp gif bmp)
+VID_EXT=(mp4 mkv webm mov avi gif)
+
+# ─────────────────────────────── helpers ─────────────────────────────────
+need() { command -v "$1" >/dev/null 2>&1; }
+
+notify() {
+    printf '%s\n' "$1" >&2
+    need notify-send && notify-send -a wallpaper-menu -u low "Wallpaper" "$1"
+    return 0
+}
+
+die() {
+    notify "$1"
+    exit 1
+}
+
+join_by_comma() { local IFS=,; printf '%s' "$*"; }
+
+# collect_files <image|video> <dir|file>...   -> NUL-separated, sorted, de-duplicated
+collect_files() {
+    local kind=$1 item ext
+    shift
+    local -a exts names=('(')
+    if [[ $kind == image ]]; then exts=("${IMG_EXT[@]}"); else exts=("${VID_EXT[@]}"); fi
+    for ext in "${exts[@]}"; do names+=(-iname "*.$ext" -o); done
+    unset 'names[-1]'
+    names+=(')')
+    for item in "$@"; do
+        if [[ -d $item ]]; then
+            find -L "$item" -maxdepth 1 -type f "${names[@]}" -print0
+        elif [[ -f $item ]]; then
+            printf '%s\0' "$item"
+        fi
+    done | sort -zu
+}
+
+# ───────────────────────────── previews (cache) ──────────────────────────
+thumb_path() {
+    local key
+    key=$(printf '%s|%s' "$1" "$(stat -c '%Y-%s' -- "$1" 2>/dev/null)" | sha1sum | cut -d' ' -f1)
+    printf '%s/thumbs/%s.jpg' "$CACHE_DIR" "$key"
+}
+
+# make_thumb <file>: create the preview if it does not exist yet (safe to run in parallel).
+make_thumb() {
+    local f=$1 out tmp seek=()
+    out=$(thumb_path "$f")
+    [[ -s $out ]] && return 0
+    mkdir -p "${out%/*}"
+    tmp="${out%.jpg}.$$.tmp.jpg"
+    case ${f,,} in *.gif) ;; *.jpg | *.jpeg | *.png | *.webp | *.bmp) ;; *) seek=(-ss 1) ;; esac
+    local vf="scale=${THUMB_W}:${THUMB_H}:force_original_aspect_ratio=increase,crop=${THUMB_W}:${THUMB_H}"
+    ffmpeg -loglevel error -y "${seek[@]}" -i "$f" -vf "$vf" -frames:v 1 -q:v 4 "$tmp" 2>/dev/null \
+        || ffmpeg -loglevel error -y -i "$f" -vf "$vf" -frames:v 1 -q:v 4 "$tmp" 2>/dev/null
+    if [[ -s $tmp ]]; then mv -f "$tmp" "$out"; else rm -f "$tmp"; return 1; fi
+}
+
+# Generate every missing preview, in parallel.
+build_thumbs() {
+    need ffmpeg || return 0
+    local -a missing=()
+    local f
+    for f in "$@"; do [[ -s $(thumb_path "$f") ]] || missing+=("$f"); done
+    (( ${#missing[@]} )) || return 0
+    (( ${#missing[@]} > 6 )) && notify "Generating ${#missing[@]} previews (first run only)…"
+    export -f make_thumb thumb_path
+    export CACHE_DIR THUMB_W THUMB_H
+    printf '%s\0' "${missing[@]}" | xargs -0 -r -P "$(nproc 2>/dev/null || echo 4)" -I{} bash -c 'make_thumb "$1"' _ {}
+    # forget previews that were not used for 90 days
+    find "$CACHE_DIR/thumbs" -type f -atime +90 -delete 2>/dev/null
+}
+
+# ─────────────────────────────── rofi menus ──────────────────────────────
+# rofi_menu <prompt> [rofi args...]   (rows on stdin)  -> prints the selected row index
+rofi_menu() {
+    local prompt=$1
+    shift
+    local -a theme=()
+    [[ -f $THEME ]] && theme=(-theme "$THEME")
+    rofi -dmenu -i -no-custom -format i -p "$prompt" "${theme[@]}" "$@"
+}
+
+GRID_THEME="window { width: 1100px; }
+listview { columns: ${GRID_COLUMNS}; lines: ${GRID_LINES}; fixed-columns: true; fixed-height: true; flow: horizontal; spacing: 12px; }
+element { orientation: vertical; padding: 10px; spacing: 8px; }
+element-icon { size: 12em; horizontal-align: 0.5; }
+element-text { horizontal-align: 0.5; }"
+
+MONITORS=() MONITOR_LABELS=()
+load_monitors() {
+    local name label
+    while IFS=$'\t' read -r name label; do
+        MONITORS+=("$name")
+        MONITOR_LABELS+=("$name  ·  $label")
+    done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[] | [.name, "\(.width)x\(.height)@\(.refreshRate | round)"] | @tsv')
+    (( ${#MONITORS[@]} )) || die "No active Hyprland monitors found."
+}
+
+TARGETS=() ALL_TARGETS=1
+choose_monitor() {
+    local idx
+    TARGETS=() ALL_TARGETS=1
+    if (( ${#MONITORS[@]} == 1 )); then
+        TARGETS=("${MONITORS[0]}")
+        return 0
+    fi
+    idx=$(printf '%s\n' "All monitors" "${MONITOR_LABELS[@]}" | rofi_menu "Monitor") || return 1
+    [[ $idx =~ ^[0-9]+$ ]] || return 1
+    if (( idx == 0 )); then
+        TARGETS=("${MONITORS[@]}")
+    else
+        TARGETS=("${MONITORS[idx - 1]}")
+        ALL_TARGETS=0
+    fi
+}
+
+# choose_file <prompt> <image|video> <dir|file>...   -> prints the chosen path
+choose_file() {
+    local prompt=$1 kind=$2 idx f label thumb
+    shift 2
+    local -a files=()
+    mapfile -d '' -t files < <(collect_files "$kind" "$@")
+    (( ${#files[@]} )) || { notify "No compatible files found."; return 1; }
+    build_thumbs "${files[@]}"
+    idx=$(
+        for f in "${files[@]}"; do
+            label=${f##*/}
+            label=${label%.*}
+            thumb=$(thumb_path "$f")
+            if [[ -s $thumb ]]; then
+                printf '%s\0icon\x1f%s\n' "$label" "$thumb"
+            else
+                printf '%s\n' "$label"
+            fi
+        done | rofi_menu "$prompt" -show-icons -theme-str "$GRID_THEME"
+    ) || return 1
+    [[ $idx =~ ^[0-9]+$ ]] || return 1
+    printf '%s' "${files[idx]}"
+}
+
+# ───────────────────────────── applying wallpapers ───────────────────────
+save_state() { # save_state <static|live> <outputs|ALL> [file]
+    mkdir -p "${STATE_FILE%/*}"
+    printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >"$STATE_FILE"
+}
+
+# Stop live wallpapers on the given outputs (all of them when ALL_TARGETS=1).
+stop_live() {
+    local m
+    if (( ALL_TARGETS )); then
+        pkill -x mpvpaper 2>/dev/null
+    else
+        for m in "${TARGETS[@]}"; do pkill -f -- "^mpvpaper .* ${m} /" 2>/dev/null; done
+    fi
+    return 0
+}
+
+ensure_awww() {
+    awww query >/dev/null 2>&1 && return 0
+    setsid -f awww-daemon >/dev/null 2>&1
+    local _
+    for _ in {1..30}; do
+        awww query >/dev/null 2>&1 && return 0
+        sleep 0.1
+    done
+    return 1
+}
+
+start_live() { # start_live <file> <outputs...>
+    local file=$1 m
+    shift
+    for m in "$@"; do
+        setsid -f mpvpaper "${MPVPAPER_FLAGS[@]}" -o "$MPV_OPTIONS" "$m" "$file" >/dev/null 2>&1
+    done
+}
+
+apply_static() {
+    need awww || die "Missing dependency: awww"
+    local file
+    file=$(choose_file "Static wallpaper" image "$STATIC_DIR") || return 0
+    choose_monitor || return 0
+    stop_live
+    ensure_awww || die "Could not start awww-daemon."
+    awww img --outputs "$(join_by_comma "${TARGETS[@]}")" "${AWWW_ARGS[@]}" "$file" || die "awww failed to set the wallpaper."
+    save_state static "$( ((ALL_TARGETS)) && echo ALL || join_by_comma "${TARGETS[@]}")" "$file"
+}
+
+apply_live() {
+    need mpvpaper || die "Missing dependency: mpvpaper"
+    local file
+    file=$(choose_file "Live wallpaper" video "${LIVE_DIRS[@]}" "${LIVE_FILES[@]}") || return 0
+    choose_monitor || return 0
+    stop_live
+    # All monitors: stop awww so its image never covers the video. One monitor: keep awww for the others.
+    if (( ALL_TARGETS )) && need awww; then awww kill >/dev/null 2>&1; fi
+    start_live "$file" "${TARGETS[@]}"
+    save_state live "$( ((ALL_TARGETS)) && echo ALL || join_by_comma "${TARGETS[@]}")" "$file"
+}
+
+restore_last() {
+    [[ -r $STATE_FILE ]] || exit 0
+    local kind outputs file
+    IFS=$'\t' read -r kind outputs file <"$STATE_FILE"
+    load_monitors
+    case $kind in
+        static)
+            need awww && ensure_awww && awww restore >/dev/null 2>&1
+            ;;
+        live)
+            need mpvpaper && [[ -f $file ]] || exit 0
+            local -a outs
+            if [[ $outputs == ALL ]]; then outs=("${MONITORS[@]}"); need awww && awww kill >/dev/null 2>&1
+            else IFS=, read -r -a outs <<<"$outputs"; fi
+            pkill -x mpvpaper 2>/dev/null
+            start_live "$file" "${outs[@]}"
+            ;;
+    esac
+    exit 0
+}
+
+# ─────────────────────────────────── main ────────────────────────────────
+case ${1:-} in
+    -h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --clear-cache) rm -rf -- "$CACHE_DIR/thumbs"; echo "previews removed"; exit 0 ;;
+    --restore) need hyprctl && need jq || exit 1; restore_last ;;
+esac
+
+# second press closes the menu
+if pgrep -x rofi >/dev/null 2>&1; then
+    pkill -x rofi
+    exit 0
+fi
+
+for cmd in rofi hyprctl jq; do
+    need "$cmd" || die "Missing dependency: $cmd"
+done
+need ffmpeg || notify "ffmpeg not found: previews are disabled."
+[[ -f $THEME ]] || printf 'Rofi theme not found (%s): using the default theme.\n' "$THEME" >&2
+
+load_monitors
+
+choice=$(printf '%s\n' "Static wallpaper" "Live wallpaper" | rofi_menu "Wallpaper") || exit 0
+case $choice in
+    0) apply_static ;;
+    1) apply_live ;;
+esac

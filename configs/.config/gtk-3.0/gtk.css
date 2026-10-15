@@ -1,0 +1,17 @@
+/* Thunar - fundo transparente */
+.thunar-window,
+.thunar-window.background {
+    background-color: rgba(7, 8, 17, 0.35);
+}
+
+/* Área principal */
+.thunar-window treeview,
+.thunar-window .view {
+    background-color: rgba(7, 8, 17, 0.20);
+}
+
+/* Painel lateral */
+.thunar-window paned,
+.thunar-window .sidebar {
+    background-color: rgba(7, 8, 17, 0.25);
+}

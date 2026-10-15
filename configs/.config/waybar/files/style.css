@@ -1,0 +1,152 @@
+
+/* @import "$HOME/.config/colors/colors.css" */
+@import "./colors/colors.css";
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 13px;
+    font-weight: bold;
+    min-height: 0;
+}
+
+window,
+tooltip {
+    background-color: alpha(@background, 0.7);
+    border-radius: 1px;
+}
+
+#waybar {
+    background: alpha(@background, 0);
+    border-radius: 0;
+}
+
+#workspaces {
+    margin: 1px 0;
+}
+
+#workspaces button {
+    color: @gray-mid;
+    border: none;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 3px;
+    border-radius: 50%;
+}
+
+#workspaces button:hover {
+    color: @gray-light;
+    transition: none;
+    border-bottom: 0px solid @gray-light;
+    border-radius: 50%;
+}
+
+#workspaces button.active {
+    color: @foreground;        /* bright white */
+    border: 0px solid @foreground;
+    border-radius: 50%;
+}
+
+#workspaces button.urgent {
+    background-color: @gray-dark;
+    color: @foreground;
+    border-radius: 50%;
+}
+
+/* ---------- Esquerda ---------- */
+
+/* ícone do Arch: branco */
+#custom-power {
+    padding: 0px 0px 0px 10px;
+    color: #ffffff;
+}
+
+/* player: botões + texto/progresso */
+#custom-player-prev,
+#custom-player-toggle,
+#custom-player-next {
+    padding: 0 5px;
+    color: @gray-mid;
+    transition: none;
+}
+
+#custom-player-toggle {
+    min-width: 14px;
+}
+
+#custom-player-prev:hover,
+#custom-player-toggle:hover,
+#custom-player-next:hover {
+    color: @foreground;
+}
+
+#custom-player {
+    margin: 0 6px 0 3px;
+    color: @gray-light;
+}
+
+#custom-player.paused {
+    color: @gray-mid;
+}
+
+/* ---------- Direita ---------- */
+
+/* espaçamento uniforme entre os módulos (antes: ~8px, agora ~12px) */
+#tray,
+#custom-sysmon,
+#custom-network,
+#bluetooth,
+#battery,
+#backlight,
+#pulseaudio {
+    margin: 0 3px;
+    padding: 0 3px;
+    color: @gray-light;
+}
+
+#bluetooth {
+    font-size: 15px;
+    min-width: 17px;
+}
+
+#backlight {
+    transition: 0.3s;
+}
+
+/* mantém a mesma distância da borda direita de antes */
+#pulseaudio {
+    margin-right: 5px;
+}
+
+/* internet: cinza claro quando ok, cinza médio quando sem internet/desconectado */
+#custom-network.nointernet,
+#custom-network.disconnected {
+    color: @gray-mid;
+}
+
+/* sistema: sobe para o branco quando esquenta */
+#custom-sysmon.warning {
+    color: @foreground;
+}
+
+#custom-sysmon.critical {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 1px;
+}
+
+#clock {
+    margin-right: 5px;
+    color: @gray-light;
+}
+
+
+/* Minimal thin border around all modules */
+#waybar > * {
+    border: 1px solid rgba(200, 200, 200, 0.25);
+    border-radius: 1px;
+    padding: 1px 2px;
+    margin-top: 1px;
+    margin-right: 1px;
+    margin-left: 1px;
+    background-color: rgba(0, 0, 0, 0.5); 
+}
