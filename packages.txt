@@ -37,6 +37,8 @@ starship                    # fish/config.fish: starship init fish
 atuin                       # fish/config.fish: atuin init fish
 # --- files, theming, fonts ---
 nautilus                    # programs.lua file manager (SUPER+X)
+materia-gtk-theme           # gsettings gtk-theme 'Materia-dark': needed for the Nautilus transparency in gtk-4.0/gtk.css
+dconf                       # persists the gsettings (theme and dark color scheme)
 ttf-jetbrains-mono-nerd     # waybar and rofi themes: "JetBrainsMono Nerd Font"
 # --- screenshots / clipboard / notifications ---
 grim                        # screenshot bindings (SUPER+Delete)
@@ -82,7 +84,6 @@ mpvpaper                    # wallpaper-menu: animated wallpapers (may be in off
 [aur:optional]
 zen-browser-bin             # SUPER+TAB launches "zen-browser"
 gpu-screen-recorder         # SUPER+R recording binding (may be in official repos)
-hyprshutdown                # SUPER+X uses it when present, else falls back to 'hyprctl dispatch exit'
 wpgtk                       # wpg command used by wpg/wp_init.sh and wpg/ settings
 
 [manual]

@@ -443,28 +443,100 @@ step_deploy() {
     (( fixed == 0 )) || ui_ok "$(t deploy.exec_fixed "$fixed")"
 }
 
-# Folders used by wallpaper-menu (created empty when missing; existing content is never touched).
-WALLPAPER_DIRS=(Pictures/Wallpapers Videos/wallpaper-live)
+# Folders that must exist after the installation (created empty when missing; content is never touched).
+USER_DIRS=(Pictures/Wallpapers Videos/wallpaper-live .config/nwg-look .config/wpg)
 
-ensure_wallpaper_dirs() {
-    local d created=0
-    for d in "${WALLPAPER_DIRS[@]}"; do
+ensure_user_dirs() {
+    local d
+    for d in "${USER_DIRS[@]}"; do
         [[ -d $TARGET_HOME/$d ]] && continue
         if (( OPT_DRY )); then
-            ui_info "$(t wallpapers.would_create "$d")"
+            ui_info "$(t dirs.would_create "$d")"
         elif mkdir -p -- "$TARGET_HOME/$d"; then
-            created=$(( created + 1 ))
+            ui_ok "$(t dirs.created "$d")"
             log INFO "created folder: $d"
         fi
     done
-    (( created == 0 )) || ui_ok "$(t wallpapers.created "$created")"
+}
+
+# Copy the wallpapers shipped in wallpapers/{static,live} into the folders used by wallpaper-menu.
+# An existing file with the same name is never overwritten.
+install_wallpapers() {
+    local root=$MONOLITH_WALLPAPERS_DIR pair sub dest f name tmp
+    [[ -d $root ]] || return 0
+    for pair in "static:Pictures/Wallpapers" "live:Videos/wallpaper-live"; do
+        sub=${pair%%:*}
+        dest=${pair#*:}
+        [[ -d $root/$sub ]] || continue
+        while IFS= read -r -d '' f; do
+            name=${f##*/}
+            if [[ -e $TARGET_HOME/$dest/$name ]]; then
+                cmp -s -- "$f" "$TARGET_HOME/$dest/$name" || ui_dim "$(t wallpapers.kept "$dest/$name")"
+                continue
+            fi
+            if (( OPT_DRY )); then
+                ui_info "$(t wallpapers.would_copy "$dest/$name")"
+                continue
+            fi
+            mkdir -p -- "$TARGET_HOME/$dest"
+            tmp="$TARGET_HOME/$dest/.$name.monolith-tmp.$$"
+            if cp -p -- "$f" "$tmp" && mv -f -- "$tmp" "$TARGET_HOME/$dest/$name"; then
+                ui_ok "$(t wallpapers.copied "$dest/$name")"
+                log INFO "wallpaper copied: $dest/$name"
+            else
+                rm -f -- "$tmp"
+                warn_later "$(t wallpapers.failed "$name")"
+            fi
+        done < <(find "$root/$sub" -maxdepth 1 -type f ! -name '.gitkeep' -print0 | LC_ALL=C sort -z)
+    done
+}
+
+# Materia-dark is what makes the transparency in gtk-4.0/gtk.css work (Nautilus).
+# Skipped when deploying to another home (MONOLITH_TARGET_HOME), because gsettings is per-user.
+apply_gtk_theme() {
+    local schema=org.gnome.desktop.interface pair key want cur
+    local -a runner=()
+    if [[ -n ${MONOLITH_TARGET_HOME-} && ${MONOLITH_APPLY_GSETTINGS-0} != 1 ]]; then
+        return 0
+    fi
+    if ! command -v gsettings >/dev/null 2>&1; then
+        warn_later "$(t gtk.no_gsettings)"
+        return 0
+    fi
+    # outside a graphical session there is no D-Bus session: use a temporary one so dconf can persist it
+    if [[ -z ${DBUS_SESSION_BUS_ADDRESS-} ]] && command -v dbus-run-session >/dev/null 2>&1; then
+        runner=(dbus-run-session --)
+    fi
+    local changed=0
+    for pair in "gtk-theme:Materia-dark" "color-scheme:prefer-dark"; do
+        key=${pair%%:*}
+        want=${pair#*:}
+        cur=$("${runner[@]}" gsettings get "$schema" "$key" 2>/dev/null) || cur=""
+        [[ $cur == "'$want'" ]] && continue
+        changed=1
+        (( OPT_DRY )) && continue
+        if ! "${runner[@]}" gsettings set "$schema" "$key" "$want" >>"$LOG_FILE" 2>&1; then
+            warn_later "$(t gtk.failed)"
+            return 0
+        fi
+        log INFO "gsettings $schema $key = $want"
+    done
+    if (( ! changed )); then
+        ui_ok "$(t gtk.already)"
+    elif (( OPT_DRY )); then
+        ui_info "$(t gtk.would_apply)"
+    else
+        ui_ok "$(t gtk.applied)"
+    fi
 }
 
 step_verify() {
     ui_step 7 "$TOTAL_STEPS" "$(t step.verify)"
     if (( OPT_DRY )); then
         ui_info "$(t verify.dry_run)"
-        ensure_wallpaper_dirs
+        ensure_user_dirs
+        install_wallpapers
+        apply_gtk_theme
         return 0
     fi
     local rel bad=0 ok=0
@@ -483,7 +555,9 @@ step_verify() {
         return 0
     fi
     ui_ok "$(t verify.ok "$ok")"
-    ensure_wallpaper_dirs
+    ensure_user_dirs
+    install_wallpapers
+    apply_gtk_theme
     printf '\n'
     bash "$SCRIPT_DIR/check-dependencies.sh" --section advice --where target ${OPT_NO_COLOR:+--no-color} || true
 }

@@ -9,6 +9,7 @@ MONOLITH_VERSION="0.1.0"
 : "${MONOLITH_ROOT:=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 : "${MONOLITH_CONFIGS_DIR:=$MONOLITH_ROOT/configs}"
 : "${MONOLITH_PACKAGES_FILE:=$MONOLITH_ROOT/packages.txt}"
+: "${MONOLITH_WALLPAPERS_DIR:=$MONOLITH_ROOT/wallpapers}"   # wallpapers/static and wallpapers/live
 
 # TARGET_HOME is where files are deployed. MONOLITH_TARGET_HOME exists for tests and
 # for advanced users; by default it is the real $HOME.
