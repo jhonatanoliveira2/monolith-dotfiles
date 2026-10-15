@@ -1,5 +1,5 @@
 hl.on("hyprland.start", function()
-    hl.exec_cmd("wallpaper-menu --restore &")
+    hl.exec_cmd("wallpaper-menu --restore")
 end)
 
 hl.on("hyprland.start", function()
