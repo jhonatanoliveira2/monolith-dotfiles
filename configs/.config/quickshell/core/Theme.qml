@@ -22,7 +22,7 @@ Singleton {
     readonly property color critical: Qt.rgba(1, 1, 1, 0.14)
 
     readonly property string font: "JetBrainsMono Nerd Font"
-    readonly property string iconFont: "Material Design Icons"
+    readonly property string iconFont: "JetBrainsMono Nerd Font"
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int barHeight: 32

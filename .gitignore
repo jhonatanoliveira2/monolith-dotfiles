@@ -24,12 +24,6 @@ secrets.*
 configs/.config/micro/backups/
 configs/.config/fish/fish_variables
 configs/.config/fish/conf.d/*.env.fish
-configs/.config/wpg/schemes/
-configs/.config/wpg/sequences
-configs/.config/wpg/samples/
-configs/.config/wal/colors*
-configs/.config/wal/sequences
-
 # --- backups, caches, editor and OS leftovers -----------------------------------
 *.bak
 *.swp
