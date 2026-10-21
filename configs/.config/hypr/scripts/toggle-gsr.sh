@@ -5,7 +5,7 @@ PIDFILE=/tmp/osu-gsr.pid
 if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
     kill -INT "$(cat "$PIDFILE")"
     rm -f "$PIDFILE"
-    notify-send -a "GPU-Screen-Recorder" "Gravação" "Encerrando gravação..."
+    notify-send -a "GPU-Screen-Recorder" "Recording" "Stopping recording..."
 else
     mkdir -p "$HOME/Videos"
     file="$HOME/Videos/$(date +%Y-%m-%d_%H-%M-%S).mp4"
@@ -14,7 +14,7 @@ else
         '.[] | select($c.x >= .x and $c.x < (.x + .width) and $c.y >= .y and $c.y < (.y + .height)) | .name')
 
     if [ -z "$monitor" ]; then
-        notify-send -u critical "Gravação" "Não foi possível identificar o monitor"
+        notify-send -u critical "Recording" "Could not identify the monitor"
         exit 1
     fi
 
@@ -24,9 +24,9 @@ else
 
     sleep 0.8
     if kill -0 "$pid" 2>/dev/null; then
-        notify-send -a "GPU-Screen-Recorder" "Gravação iniciada" "$monitor · HEVC · 60 FPS · Qualidade ultra"
+        notify-send -a "GPU-Screen-Recorder" "Recording started" "$monitor · HEVC · 60 FPS · Ultra quality"
     else
         rm -f "$PIDFILE"
-        notify-send -u critical "Gravação" "Falha ao iniciar o gravador"
+        notify-send -u critical "Recording" "Failed to start recorder"
     fi
 fi

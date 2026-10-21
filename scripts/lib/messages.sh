@@ -58,7 +58,10 @@ _m deps.file_missing "Not found: ~/%s" "Não encontrado: ~/%s"
 _m deps.files_ok "All referenced files are present." "Todos os arquivos referenciados estão presentes."
 _m deps.locale_missing "Locale pt_BR.UTF-8 is not generated; hypr/modules/environment.lua sets LANG=pt_BR.UTF-8 (see /etc/locale.gen)." "O locale pt_BR.UTF-8 não está gerado; hypr/modules/environment.lua define LANG=pt_BR.UTF-8 (veja /etc/locale.gen)."
 _m deps.shell_note "Your login shell is %s. The Hyprland autostart in fish/config.fish only runs under fish on tty1." "Seu shell de login é %s. O autostart do Hyprland em fish/config.fish só funciona no fish, no tty1."
-_m deps.service_note "Service not enabled: %s (needed by the matching waybar module)." "Serviço não habilitado: %s (necessário para o módulo correspondente da waybar)."
+_m deps.waybar_autostart "Hyprland still starts Waybar: replace it with 'quickshell' in your autostart." "O Hyprland ainda inicia a Waybar: troque por 'quickshell' no autostart."
+_m deps.qs_missing "Hyprland does not start Quickshell: add 'quickshell' to your autostart." "O Hyprland não inicia o Quickshell: adicione 'quickshell' ao autostart."
+_m deps.swaync_conflict "swaync is still started: the Quickshell notification server and swaync cannot run together (see docs/QUICKSHELL.en.md)." "O swaync ainda é iniciado: o servidor de notificações do Quickshell e o swaync não rodam juntos (veja docs/QUICKSHELL.md)."
+_m deps.service_note "Service not enabled: %s (needed by the matching Quickshell module)." "Serviço não habilitado: %s (necessário para o módulo correspondente do Quickshell)."
 
 # ---- packages ---------------------------------------------------------------------------
 _m pkg.skipped_flag "Package installation skipped (--no-deps)." "Instalação de pacotes ignorada (--no-deps)."
@@ -123,6 +126,11 @@ _m gtk.already "GTK theme already set (Materia-dark, dark)." "Tema GTK já defin
 _m gtk.would_apply "Would set the GTK theme to Materia-dark (dark)." "Definiria o tema GTK como Materia-dark (escuro)."
 _m gtk.no_gsettings "gsettings not found: set the GTK theme manually (see docs/INSTALACAO.en.md)." "gsettings não encontrado: defina o tema GTK manualmente (veja docs/INSTALACAO.md)."
 _m gtk.failed "Could not apply the GTK theme. Run it inside your Hyprland session: gsettings set org.gnome.desktop.interface gtk-theme 'Materia-dark'" "Não foi possível aplicar o tema GTK. Execute dentro da sessão do Hyprland: gsettings set org.gnome.desktop.interface gtk-theme 'Materia-dark'"
+
+_m shell.ready "Quickshell configuration deployed (~/.config/quickshell)." "Configuração do Quickshell instalada (~/.config/quickshell)."
+_m shell.no_binary "Quickshell is not installed: install the 'quickshell' package (AUR/extra) to use the new shell." "O Quickshell não está instalado: instale o pacote 'quickshell' (AUR/extra) para usar o novo shell."
+_m shell.ask_switch "Waybar is running. Stop it and start Quickshell now?" "A Waybar está em execução. Encerrá-la e iniciar o Quickshell agora?"
+_m shell.started "Quickshell started (Waybar stopped)." "Quickshell iniciado (Waybar encerrada)."
 
 # ---- restore ----------------------------------------------------------------------------
 _m restore.bad_id "Backup not found: %s (use --list)." "Backup não encontrado: %s (use --list)."

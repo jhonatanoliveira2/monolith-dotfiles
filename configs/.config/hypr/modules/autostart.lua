@@ -1,18 +1,13 @@
 hl.on("hyprland.start", function()
-    hl.exec_cmd("wallpaper-menu --restore")
+    local startupCommands = {
+        "hypridle",
+        "awww-daemon",
+        "quickshell",
+        "/usr/bin/lxqt-policykit-agent",
+        "wallpaper-menu --restore",
+    }
+
+    for _, command in ipairs(startupCommands) do
+        hl.exec_cmd(command .. " &")
+    end
 end)
-
-hl.on("hyprland.start", function()
-    hl.exec_cmd("swaync &")
-end)
-
-hl.on("hyprland.start", function()
-    hl.exec_cmd("waybar &")
-end)
-
-hl.on("hyprland.start", function()
-    hl.exec_cmd("/usr/bin/lxqt-policykit-agent &")
-end)
-
-
-

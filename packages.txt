@@ -23,13 +23,16 @@
 # --- compositor, session, lock screen ---
 hyprland                    # hyprland.lua (Lua configuration entry point) and start-hyprland
 hyprlock                    # SUPER+Z binding and hypr/hyprlock.conf
+hypridle					# hyprland idle daemon
+quickshell                  # the shell: bar, menus, notifications
 xdg-desktop-portal-hyprland # hypr/xdph.conf (screen sharing portal)
 lxqt-policykit              # autostart: /usr/bin/lxqt-policykit-agent
 qt6ct                       # environment.lua: QT_QPA_PLATFORMTHEME=qt6ct
-# --- bar, notifications, launcher ---
-waybar                      # autostart + waybar/ scripts and modules
-swaync                      # autostart + SUPER+C (swaync-client)
-rofi                        # SUPER+A launcher and waybar audio menu (needs a Wayland-capable build)
+git
+base-devel                         
+# --- shell, launcher ---
+upower                      # Quickshell battery module (UPower)
+rofi                        # SUPER+A launcher and wallpaper-menu (needs a Wayland-capable build)
 # --- terminal and shell (fish/starship/atuin run on every interactive shell) ---
 ghostty                     # programs.lua terminal + ghostty/config.ghostty
 fish                        # ghostty 'command = fish' and fish/config.fish
@@ -39,7 +42,7 @@ atuin                       # fish/config.fish: atuin init fish
 nautilus                    # programs.lua file manager (SUPER+X)
 materia-gtk-theme           # gsettings gtk-theme 'Materia-dark': needed for the Nautilus transparency in gtk-4.0/gtk.css
 dconf                       # persists the gsettings (theme and dark color scheme)
-ttf-jetbrains-mono-nerd     # waybar and rofi themes: "JetBrainsMono Nerd Font"
+ttf-jetbrains-mono-nerd     # Quickshell and Rofi themes: "JetBrainsMono Nerd Font"
 # --- screenshots / clipboard / notifications ---
 grim                        # screenshot bindings (SUPER+Delete)
 slurp                       # area screenshot (SUPER+SHIFT+Delete)
@@ -49,15 +52,14 @@ jq                          # screen recorder binding and wallpaper-menu parse h
 ffmpeg                      # wallpaper-menu: previews of images and videos
 # --- audio, media, brightness, network ---
 pipewire                    # audio stack
-pipewire-pulse              # pactl used by waybar (mute, sink menu)
-wireplumber                 # wpctl used by media-keys.lua
-libpulse                    # pactl binary
-playerctl                   # media keys, waybar player, hyprlock now-playing
-brightnessctl               # media-keys.lua brightness keys
-networkmanager              # waybar network module and nm-connection-editor
-network-manager-applet      # nm-connection-editor (waybar network click)
-blueman                     # waybar bluetooth click (blueman-manager)
-curl                        # waybar network-status.sh connectivity probe
+pipewire-pulse              # PulseAudio compatibility for applications
+wireplumber                 # wpctl: media keys and the Quickshell output selector
+playerctl                   # media keys and hyprlock now-playing (the bar player uses MPRIS directly)
+brightnessctl               # media-keys.lua brightness keys and the Quickshell brightness slider
+networkmanager              # Quickshell network menu (nmcli)
+network-manager-applet      # nm-connection-editor ("Advanced" in the network menu)
+blueman                     # "Manager" button of the Bluetooth menu (blueman-manager)
+curl                        # Quickshell connectivity probe (real internet check)
 
 [official:optional]
 # Standalone apps: their configuration is included, but nothing in the environment launches them
@@ -66,25 +68,25 @@ fastfetch                   # fastfetch/config.jsonc (the call in fish/config.fi
 btop                        # btop/btop.conf
 micro                       # micro/ settings and colour scheme
 neovim                      # nvim/ (LazyVim starter)
-git                         # lazy.nvim bootstrap clones plugins with git
 gcc                         # nvim-treesitter builds parsers
 tree-sitter-cli             # required by nvim-treesitter (main branch)
 ripgrep                     # LazyVim: live grep (recommended)
 fd                          # LazyVim: file finder (recommended)
 nwg-look                    # nwg-look/config (GTK settings manager, run by hand)
-python-pywal                # wpg backend (wpg.conf: backend = wal); only used when wpg is run
+pavucontrol                 # "Audio mixer" button in the Quickshell audio menu
 # Features that only matter for some machines
-power-profiles-daemon       # waybar power-profile module (laptop only)
+power-profiles-daemon       # power profiles (Quickshell UPower service)
 xorg-xwayland               # X11 applications (window-rules.lua has an xwayland rule)
 
 [aur:required]
 awww                        # autostart: awww-daemon; static wallpapers in wallpaper-menu (may be in official repos)
 mpvpaper                    # wallpaper-menu: animated wallpapers (may be in official repos)
+ttf-material-icons-git	    # quickshell glyphs icons
+wpgtk                       # wpg command used by wpg/wp_init.sh and wpg/ settings
 
 [aur:optional]
-zen-browser-bin             # SUPER+TAB launches "zen-browser"
-gpu-screen-recorder         # SUPER+R recording binding (may be in official repos)
-wpgtk                       # wpg command used by wpg/wp_init.sh and wpg/ settings
+zen-browser-bin             # SUPER+TAB launches "zen-browser", replace it with your favorite browser
+gpu-screen-recorder         # SUPER+R recording binding
 
 [manual]
 # (no manual entries at the moment)

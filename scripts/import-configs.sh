@@ -23,7 +23,7 @@ source "$SCRIPT_DIR/lib/messages.sh"
 # shellcheck source=lib/ui.sh
 source "$SCRIPT_DIR/lib/ui.sh"
 
-IMPORT_DIRS=(hypr waybar fish ghostty fastfetch btop swaync nvim micro gtk-3.0 gtk-4.0 nwg-look wal wpg)
+IMPORT_DIRS=(hypr quickshell fish ghostty fastfetch btop swaync nvim micro gtk-3.0 gtk-4.0 nwg-look wal wpg)
 LOCAL_BIN_FILES=(wallpaper-menu)
 # tar --exclude patterns, matched against paths relative to ~/.config
 EXCLUDES=(

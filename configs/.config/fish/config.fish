@@ -1,6 +1,8 @@
 # ===== AUTO START HYPRLAND (TTY1) =====
 cat ~/.config/wpg/sequences &
 
+set -U fish_greeting
+
 if test -z "$WAYLAND_DISPLAY"; and test "$XDG_VTNR" = 1
     exec start-hyprland
 end

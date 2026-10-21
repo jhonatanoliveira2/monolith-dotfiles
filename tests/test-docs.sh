@@ -59,7 +59,7 @@ done
 echo "== script and tool references"
 while IFS= read -r ref; do
     [[ -e $ref ]] && ok || ko "referenced but missing: $ref"
-# only repository-level paths: skip config-relative ones such as hypr/scripts/x.sh or waybar/scripts/x.sh
+# only repository-level paths: skip config-relative ones such as hypr/scripts/x.sh or quickshell/scripts/x.sh
 done < <(grep -rhoP '(?<![\w./-])(\./)?(scripts|tools|tests)/[A-Za-z0-9_./-]+\.(sh|py)' --include='*.md' . 2>/dev/null | sed 's#^\./##' | sort -u)
 
 echo "== bilingual pairs"
@@ -83,7 +83,7 @@ done
 
 echo "== structure required by the project brief"
 for p in .github/ISSUE_TEMPLATE .github/PULL_REQUEST_TEMPLATE.md assets/logo assets/screenshots assets/previews \
-    configs/.config/hypr configs/.config/waybar configs/.config/fish configs/.config/ghostty configs/.config/fastfetch \
+    configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty configs/.config/fastfetch \
     configs/.config/btop configs/.config/swaync configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
     configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \
     scripts/install.sh scripts/backup.sh scripts/check-dependencies.sh \

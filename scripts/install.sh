@@ -491,14 +491,34 @@ install_wallpapers() {
     done
 }
 
+# True when deploying to the real home (gsettings and the running session are per-user).
+# MONOLITH_APPLY_GSETTINGS=1 lets the tests exercise these steps against fixtures.
+real_session() { [[ -z ${MONOLITH_TARGET_HOME-} || ${MONOLITH_APPLY_GSETTINGS-0} == 1 ]]; }
+
+# Quickshell replaces Waybar: check the binary and, in an interactive Wayland session, offer to switch now.
+configure_quickshell() {
+    [[ -f $TARGET_HOME/.config/quickshell/shell.qml ]] || return 0
+    ui_ok "$(t shell.ready)"
+    if ! command -v quickshell >/dev/null 2>&1; then
+        warn_later "$(t shell.no_binary)"
+        return 0
+    fi
+    real_session || return 0
+    if (( ! OPT_DRY && ! OPT_YES && UI_INTERACTIVE )) && [[ -n ${WAYLAND_DISPLAY-} ]] && pgrep -x waybar >/dev/null 2>&1; then
+        if ui_confirm "$(t shell.ask_switch)" n; then
+            pkill -x waybar 2>/dev/null
+            setsid -f quickshell >/dev/null 2>&1
+            ui_ok "$(t shell.started)"
+        fi
+    fi
+}
+
 # Materia-dark is what makes the transparency in gtk-4.0/gtk.css work (Nautilus).
 # Skipped when deploying to another home (MONOLITH_TARGET_HOME), because gsettings is per-user.
 apply_gtk_theme() {
     local schema=org.gnome.desktop.interface pair key want cur
     local -a runner=()
-    if [[ -n ${MONOLITH_TARGET_HOME-} && ${MONOLITH_APPLY_GSETTINGS-0} != 1 ]]; then
-        return 0
-    fi
+    real_session || return 0
     if ! command -v gsettings >/dev/null 2>&1; then
         warn_later "$(t gtk.no_gsettings)"
         return 0
@@ -537,6 +557,7 @@ step_verify() {
         ensure_user_dirs
         install_wallpapers
         apply_gtk_theme
+        configure_quickshell
         return 0
     fi
     local rel bad=0 ok=0
@@ -558,6 +579,7 @@ step_verify() {
     ensure_user_dirs
     install_wallpapers
     apply_gtk_theme
+    configure_quickshell
     printf '\n'
     bash "$SCRIPT_DIR/check-dependencies.sh" --section advice --where target ${OPT_NO_COLOR:+--no-color} || true
 }

@@ -53,6 +53,7 @@ ui_init
 # Files referenced by the configurations but possibly absent from the repository/system.
 # Format: "<path relative to $HOME>|<english reason>"
 EXPECTED_FILES=(
+    ".config/quickshell/shell.qml|Quickshell entry point (bar, menus, notifications)"
     ".config/hypr/hyprlock-colors.conf|sourced by hypr/hyprlock.conf"
     ".config/hypr/scripts/password-cursor.sh|used by hypr/hyprlock.conf (cursor label)"
     ".config/hypr/scripts/now-playing.sh|used by hypr/hyprlock.conf (media label)"
@@ -150,6 +151,18 @@ report_advice() {
         ui_dim "$why"
     done
     (( found )) || ui_ok "$(t deps.files_ok)"
+
+    # the session must start Quickshell instead of Waybar (informational)
+    if [[ $WHERE == target && -d $root/.config/hypr ]]; then
+        if grep -rqI --include='*.lua' --include='*.conf' -E '(^|[^[:alnum:]_-])waybar([^[:alnum:]_-]|$)' "$root/.config/hypr" 2>/dev/null; then
+            ui_warn "$(t deps.waybar_autostart)"
+        elif ! grep -rqI --include='*.lua' --include='*.conf' -E '(^|[^[:alnum:]_-])(quickshell|qs)([^[:alnum:]_-]|$)' "$root/.config/hypr" 2>/dev/null; then
+            ui_info "$(t deps.qs_missing)"
+        fi
+        if grep -rqI --include='*.lua' --include='*.conf' -E '(^|[^[:alnum:]_-])swaync([^[:alnum:]_-]|$)' "$root/.config/hypr" 2>/dev/null; then
+            ui_info "$(t deps.swaync_conflict)"
+        fi
+    fi
 
     # runtime advisories (informational, never fatal)
     if command -v locale >/dev/null 2>&1 && ! locale -a 2>/dev/null | grep -qiE '^pt_BR\.utf-?8$'; then

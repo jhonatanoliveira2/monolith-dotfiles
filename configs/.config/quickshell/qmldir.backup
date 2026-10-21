@@ -1,0 +1,6 @@
+singleton Stats 1.0 Stats.qml
+singleton Net 1.0 Net.qml
+singleton Audio 1.0 Audio.qml
+singleton Brightness 1.0 Brightness.qml
+singleton Notifs 1.0 Notifs.qml
+singleton Sys 1.0 Sys.qml
