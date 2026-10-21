@@ -3,7 +3,7 @@
 
 Maintainer tool used to generate assets/previews/*.svg from a real installer run:
 
-    script -qec "stty cols 100; ./scripts/install.sh --dry-run" /tmp/run.typescript
+    script -qec "stty cols 100; " /tmp/run.typescript
     python3 tools/ansi2svg.py /tmp/run.typescript assets/previews/installer.svg \
         --title "MONOLITH installer" [--from "M O N O"] [--lines 60]
 

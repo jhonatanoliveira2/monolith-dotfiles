@@ -2,7 +2,7 @@
 # import-configs.sh - copy your existing ~/.config folders into configs/.config (repository staging).
 #
 # It copies ONLY the folders listed in IMPORT_DIRS, keeps the hierarchy and file contents untouched,
-# and leaves machine-specific / private files out (see EXCLUDES and docs/CONFIGURACAO.md).
+# and leaves machine-specific / private files out (see EXCLUDES and docs/configuracao.md).
 # Nothing is ever deleted from your home directory.
 #
 # Usage: import-configs.sh [--from DIR] [--with-local-bin] [--dry-run] [--yes] [--lang en|pt_BR] [--no-color]

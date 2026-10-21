@@ -1,6 +1,6 @@
 # ───────────────────────────────────────────────────────────────────────────
 # MONOLITH Dotfiles - what must never be published
-# Rationale for every group: docs/CONFIGURACAO.md (section "Arquivos deixados de fora")
+# Rationale for every group: docs/configuracao.md (section "Arquivos deixados de fora")
 # ───────────────────────────────────────────────────────────────────────────
 
 # --- secrets and credentials -------------------------------------------------

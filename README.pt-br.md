@@ -1,152 +1,133 @@
-
 <p align="center">
-  <img src="assets/logo/banner.svg" alt="MONOLITH Dotfiles" width="100%">
+  <img src="assets/logo/banner.svg" alt="MONOLITH — configurações de desktop para Arch Linux" width="960">
 </p>
 
 <p align="center">
-  <b>Português (Brasil)</b> · <a href="README.md">English</a>
+  <strong>Português (Brasil)</strong> · <a href="README.md">English</a>
 </p>
 
 <p align="center">
-  <img alt="Plataforma: Arch Linux" src="https://img.shields.io/badge/platform-Arch_Linux-00e5ff?style=flat-square&labelColor=14161a&logo=archlinux&logoColor=white">
-  <img alt="Gerenciador de janelas: Hyprland" src="https://img.shields.io/badge/WM-Hyprland-00e5ff?style=flat-square&labelColor=14161a">
-  <img alt="Shell: Bash" src="https://img.shields.io/badge/shell-Bash-8b9099?style=flat-square&labelColor=14161a">
-  <img alt="Documentação: português e inglês" src="https://img.shields.io/badge/docs-PT--BR_%7C_EN-8b9099?style=flat-square&labelColor=14161a">
-  <img alt="Licença: ainda não definida" src="https://img.shields.io/badge/license-not_yet_defined-555b63?style=flat-square&labelColor=14161a">
+  <img alt="Arch Linux" src="https://img.shields.io/badge/SO-Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white">
+  <img alt="Hyprland" src="https://img.shields.io/badge/Compositor-Hyprland-00d9f5?style=for-the-badge">
+  <img alt="Bash" src="https://img.shields.io/badge/Instalador-Bash-4eaa25?style=for-the-badge&logo=gnubash&logoColor=white">
+  <img alt="Licença MIT" src="https://img.shields.io/badge/Licen%C3%A7a-MIT-8b9099?style=for-the-badge">
 </p>
 
-# MONOLITH Dotfiles
+<h1 align="center">MONOLITH Dotfiles</h1>
 
-Um ambiente **Arch Linux + Hyprland** minimalista. O MONOLITH reúne configuração do compositor em Lua, barra de status, notificações, lançador, terminal, shell, editores e temas — além de um instalador de terminal que cria backups antes de substituir arquivos existentes.
+## Previa 
 
-## Conteúdo
+<p align="center">
+  <a href="https://vimeo.com/1238180685">
+    <img src="https://i.postimg.cc/Ppy5hLbc/2026-10-21-20-00-31.png" alt="Video preview" width="100%">
+  </a>
+</p>
 
-- [Destaques](#destaques)
-- [Ambiente testado](#ambiente-testado)
-- [Configurações incluídas](#configurações-incluídas)
-- [Início rápido](#início-rápido)
-- [Dependências](#dependências)
-- [Backup e recuperação](#backup-e-recuperação)
-- [Prévia do instalador](#prévia-do-instalador)
-- [Documentação](#documentação)
-- [Estrutura do repositório](#estrutura-do-repositório)
+## Captura de tela 
 
-## Destaques
+<p align="center">
+  <img src="https://i.postimg.cc/D4fmbQyv/2026-10-21-18-13-04.png" alt="Desktop" width="100%">
+</p>
 
-- **Instalador bilíngue:** inglês por padrão, com opção de português do Brasil; inclui tela de boas-vindas, seleção de idioma, sete etapas, barras de progresso e resumo final.
-- **Backup antes de substituir:** salva cada arquivo diferente, reverte automaticamente as cópias se houver falha e oferece um comando de restauração (`scripts/restore.sh`).
-- **Instalação idempotente:** ao executar novamente, ignora arquivos que já são idênticos e evita backups desnecessários.
-- **Sem instalação como root:** `sudo` é usado somente para instalar pacotes com `pacman`. O instalador não altera seu shell de login, serviços nem o locale do sistema; ele apenas exibe avisos sobre esses itens.
-- **Dependências objetivas:** pacotes oficiais, do AUR e manuais estão separados e justificados em [`packages.txt`](packages.txt) e na [análise de dependências](docs/dependencias.md).
-- **Menu de wallpapers:** abra o menu do Rofi com `SUPER+D` para escolher wallpapers estáticos (`awww`) ou animados (`mpvpaper`).
-- **Importação de configurações:** `import-configs.sh` copia pastas selecionadas de `~/.config` para o repositório, deixando de fora conteúdo privado ou específico da máquina.
+<p align="center">
+  <img src="https://i.postimg.cc/2Lj3Bd83/2026-10-21-18-14-12.png" alt="Quickshell" width="100%">
+</p>
 
-## Ambiente testado
+<p align="center">
+  <img src="https://i.postimg.cc/4nXYMGvc/2026-10-21-18-15-51.png" alt="Rofi e menus" width="100%">
+</p>
 
-| Componente | Ambiente validado |
+<p align="center">
+  Um desktop integrado para Arch Linux com Hyprland, Quickshell e um instalador reversível.
+</p>
+
+<p align="center">
+  <a href="#capturas-de-tela">Conheça o desktop</a> ·
+  <a href="#início-rápido">Instale</a> ·
+  <a href="#documentação">Leia os guias</a>
+</p>
+
+## Visão geral
+
+O MONOLITH reúne compositor, shell gráfico, terminal, ambiente de shell, lançadores e configurações visuais em um só repositório. O instalador verifica dependências, cria cópias de segurança antes de substituir arquivos e pode reverter uma cópia interrompida. Algumas opções dependem do hardware; revise-as antes de aplicar as configurações em outra máquina.
+
+| Camada do desktop | O que está incluído |
 |---|---|
-| Sistema operacional | Arch Linux, instalação mínima |
-| Hyprland | 0.55 ou superior (configuração em Lua) |
-| CPU | AMD Ryzen 7 5700X |
-| GPU | AMD Radeon RX 9060 XT |
+| Gerenciador de janelas | Hyprland, configurado em Lua e dividido em módulos |
+| Shell gráfico | Barra, menus, notificações e controles do Quickshell |
+| Terminal e shell | Ghostty, Fish, Starship e Atuin |
+| Lançadores e arquivos | Rofi, Nautilus e seletor de wallpapers |
+| Ferramentas pessoais | Configurações para Neovim, Micro e btop |
+| Aparência | Ajustes GTK, paletas derivadas de wallpapers e shaders de cursor |
 
-## Configurações incluídas
+## O que diferencia o MONOLITH
 
-| Pasta | Conteúdo |
-|---|---|
-| `hypr/` | Hyprland em **Lua** (módulos), hyprlock, portal XDPH, lançador Rofi e menu de wallpapers |
-| `waybar/` | Barra de status e scripts para player, rede, monitor do sistema, perfil de energia e menu de áudio; inclui tema do Rofi |
-| `swaync/` | Central de notificações |
-| `ghostty/` | Terminal e shaders de cursor |
-| `fish/` | Configuração do shell com Starship e Atuin |
-| `fastfetch/` | Informações do sistema com logos aleatórios |
-| `btop/`, `micro/`, `nvim/` | Monitor de recursos e editores (Neovim com LazyVim) |
-| `gtk-3.0/`, `gtk-4.0/`, `nwg-look/` | Configurações de tema GTK |
-| `wal/`, `wpg/` | Esquemas de cores derivados do wallpaper |
+- **Mudanças mais seguras:** arquivos existentes são copiados antes da substituição; cópias interrompidas são revertidas.
+- **Execuções repetíveis:** arquivos idênticos são ignorados e arquivos pessoais ausentes do repositório são preservados.
+- **Instalação transparente:** a verificação separa pacotes obrigatórios e opcionais e aponta arquivos referenciados que estão faltando.
+- **Recuperação prática:** liste snapshots, restaure o mais recente ou escolha um backup específico.
+- **Sem alterações silenciosas no sistema:** o instalador não troca o shell de login, não habilita serviços nem edita `/etc`.
 
-Consulte [Configuração](docs/configuracao.md) para ver os detalhes de cada pasta, itens específicos da máquina e lacunas conhecidas.
+> [!WARNING]
+> Confira as opções específicas de monitor, entrada e idioma em [`docs/configuracao.md`](docs/configuracao.md) antes de instalar. Comece com uma simulação e mantenha os comandos de restauração à mão.
 
 ## Início rápido
+
+**Requisitos:** Arch Linux, Bash 4.4+, Git e uma conta de usuário comum. A configuração Lua incluída requer Hyprland 0.55 ou superior. Um auxiliar do AUR (`paru` ou `yay`) só é necessário se você quiser que o instalador compile pacotes do AUR automaticamente.
 
 ```bash
 git clone https://github.com/jhonatanoliveira2/monolith-dotfiles.git
 cd monolith-dotfiles
-
-# Permissões de execução.
-chmod +x scripts/*.sh
-
-# Aplique a instalação.
 ./scripts/install.sh
 ```
 
-O instalador também cria estas pastas para wallpapers:
-
-- `~/Pictures/Wallpapers` para imagens estáticas
-- `~/Videos/wallpaper-live` para vídeos animados `.mp4`
+O instalador copia as configurações que já estão em `configs/` para sua pasta pessoal. Também instala pacotes, a menos que você use `--no-deps`, e coloca os wallpapers incluídos em `~/Pictures/Wallpapers` e `~/Videos/wallpaper-live`.
 
 <details>
-<summary><strong>Opções do instalador</strong></summary>
+  <summary><strong>Backup e recuperação</strong></summary>
 
-| Opção | Finalidade |
-|---|---|
-| `--lang pt_BR` | Executar o instalador em português do Brasil |
-| `--yes` | Pular as confirmações interativas |
-| `--no-deps` | Não instalar dependências |
-| `--with-optional` | Incluir pacotes opcionais |
-| `--no-aur` | Ignorar pacotes do AUR |
+  ```bash
+  ./scripts/backup.sh --list
+  ./scripts/restore.sh
+  ./scripts/restore.sh --dry-run
+  ```
 
-Consulte o [guia completo de instalação](docs/instalacao.md) para ver todas as etapas.
-
+  Os backups ficam em `~/.local/share/monolith-dotfiles/backups/`. Consulte o [guia de instalação](docs/Instalacao.md#backup-e-recuperação) para restaurar um snapshot específico ou recuperar arquivos manualmente.
 </details>
-
-## Dependências
-
-As dependências obrigatórias, opcionais e manuais estão listadas em [`packages.txt`](packages.txt), com a justificativa de cada item. Você pode verificar o sistema a qualquer momento:
-
-```bash
-./scripts/check-dependencies.sh
-```
-
-Para entender os critérios usados na lista de pacotes, consulte a [análise de dependências](docs/dependencias.md).
-
-## Backup e recuperação
-
-Os backups são armazenados em `~/.local/share/monolith-dotfiles/backups/<data-hora>/`.
-
-```bash
-./scripts/backup.sh --list                             # Lista os backups disponíveis
-./scripts/restore.sh                                   # Restaura o backup mais recente
-./scripts/restore.sh --id AAAAMMDD-HHMMSS --remove-new # Restaura um backup e remove arquivos adicionados depois
-```
-
-Consulte [Backup e recuperação](docs/instalacao.md#backup-e-recuperação) para obter mais detalhes e instruções de recuperação manual.
 
 ## Prévia do instalador
 
 <p align="center">
-  <img src="assets/previews/installer-welcome.svg" alt="Tela de boas-vindas do instalador MONOLITH" width="640">
+  <img src="assets/previews/installer-welcome.svg" alt="Boas-vindas e etapas do instalador MONOLITH" width="760">
 </p>
+
+<details>
+  <summary>Ver outra tela do instalador</summary>
+  <p align="center"><img src="assets/previews/installer-run.svg" alt="Progresso e conclusão do instalador MONOLITH" width="760"></p>
+</details>
 
 ## Documentação
 
-- [Instalação](docs/instalacao.md)
-- [Configuração](docs/configuracao.md)
-- [Dependências](docs/dependencias.md)
-- [Solução de problemas](docs/solucao-de-problemas.md)
-- [Contribuição](CONTRIBUTING.md)
+| Guia | English | Português (Brasil) |
+|---|---|---|
+| Instalação e recuperação | [Installation](docs/Installation.md) | [Instalação](docs/Instalacao.md) |
+| Configuração e notas de hardware | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
+| Justificativas dos pacotes | [Dependencies](docs/dependencies.md) | [Dependências](docs/Dependencias.md) |
+| Problemas comuns | [Troubleshooting](docs/Troubleshooting.md) | [Solução de problemas](docs/Problemas-conhecidos.md) |
+| Contribuição | [Contributing](CONTRIBUTING.en.md) | [Contribuindo](CONTRIBUTING.md) |
 
 ## Estrutura do repositório
 
 ```text
-monolith-dotfiles/
-├── configs/.config/…      # Suas configurações → ~/.config
-├── configs/.local/bin/    # Scripts usados pelos atalhos → ~/.local/bin
-├── scripts/               # Instalação, backup, restauração, verificações e importação
-│   └── lib/                # Interface, traduções, mensagens, pacotes e utilitários
-├── docs/                   # Documentação em português do Brasil e inglês
-├── assets/                 # Logo, capturas de tela e prévias
-├── tests/                  # Testes do instalador
-├── tools/                  # Gerador de prévias SVG
-├── packages.txt            # Dependências oficiais, AUR e manuais
-└── .github/                # Modelos de issues e pull requests; CI
+configs/                 Configurações de desktop instaladas na pasta pessoal
+scripts/                 Instalador, backup, restauração, verificações e importação
+docs/                    Guias em inglês e português do Brasil
+assets/                  Identidade visual, prévias e espaços de screenshots
+wallpapers/              Wallpapers estáticos e animados incluídos
+tests/                   Testes do instalador e da documentação
+tools/                   Utilitário para renderizar prévias do terminal
+packages.txt             Relação de pacotes oficiais, opcionais e AUR
+LICENSE                  MIT
 ```
+
+O instalador e os arquivos de configuração são fornecidos como estão. Leia os [créditos e avisos de licença](THIRD-PARTY-CREDITS.md) antes de redistribuir componentes incluídos.

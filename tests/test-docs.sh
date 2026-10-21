@@ -75,7 +75,7 @@ source scripts/lib/common.sh
 source scripts/lib/packages.sh
 for sec in official:required official:optional aur:required aur:optional manual; do
     while IFS= read -r pkg; do
-        for d in docs/DEPENDENCIAS.md docs/DEPENDENCIAS.en.md; do
+        for d in docs/Dependencias.md docs/dependencies.md; do
             grep -qF "$pkg" "$d" && ok || ko "$pkg ($sec) is not documented in $d"
         done
     done < <(pkg_list "$sec")
@@ -87,8 +87,8 @@ for p in .github/ISSUE_TEMPLATE .github/PULL_REQUEST_TEMPLATE.md assets/logo ass
     configs/.config/btop configs/.config/swaync configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
     configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \
     scripts/install.sh scripts/backup.sh scripts/check-dependencies.sh \
-    docs/INSTALACAO.md docs/INSTALACAO.en.md docs/CONFIGURACAO.md docs/CONFIGURACAO.en.md \
-    docs/SOLUCAO-DE-PROBLEMAS.md docs/SOLUCAO-DE-PROBLEMAS.en.md \
+    docs/Instalacao.md docs/Installation.md docs/configuracao.md docs/config.md \
+    docs/Problemas-conhecidos.md docs/Troubleshooting.md \
     .gitignore LICENSE packages.txt README.md README.pt-br.md CONTRIBUTING.md CONTRIBUTING.en.md; do
     [[ -e $p ]] && ok || ko "missing: $p"
 done

@@ -2,7 +2,7 @@
 #
 # Derived from the configuration files. A program is listed as
 # "required" only when an ACTIVE binding, autostart entry, script or module calls it.
-# Commented-out or unused entries were deliberately NOT promoted (see docs/DEPENDENCIAS.md).
+# Commented-out or unused entries were deliberately NOT promoted (see docs/Dependencias.md).
 #
 # Format
 #   [<source>:<scope>]      source = official | aur ; scope = required | optional

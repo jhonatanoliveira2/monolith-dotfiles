@@ -1,76 +1,63 @@
-# Dependencies
+# Dependencies and packages
 
-[Português (Brasil)](dependencias.md) · [English](dependencies.md)
+[Português (Brasil)](dependencias.md) · **English**
 
-The machine-readable list is [`../packages.txt`](../packages.txt) (`[source:scope]` sections). This document
-explains **how** it was built and **why**.
+The package list in [`../packages.txt`](../packages.txt) is the source used by the installer. This guide summarises the criteria and explains the categories.
 
-## Criteria
+## How the categories work
 
-- **Required**: something in the *active* configuration calls it — autostart, key binding, Waybar module, script
-  or environment variable.
-- **Optional**: the app has an included configuration but **nothing launches it** (you open it by hand), or the
-  feature only matters on some machines (laptop, X11).
-- **Commented-out or inert items were not promoted** (e.g. the `fastfetch` call in `config.fish` is commented
-  out; `programs.ide = "code"` is not used by any binding).
-- Packages from the `base` group (bash, coreutils, procps-ng, util-linux, systemd, …) are assumed.
+- **Required**: used by a shortcut, service started by the configuration, active Quickshell component or included script.
+- **Optional**: needed only for applications or features that are not started automatically, or for specific hardware.
+- **AUR**: some packages may be available in the official repositories. The installer checks with `pacman` before calling an AUR helper.
+- **Manual**: items not installed through `pacman` or the AUR. The current manifest has no entries in this category.
 
-## Required official packages
+The installer does not run `pacman -Sy`. If a package cannot be found, update the system with `sudo pacman -Syu` and try again.
 
-| Package | Used by |
+## Official repositories — required
+
+| Package | Main use |
 |---|---|
-| `hyprland` | `hyprland.lua`, `start-hyprland` (fish) |
-| `hyprlock` | `SUPER+Z` binding, `hyprlock.conf` |
-| `xdg-desktop-portal-hyprland` | `hypr/xdph.conf` |
-| `lxqt-policykit` | autostart `/usr/bin/lxqt-policykit-agent` |
-| `qt6ct` | `QT_QPA_PLATFORMTHEME=qt6ct` |
-| `waybar`, `swaync`, `rofi` | autostart, `SUPER+A`/`SUPER+C` bindings, audio menu |
-| `ghostty`, `fish`, `starship`, `atuin` | terminal; shell; `starship`/`atuin init fish` on every interactive shell |
-| `nautilus` | `programs.lua` (`SUPER+X`) |
-| `ttf-jetbrains-mono-nerd` | Waybar, Rofi and swaync themes (*JetBrainsMono Nerd Font*) |
-| `grim`, `slurp`, `wl-clipboard`, `libnotify`, `jq` | screenshot and recording bindings (`grim`, `slurp`, `wl-copy`, `notify-send`, `jq`); `jq` is also used by `wallpaper-menu` |
-| `ffmpeg` | `wallpaper-menu`: previews of images and videos |
-| `pipewire`, `pipewire-pulse`, `wireplumber`, `libpulse` | `wpctl` (media keys), `pactl` (Waybar: mute and sink menu) |
-| `playerctl` | media keys, Waybar player, hyprlock label |
-| `brightnessctl` | brightness keys |
-| `networkmanager`, `network-manager-applet` | network module (click opens `nm-connection-editor`) |
-| `blueman` | Bluetooth module (click opens `blueman-manager`) |
-| `curl` | `network-status.sh` (real connectivity check) |
+| `hyprland`, `hyprlock`, `hypridle`, `xdg-desktop-portal-hyprland` | Compositor, lock screen, idle handling and screen sharing |
+| `quickshell`, `upower` | Desktop shell bar, menus and battery status |
+| `lxqt-policykit`, `qt6ct`, `dconf`, `materia-gtk-theme` | Graphical authorization and appearance settings |
+| `git`, `base-devel` | Setup dependencies and building packages when needed |
+| `rofi` | Application launcher and wallpaper menu; requires Wayland support |
+| `ghostty`, `fish`, `starship`, `atuin` | Terminal and shell environment |
+| `nautilus` | File manager launched by a shortcut |
+| `ttf-jetbrains-mono-nerd` | Desktop typography |
+| `grim`, `slurp`, `wl-clipboard`, `libnotify`, `jq` | Screenshots, area selection, clipboard, notifications and data parsing |
+| `ffmpeg` | Wallpaper-menu previews |
+| `pipewire`, `pipewire-pulse`, `wireplumber`, `playerctl` | Audio and media controls |
+| `brightnessctl` | Brightness controls |
+| `networkmanager`, `network-manager-applet`, `blueman`, `curl` | Network, Bluetooth and connectivity checks |
 
-## Optional official packages
+## Official repositories — optional
 
-| Package | Note |
+| Package | Needed when |
 |---|---|
-| `fastfetch`, `btop`, `micro` | configuration included; nothing launches them |
-| `neovim`, `git`, `gcc`, `tree-sitter-cli`, `ripgrep`, `fd` | LazyVim: `git` clones plugins; `gcc` and `tree-sitter-cli` build parsers; `ripgrep`/`fd` are recommended |
-| `nwg-look` | GTK theme manager, used by hand |
-| `python-pywal` | `wpg` backend (`backend = wal`); only if you run `wpg` |
-| `power-profiles-daemon` | power-profile module (laptop); without it the module stays hidden. With TLP/auto-cpufreq, do not install |
-| `xorg-xwayland` | X11 apps (there is a window rule for `xwayland`) |
+| `fastfetch`, `btop`, `micro` | You use these manually launched configured applications |
+| `neovim`, `gcc`, `tree-sitter-cli`, `ripgrep`, `fd` | You use Neovim/LazyVim and its search or parser-building features |
+| `nwg-look` | You want to adjust GTK themes through a graphical interface |
+| `pavucontrol` | You open the audio mixer from a Quickshell menu |
+| `power-profiles-daemon` | You use power-profile controls on supported hardware |
+| `xorg-xwayland` | You run X11 applications |
 
 ## AUR
 
-| Package | Scope | Note |
+| Package | Category | Use |
 |---|---|---|
-| `awww` | required | autostart of `awww-daemon`; static wallpapers in `wallpaper-menu`. May already be in the official repositories |
-| `mpvpaper` | required | animated wallpapers in `wallpaper-menu` (may already be in the official repositories) |
-| `zen-browser-bin` | optional | `SUPER+TAB` |
-| `gpu-screen-recorder` | optional | `SUPER+R` (may be in the official repositories) |
-| `hyprshutdown` | optional | `SUPER+X` falls back to `hyprctl dispatch exit` |
-| `wpgtk` | optional | the `wpg` command (`wp_init.sh`, `wpg/`) |
+| `awww`, `mpvpaper`, `wpgtk` | Required in the manifest | Wallpapers, colour integration and themes |
+| `ttf-material-icons-git` | Required in the manifest | Quickshell icons |
+| `zen-browser-bin`, `gpu-screen-recorder` | Optional | Shortcut browser and screen recording |
 
-The installer checks `pacman -Si` first: whatever is already in the official repositories is installed with `pacman`.
+The manifest is the final reference for each package category and may change as the project evolves.
 
-## Services and locale (not changed by the installer)
-
-`NetworkManager.service`, `bluetooth.service` and, on a laptop, `power-profiles-daemon.service` must be
-running for the matching modules. The `pt_BR.UTF-8` locale must be generated (`/etc/locale.gen`).
-`check-dependencies.sh` only warns.
-
-## Checking
+## Check your system
 
 ```bash
-./scripts/check-dependencies.sh                         # full report
-./scripts/check-dependencies.sh --list-missing=required # only what is missing (machine output)
-./scripts/check-dependencies.sh --strict                # exits 1 if a required package is missing
+./scripts/check-dependencies.sh
+./scripts/check-dependencies.sh --list-missing=required
+./scripts/check-dependencies.sh --strict
 ```
+
+The first command prints the full report. The second lists missing required packages. `--strict` returns a non-zero status when a required dependency is missing. The check also reports files used by the configuration that are not available.
