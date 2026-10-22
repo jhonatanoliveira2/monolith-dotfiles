@@ -17,24 +17,17 @@
 
 ## Previa 
 
-<p align="center">
-  <a href="https://vimeo.com/1238180685">
-    <img src="https://i.postimg.cc/Ppy5hLbc/2026-10-21-20-00-31.png" alt="Video preview" width="100%">
-  </a>
-</p>
+[Video YouTube](https://youtu.be/W_SYo-i9fXk)
+
+
+
 
 ## Captura de tela 
 
 <p align="center">
-  <img src="https://i.postimg.cc/D4fmbQyv/2026-10-21-18-13-04.png" alt="Desktop" width="100%">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/2Lj3Bd83/2026-10-21-18-14-12.png" alt="Quickshell" width="100%">
-</p>
-
-<p align="center">
-  <img src="https://i.postimg.cc/4nXYMGvc/2026-10-21-18-15-51.png" alt="Rofi e menus" width="100%">
+  <img src="assets/screenshots/1.png" width="100%">
+  <img src="assets/screenshots/2.png" width="100%">
+  <img src="assets/screenshots/3.png" width="100%">
 </p>
 
 <p align="center">
