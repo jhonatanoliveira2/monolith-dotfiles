@@ -68,7 +68,13 @@ Singleton {
         sensitivity: { opt: "input:sensitivity", type: "float", min: -1, max: 1 },
         naturalMouse: { opt: "input:natural_scroll", type: "bool" },
         naturalTouchpad: { opt: "input:touchpad:natural_scroll", type: "bool" },
-        tapToClick: { opt: "input:touchpad:tap-to-click", type: "bool" }
+        tapToClick: { opt: "input:touchpad:tap-to-click", type: "bool" },
+        tpDisableTyping: { opt: "input:touchpad:disable_while_typing", type: "bool" },
+        tpScrollFactor: { opt: "input:touchpad:scroll_factor", type: "float", min: 0.1, max: 3 },
+        tpMiddleEmulation: { opt: "input:touchpad:middle_button_emulation", type: "bool" },
+        tpClickfinger: { opt: "input:touchpad:clickfinger_behavior", type: "bool" },
+        tpTapDrag: { opt: "input:touchpad:tap-and-drag", type: "bool" },
+        tpDragLock: { opt: "input:touchpad:drag_lock", type: "int", min: 0, max: 2 }
     })
     // keys with their own Settings property (-1 = untouched); the rest is stored in Settings.overrides
     readonly property var persisted: ["gapsIn", "gapsOut", "borderSize", "rounding", "animations", "blur", "shadow"]
@@ -188,7 +194,29 @@ Singleton {
         }
         return e
     }
-    function reapply() { apply(chosen()) }
+    function reapply() { apply(chosen()); if (!Settings.touchpadEnabled) applyTouchpad() }
+
+    // Touchpad on / off: per-device config (hl.device) for every touchpad Hyprland reports.
+    // Runtime only, like the rest: reapplied at startup and after each reload.
+    function setTouchpad(on) { Settings.touchpadEnabled = on; applyTouchpad() }
+    function applyTouchpad() { tpList.running = true }
+    Process {
+        id: tpList
+        command: ["hyprctl", "devices", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let mice = []
+                try { mice = JSON.parse(text).mice || [] } catch (e) { return }
+                const names = mice.map(m => String(m.name)).filter(n => /touchpad|trackpad|glidepoint|synaptics/i.test(n))
+                    .map(n => n.replace(/[^A-Za-z0-9:._-]/g, ""))
+                if (!names.length) return
+                const on = Settings.touchpadEnabled ? "true" : "false"
+                tpEval.command = Config.hyprEval.concat([names.map(n => "hl.device({ name = \"" + n + "\", enabled = " + on + " })").join("; ")])
+                tpEval.running = true
+            }
+        }
+    }
+    Process { id: tpEval }
 
     // generated/settings.lua: plain hl.config{} with the chosen values (no logic, safe to delete)
     function writeGenerated() {

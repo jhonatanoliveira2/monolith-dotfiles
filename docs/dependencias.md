@@ -29,7 +29,7 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 | `ffmpeg` | Pré-visualizações do menu de wallpapers |
 | `pipewire`, `pipewire-pulse`, `wireplumber`, `playerctl` | Áudio e controles de mídia |
 | `brightnessctl` | Controle de brilho |
-| `networkmanager`, `network-manager-applet`, `blueman`, `curl` | Rede, Bluetooth e verificação de conectividade |
+| `networkmanager`, `network-manager-applet`, `blueman`, `bluez-utils`, `curl` | Rede (iwd e systemd-networkd também funcionam), Bluetooth (bluetoothctl é o agente de pareamento) e verificação de conectividade |
 | `udisks2`, `pciutils`, `pacman-contrib` | Saúde dos discos, nome da GPU e limpeza do cache do pacman (Configurações) |
 
 ## Repositórios oficiais — opcionais

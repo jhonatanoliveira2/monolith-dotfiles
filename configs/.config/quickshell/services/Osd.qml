@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import "../core"
 
-// What the on-screen display shows (volume | mic | brightness | media) and for how long.
+// What the on-screen display shows (volume | mic | brightness | kbd | touchpad | media) and for how long.
 Singleton {
     id: root
     property string kind: ""

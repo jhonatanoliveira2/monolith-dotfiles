@@ -41,5 +41,33 @@ MenuWindow {
                 }
             }
         }
+
+        // keyboard backlight (laptops that have one): one button per level
+        Component.onCompleted: Brightness.reload()
+        Section { width: parent.width; text: Strings.t("kbdBacklight"); visible: Brightness.kbdAvailable }
+        Flow {
+            visible: Brightness.kbdAvailable
+            width: parent.width; spacing: 4
+            Repeater {
+                model: Brightness.kbdAvailable && Brightness.kbdMax <= 5 ? Brightness.kbdMax + 1 : 0
+                delegate: Btn {
+                    required property int index
+                    compact: true
+                    text: index === 0 ? "Off" : Math.round(index / Brightness.kbdMax * 100) + "%"
+                    active: Brightness.kbdCurrent === index
+                    onActivated: Brightness.setKbd(index)
+                }
+            }
+        }
+        // many levels (some vendors expose 0-255): a slider instead
+        Item {
+            visible: Brightness.kbdAvailable && Brightness.kbdMax > 5
+            width: parent.width; height: 30
+            ThinSlider {
+                anchors { left: parent.left; leftMargin: 10; right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                value: Brightness.kbdMax > 0 ? Brightness.kbdCurrent / Brightness.kbdMax : 0
+                onMoved: v => Brightness.setKbd(v * Brightness.kbdMax)
+            }
+        }
     }
 }

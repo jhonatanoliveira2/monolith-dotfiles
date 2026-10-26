@@ -13,42 +13,29 @@ MenuWindow {
     Column {
         width: parent.width
         spacing: 4
-        readonly property var dev: UPower.displayDevice
-        readonly property bool hasBattery: dev !== null && dev !== undefined && dev.isPresent && dev.isLaptopBattery
-        readonly property real pct: dev ? (dev.percentage > 1 ? dev.percentage : dev.percentage * 100) : 0
-        readonly property bool charging: dev && dev.state === UPowerDeviceState.Charging
-
-        function span(s) {
-            if (!s || s <= 0) return ""
-            const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60)
-            return (h > 0 ? h + "h " : "") + m + "min"
-        }
 
         Item {
-            visible: parent.hasBattery
-            width: parent.width; height: 64
+            visible: Battery.present
+            width: parent.width; height: 72
             Txt {
                 id: big
                 anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                text: Math.round(parent.parent.pct) + "%"; font.pixelSize: 30; color: Theme.foreground
+                text: Math.round(Battery.pct) + "%"; font.pixelSize: 30; color: Theme.foreground
             }
             Column {
                 anchors { left: big.right; leftMargin: 14; right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
                 spacing: 4
-                Txt {
-                    width: parent.width; font.bold: false
-                    text: parent.parent.parent.charging
-                        ? Strings.t("charging") + (parent.parent.parent.dev.timeToFull > 0 ? "  ·  " + parent.parent.parent.span(parent.parent.parent.dev.timeToFull) : "")
-                        : Strings.t("discharging") + (parent.parent.parent.dev.timeToEmpty > 0 ? "  ·  " + parent.parent.parent.span(parent.parent.parent.dev.timeToEmpty) : "")
-                }
+                Txt { width: parent.width; font.bold: false; text: (Battery.onAc ? Theme.glyph.bolt + "  " : "") + Battery.stateText() }
                 Rectangle {
                     width: parent.width; height: 4; color: Theme.grayDark
                     Rectangle {
-                        width: parent.width * Math.min(1, parent.parent.parent.parent.pct / 100); height: parent.height
+                        width: parent.width * Math.min(1, Battery.pct / 100); height: parent.height
                         gradient: Gradient { orientation: Gradient.Horizontal; GradientStop { position: 0; color: Theme.grayMid } GradientStop { position: 1; color: Theme.white } }
                         Behavior on width { NumberAnimation { duration: Theme.dur(300) } }
                     }
                 }
+                // time left (or until full) and the current draw / charge rate
+                Txt { visible: text !== ""; width: parent.width; font.bold: false; font.pixelSize: Theme.small; color: Theme.grayMid; text: Battery.detailText() }
             }
         }
 
@@ -59,5 +46,7 @@ MenuWindow {
             Btn { text: Strings.t("balanced"); icon: Theme.glyph.balanced; active: PowerProfiles.profile === PowerProfile.Balanced; onActivated: PowerProfiles.profile = PowerProfile.Balanced }
             Btn { visible: PowerProfiles.hasPerformanceProfile; text: Strings.t("performance"); icon: Theme.glyph.perf; active: PowerProfiles.profile === PowerProfile.Performance; onActivated: PowerProfiles.profile = PowerProfile.Performance }
         }
+        Item { width: 1; height: 4; visible: Battery.present }
+        ToggleRow { visible: Battery.present; width: parent.width; icon: Theme.glyph.saver; label: Strings.t("batSaver"); checked: Settings.batterySaver; onToggled: c => Settings.batterySaver = c }
     }
 }

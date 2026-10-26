@@ -23,6 +23,12 @@ bindMedia("XF86AudioMicMute", "micMute", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ 
 bindMedia("XF86MonBrightnessUp", "brightnessUp", "brightnessctl -e4 -n2 set 5%+", true)
 bindMedia("XF86MonBrightnessDown", "brightnessDown", "brightnessctl -e4 -n2 set 5%-", true)
 
+-- laptops: touchpad on / off (Settings > Input keeps the state) and keyboard backlight
+bindMedia("XF86TouchpadToggle", "touchpadToggle", "notify-send Touchpad 'Quickshell is not running'")
+bindMedia("XF86KbdBrightnessUp", "kbdUp", "brightnessctl -q -d '*::kbd_backlight' set +1", true)
+bindMedia("XF86KbdBrightnessDown", "kbdDown", "brightnessctl -q -d '*::kbd_backlight' set 1-", true)
+bindMedia("XF86KbdLightOnOff", "kbdCycle", "brightnessctl -q -d '*::kbd_backlight' set +1")
+
 bindMedia("XF86AudioNext", "mediaNext", "playerctl next")
 bindMedia("XF86AudioPrev", "mediaPrev", "playerctl previous")
 bindMedia("XF86AudioPlay", "mediaToggle", "playerctl play-pause")

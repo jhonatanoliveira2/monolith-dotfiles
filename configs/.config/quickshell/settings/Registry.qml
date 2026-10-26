@@ -28,6 +28,7 @@ Singleton {
     function setSys(key) { return v => Sys.setValue(key, typeof v === "boolean" ? (v ? 1 : 0) : v) }
     function open(rel) { Quickshell.execDetached(["xdg-open", rel.indexOf("/") === 0 ? rel : home + "/" + rel]) }
     function run(cmd) { Quickshell.execDetached(cmd) }
+    function lbl(pt, en) { return Settings.language === "en" ? en : pt }     // labels of choice buttons
 
     function tog(page, cat, id, label, kw, get, set, extra) { return Object.assign({ page, cat, id, type: "toggle", label, kw, get, set }, extra || {}) }
     function sld(page, cat, id, label, kw, min, max, step, suffix, get, set, extra) { return Object.assign({ page, cat, id, type: "slider", label, kw, min, max, step, suffix, get, set }, extra || {}) }
@@ -149,13 +150,26 @@ Singleton {
         sld("power", "screen", "pbrightness", ["Brilho", "Brightness"], "backlight luz", 1, 100, 1, "%", () => Math.round(Brightness.fraction * 100), v => Brightness.set(v / 100), { when: () => Brightness.available }),
         tog("power", "general", "pkeepAwake", ["Manter acordado", "Keep awake"], "idle caffeine suspender sleep", () => Settings.keepAwake, v => Settings.keepAwake = v),
         btn("power", "general", "psuspend", ["Suspender", "Suspend"], "sleep", () => Sys.suspend()),
+        tog("power", "battery", "batSaver", ["Economia na bateria (sem blur, sombras e animações)", "Battery saver (no blur, shadows or animations)"],
+            "economia saver efeitos blur sombra animação energia", () => Settings.batterySaver, v => Settings.batterySaver = v),
+        cho("power", "battery", "autoProfile", ["Perfil automático (economia na bateria)", "Automatic profile (saver on battery)"], "power-profiles-daemon perfil tomada ac",
+            [{ v: "off", l: lbl("Desligado", "Off") }, { v: "balanced", l: lbl("Equilibrado na tomada", "Balanced on AC") }, { v: "performance", l: lbl("Desempenho na tomada", "Performance on AC") }],
+            () => Settings.autoProfile, v => { Settings.autoProfile = v; Battery.profile() }),
+        tog("power", "battery", "batAlerts", ["Avisos de bateria fraca (20 / 10 / 5%)", "Low battery alerts (20 / 10 / 5%)"], "aviso alerta low notificação",
+            () => Settings.batteryAlerts, v => Settings.batteryAlerts = v),
+        cho("power", "battery", "critAction", ["Ação em bateria crítica (5%)", "Critical battery action (5%)"], "crítica suspender hibernar desligar",
+            [{ v: "none", l: lbl("Nada", "None") }, { v: "suspend", l: lbl("Suspender", "Suspend") }, { v: "hibernate", l: lbl("Hibernar", "Hibernate") }, { v: "poweroff", l: lbl("Desligar", "Power off") }],
+            () => Settings.criticalAction, v => Settings.criticalAction = v),
+        cho("power", "battery", "chargeLimit", ["Limite de carga (preserva a bateria)", "Charge limit (preserves the battery)"], "limite carga threshold conservação saúde health",
+            [{ v: 100, l: "100%" }, { v: 90, l: "90%" }, { v: 80, l: "80%" }, { v: 60, l: "60%" }],
+            () => Battery.limit, v => Battery.setLimit(v), { when: () => Battery.limitFile !== "" }),
 
         // ── storage / network / bluetooth / update ──
         btn("update", "general", "openRepo", ["Abrir repositório", "Open repository"], "github git site", () => root.run(["xdg-open", root.repoUrl])),
         tog("bluetooth", "general", "btOn", ["Bluetooth", "Bluetooth"], "bluetooth sem fio wireless", () => Bt.enabled, v => Bt.setEnabled(v), { when: () => Bt.present }),
         tog("network", "general", "wifi", ["Wi-Fi", "Wi-Fi"], "wifi rede wireless internet", () => Net.wifiEnabled, v => Net.setWifi(v), { when: () => Net.hasWifi }),
         btn("network", "general", "rescan", ["Procurar redes", "Scan networks"], "wifi scan procurar", () => Net.scan(true), { when: () => Net.hasWifi }),
-        btn("network", "general", "netAdv", ["Editor de conexões", "Connection editor"], "nm-connection-editor avançado advanced vpn", () => root.run(["nm-connection-editor"])),
+        btn("network", "general", "netAdv", ["Editor de conexões", "Connection editor"], "nm-connection-editor iwctl networkctl avançado advanced vpn", () => Net.advanced(), { when: () => Net.available }),
 
         // ── input ──
         { page: "input", cat: "keyboard", id: "kbLayout", type: "text", label: ["Layout do teclado", "Keyboard layout"], kw: "keyboard teclado layout us br",
@@ -167,7 +181,16 @@ Singleton {
             [{ v: 0, l: "Off" }, { v: 1, l: "Always" }, { v: 2, l: "Click" }, { v: 3, l: "Loose" }], () => root.sys("followMouse"), v => Sys.setValue("followMouse", v)),
         htog("input", "mouse", "naturalMouse", ["Rolagem natural (mouse)", "Natural scroll (mouse)"], "scroll"),
         htog("input", "touchpad", "naturalTouchpad", ["Rolagem natural (touchpad)", "Natural scroll (touchpad)"], "scroll"),
-        htog("input", "touchpad", "tapToClick", ["Toque para clicar", "Tap to click"], "touchpad")
+        htog("input", "touchpad", "tapToClick", ["Toque para clicar", "Tap to click"], "touchpad"),
+        tog("input", "touchpad", "tpEnabled", ["Touchpad ativado", "Touchpad enabled"], "touchpad desativar disable trackpad",
+            () => Settings.touchpadEnabled, v => Sys.setTouchpad(v), { when: () => root.laptop }),
+        htog("input", "touchpad", "tpDisableTyping", ["Desativar ao digitar", "Disable while typing"], "touchpad digitar typing palm"),
+        hpct("input", "touchpad", "tpScrollFactor", ["Velocidade de rolagem", "Scroll speed"], "touchpad scroll rolagem", 10, 300),
+        htog("input", "touchpad", "tpClickfinger", ["Clique com 2 / 3 dedos", "Two / three finger click"], "touchpad clickfinger botão direito right click"),
+        htog("input", "touchpad", "tpMiddleEmulation", ["Clique do meio (dois botões juntos)", "Middle click (both buttons)"], "touchpad middle meio"),
+        htog("input", "touchpad", "tpTapDrag", ["Tocar e arrastar", "Tap and drag"], "touchpad arrastar drag"),
+        cho("input", "touchpad", "tpDragLock", ["Trava de arrasto", "Drag lock"], "touchpad drag lock arrastar",
+            [{ v: 0, l: lbl("Desligada", "Off") }, { v: 1, l: lbl("Temporizada", "Timeout") }, { v: 2, l: lbl("Fixa", "Sticky") }], () => root.sys("tpDragLock"), v => Sys.setValue("tpDragLock", v))
     ]
 
     function text(e) { return Labels.pick(e.label) }

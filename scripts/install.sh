@@ -504,6 +504,11 @@ configure_quickshell() {
         return 0
     fi
     real_session || return 0
+    # Quickshell hot-reloads each file as it is copied: an intermediate state (a new file not there yet)
+    # can stay loaded, so finish with one full reload of the deployed tree.
+    if (( ! OPT_DRY )) && pgrep -x quickshell >/dev/null 2>&1 && command -v qs >/dev/null 2>&1; then
+        qs ipc call shell reload >/dev/null 2>&1 || true
+    fi
     if (( ! OPT_DRY && ! OPT_YES && UI_INTERACTIVE )) && [[ -n ${WAYLAND_DISPLAY-} ]] && pgrep -x waybar >/dev/null 2>&1; then
         if ui_confirm "$(t shell.ask_switch)" n; then
             pkill -x waybar 2>/dev/null

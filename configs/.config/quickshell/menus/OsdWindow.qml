@@ -40,10 +40,14 @@ Scope {
 
                 readonly property real value: Osd.kind === "volume" ? (Audio.muted ? 0 : Audio.volume)
                     : Osd.kind === "mic" ? (Audio.micMuted ? 0 : Audio.micVolume)
-                    : Osd.kind === "brightness" ? Brightness.fraction : Media.progress
+                    : Osd.kind === "brightness" ? Brightness.fraction
+                    : Osd.kind === "kbd" ? (Brightness.kbdMax > 0 ? Brightness.kbdCurrent / Brightness.kbdMax : 0)
+                    : Osd.kind === "touchpad" ? (Settings.touchpadEnabled ? 1 : 0) : Media.progress
                 readonly property string icon: Osd.kind === "volume" ? Audio.glyph()
                     : Osd.kind === "mic" ? (Audio.micMuted ? Theme.glyph.micOff : Theme.glyph.mic)
                     : Osd.kind === "brightness" ? Theme.glyph.backlight
+                    : Osd.kind === "kbd" ? Theme.g(0xf11c)
+                    : Osd.kind === "touchpad" ? Theme.g(0xf245)
                     : (Media.playing ? Theme.glyph.play : Theme.glyph.pause)
 
                 CoverArt {
@@ -78,7 +82,7 @@ Scope {
                     anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
                     width: visible ? 40 : 0
                     horizontalAlignment: Text.AlignRight
-                    text: Math.round(box.value * 100) + "%"
+                    text: Osd.kind === "touchpad" ? (Settings.touchpadEnabled ? "On" : "Off") : Math.round(box.value * 100) + "%"
                     color: Theme.grayLight
                 }
             }

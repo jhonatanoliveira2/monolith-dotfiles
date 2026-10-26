@@ -40,6 +40,11 @@ Singleton {
     property alias criticalSticky: adapter.criticalSticky
     property alias ytmPort: adapter.ytmPort
     property alias ytmToken: adapter.ytmToken
+    property alias batteryAlerts: adapter.batteryAlerts
+    property alias criticalAction: adapter.criticalAction
+    property alias autoProfile: adapter.autoProfile
+    property alias batterySaver: adapter.batterySaver
+    property alias touchpadEnabled: adapter.touchpadEnabled
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
 
     readonly property string dir: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/quickshell-monolith"
@@ -99,6 +104,11 @@ Singleton {
             property bool criticalSticky: true
             property int ytmPort: 26538            // th-ch/youtube-music "API Server" plugin
             property string ytmToken: ""
+            property bool batteryAlerts: true      // toasts at 20 / 10 / 5 %
+            property string criticalAction: "none" // at 5 %: none | suspend | hibernate | poweroff
+            property string autoProfile: "off"     // off | balanced | performance (profile on AC; saver on battery)
+            property bool batterySaver: false      // blur, shadows and animations off on battery
+            property bool touchpadEnabled: true
             property var overrides: ({})
         }
     }

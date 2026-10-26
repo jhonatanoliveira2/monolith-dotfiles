@@ -7,64 +7,39 @@ import "../services"
 import "../components"
 
 // Laptops only (the page is hidden without a battery): battery state and health, power profiles
-// (power-profiles-daemon, when installed), charge limit (read-only, set by the firmware / TLP) and brightness.
+// (power-profiles-daemon, when installed) and the power options of the Registry (services/Battery.qml).
 Column {
     id: root
     spacing: 8
-    readonly property var dev: UPower.displayDevice
-    readonly property var bat: UPower.devices.values.find(d => d.isLaptopBattery) || dev
-    readonly property real pct: dev ? (dev.percentage > 1 ? dev.percentage : dev.percentage * 100) : 0
-    readonly property bool charging: dev && dev.state === UPowerDeviceState.Charging
     property bool hasProfiles: false
-    property string limit: ""
-
-    function span(s) {
-        if (!s || s <= 0) return ""
-        const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60)
-        return (h > 0 ? h + "h " : "") + m + "min"
-    }
-    function stateText() {
-        if (!dev) return ""
-        switch (dev.state) {
-        case UPowerDeviceState.Charging: return Strings.t("charging") + (dev.timeToFull > 0 ? "  ·  " + Labels.t("pwFullIn") + " " + span(dev.timeToFull) : "")
-        case UPowerDeviceState.FullyCharged: return Labels.t("pwFull")
-        case UPowerDeviceState.PendingCharge: return Labels.t("pwHeld")
-        default: return Strings.t("discharging") + (dev.timeToEmpty > 0 ? "  ·  " + span(dev.timeToEmpty) + " " + Labels.t("pwLeft") : "")
-        }
-    }
 
     Process {
         running: true
-        command: ["sh", "-c", "busctl --system list --no-legend 2>/dev/null | grep -qE 'net.hadess.PowerProfiles|org.freedesktop.UPower.PowerProfiles' && echo p; " +
-                              "for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do [ -r \"$f\" ] && echo \"l=$(cat \"$f\")\" && break; done"]
+        command: ["sh", "-c", "busctl --system list --no-legend 2>/dev/null | grep -qE 'net.hadess.PowerProfiles|org.freedesktop.UPower.PowerProfiles' && echo p"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                root.hasProfiles = text.split("\n").indexOf("p") >= 0
-                const m = /l=(\d+)/.exec(text)
-                root.limit = m ? m[1] : ""
-            }
+            onStreamFinished: root.hasProfiles = text.split("\n").indexOf("p") >= 0
         }
     }
 
     Rectangle {
         width: parent.width; height: 92; color: "transparent"; border.width: 1; border.color: Theme.line; radius: Theme.radius
-        Txt { id: big; x: 16; height: parent.height; text: Math.round(root.pct) + "%"; font.pixelSize: 32; color: Theme.white }
+        Txt { id: big; x: 16; height: parent.height; text: Math.round(Battery.pct) + "%"; font.pixelSize: 32; color: Theme.white }
         Column {
             anchors { left: big.right; leftMargin: 18; right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
             spacing: 5
-            Txt { width: parent.width; text: root.stateText(); color: Theme.foreground }
+            Txt { width: parent.width; text: Battery.stateText() + (Battery.detailText() ? "  ·  " + Battery.detailText() : ""); color: Theme.foreground }
             Rectangle {
                 width: parent.width; height: 4; color: Theme.grayDark
-                Rectangle { width: parent.width * Math.min(1, root.pct / 100); height: parent.height
+                Rectangle { width: parent.width * Math.min(1, Battery.pct / 100); height: parent.height
                     gradient: Gradient { orientation: Gradient.Horizontal; GradientStop { position: 0; color: Theme.grayMid } GradientStop { position: 1; color: Theme.white } } }
             }
             Txt {
                 width: parent.width; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false
-                text: root.bat ? [
-                    root.bat.energyCapacity > 0 ? Labels.t("pwEnergy") + " " + root.bat.energy.toFixed(1) + " / " + root.bat.energyCapacity.toFixed(1) + " Wh" : "",
-                    Math.abs(root.bat.changeRate) > 0.05 ? Math.abs(root.bat.changeRate).toFixed(1) + " W" : "",
-                    root.bat.healthSupported ? Labels.t("pwHealth") + " " + Math.round(root.bat.healthPercentage) + "%" : "",
-                    root.limit ? Labels.t("pwLimit") + " " + root.limit + "%" : "",
+                readonly property var bat: Battery.bat
+                text: bat ? [
+                    bat.energyCapacity > 0 ? Labels.t("pwEnergy") + " " + bat.energy.toFixed(1) + " / " + bat.energyCapacity.toFixed(1) + " Wh" : "",
+                    bat.healthSupported ? Labels.t("pwHealth") + " " + Math.round(bat.healthPercentage) + "%" : "",
+                    Battery.limit > 0 && Battery.limit < 100 ? Labels.t("pwLimit") + " " + Battery.limit + "%" : "",
                     UPower.onBattery ? "" : Labels.t("pwAc")
                 ].filter(x => x).join("  ·  ") : ""
             }

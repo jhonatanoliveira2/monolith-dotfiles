@@ -46,6 +46,10 @@ ShellRoot {
     Key { name: "micMute"; onPressed: { Audio.toggleMic(); Osd.show("mic") } }
     Key { name: "brightnessUp"; onPressed: { Brightness.nudge(5); Osd.show("brightness") } }
     Key { name: "brightnessDown"; onPressed: { Brightness.nudge(-5); Osd.show("brightness") } }
+    Key { name: "touchpadToggle"; onPressed: { Sys.setTouchpad(!Settings.touchpadEnabled); Osd.show("touchpad") } }
+    Key { name: "kbdUp"; onPressed: { Brightness.kbdNudge(1); Osd.show("kbd") } }
+    Key { name: "kbdDown"; onPressed: { Brightness.kbdNudge(-1); Osd.show("kbd") } }
+    Key { name: "kbdCycle"; onPressed: { Brightness.setKbd(Brightness.kbdCurrent >= Brightness.kbdMax ? 0 : Brightness.kbdCurrent + 1); Osd.show("kbd") } }
     Key { name: "mediaToggle"; onPressed: { Media.toggle(); Osd.show("media") } }
     Key { name: "mediaNext"; onPressed: { Media.next(); Osd.show("media") } }
     Key { name: "mediaPrev"; onPressed: { Media.previous(); Osd.show("media") } }
