@@ -40,9 +40,10 @@ PanelWindow {
                 pad: 8
                 Txt { text: Theme.glyph.arch; color: Theme.white; font.pixelSize: 15 }
             }
-            Workspaces { height: parent.height }
+            Workspaces { height: parent.height; screenName: bar.screenName }
             Item { width: 8; height: 1 }
-            Player { height: parent.height }
+            Player { height: parent.height; screenName: bar.screenName }
+            WindowTitle { height: parent.height; screenName: bar.screenName }
         }
 
         // ── center: clock ─────────────────────────────────────────────

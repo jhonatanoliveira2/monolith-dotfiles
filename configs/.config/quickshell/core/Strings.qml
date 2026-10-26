@@ -18,7 +18,15 @@ Singleton {
         border: "Borda", rounding: "Arredondamento",
         desktop: "Desktop", wallpaper: "Wallpaper", gtkTheme: "Tema GTK", reloadHypr: "Recarregar Hyprland", reloadShell: "Recarregar shell",
         session: "Sessão", lock: "Bloquear", suspend: "Suspender", logout: "Sair", reboot: "Reiniciar", poweroff: "Desligar",
-        screenshot: "Captura de tela", screenshotBody: "Imagem copiada para a área de transferência"
+        screenshot: "Captura de tela", screenshotBody: "Imagem copiada para a área de transferência",
+        noPlayer: "Nada tocando", searchTracks: "Buscar faixas…", results: "Resultados", recent: "Tocadas recentemente",
+        searchHint: "Enter busca no serviço de música do player", history: "Histórico", media: "Mídia",
+        connecting: "Conectando…", disconnecting: "Desconectando…", pairing: "Pareando…",
+        netGone: "Rede fora de alcance", netTimeout: "Tempo esgotado ao conectar", netFail: "Falha ao conectar",
+        wifiHwOff: "Wi-Fi bloqueado pelo hardware (botão/rfkill)", btBlocked: "Bluetooth bloqueado (rfkill) — ative para desbloquear",
+        btPairFail: "Falha ao parear", monOverlap: "Monitores sobrepostos: ajuste as posições", btConnFail: "Falha ao conectar",
+        ytmOff: "API do YouTube Music inacessível", ytmAuth: "API do YouTube Music recusou o acesso", ytmHttp: "Erro da API do YouTube Music",
+        ytmHint: "Aleatório/repetir no YouTube Music exigem o plugin \"API Server\" (autorização: nenhuma, ou token em Configurações > Barra)"
     })
     readonly property var en: ({
         online: "Connected", nointernet: "No internet", disconnected: "Disconnected", disconnect: "Disconnect",
@@ -34,7 +42,15 @@ Singleton {
         border: "Border", rounding: "Rounding",
         desktop: "Desktop", wallpaper: "Wallpaper", gtkTheme: "GTK theme", reloadHypr: "Reload Hyprland", reloadShell: "Reload shell",
         session: "Session", lock: "Lock", suspend: "Suspend", logout: "Log out", reboot: "Reboot", poweroff: "Power off",
-        screenshot: "Screenshot", screenshotBody: "Image copied to the clipboard"
+        screenshot: "Screenshot", screenshotBody: "Image copied to the clipboard",
+        noPlayer: "Nothing playing", searchTracks: "Search tracks…", results: "Results", recent: "Recently played",
+        searchHint: "Enter searches the player's music service", history: "History", media: "Media",
+        connecting: "Connecting…", disconnecting: "Disconnecting…", pairing: "Pairing…",
+        netGone: "Network out of range", netTimeout: "Timed out while connecting", netFail: "Connection failed",
+        wifiHwOff: "Wi-Fi blocked by hardware (switch/rfkill)", btBlocked: "Bluetooth blocked (rfkill) — switch on to unblock",
+        btPairFail: "Pairing failed", monOverlap: "Monitors overlap: adjust the positions", btConnFail: "Connection failed",
+        ytmOff: "YouTube Music API unreachable", ytmAuth: "YouTube Music API denied access", ytmHttp: "YouTube Music API error",
+        ytmHint: "Shuffle/repeat in YouTube Music need its \"API Server\" plugin (authorization: none, or a token in Settings > Bar)"
     })
 
     function t(key) {

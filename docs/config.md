@@ -67,4 +67,31 @@ configs/
 └── .local/bin/       utilities called by shortcuts
 ```
 
-For installation and rollback instructions, see the [installation guide](Installation.md).
+For installation and rollback instructions, see the [installation guide](installation.md).
+
+## Settings app
+
+`Super` menu → **Settings** (or `qs ipc call shell settings <page>`). Pages: System, Display, Configs, Bar, Audio,
+Microphone, Notifications, Network, Bluetooth, Power (laptops only), Storage, Input and Update.
+
+- **Display** and **Configs** apply changes live through the Hyprland Lua API (`hyprctl eval`) and save them in
+  `~/.config/hypr/generated/monitors.lua` and `~/.config/hypr/generated/settings.lua`. `hyprland.lua` loads both
+  files last. Delete a file to go back to your own `modules/*.lua`. A monitor change reverts after 15 seconds
+  unless you click **Keep**.
+- **Storage** reads disk health from UDisks2, without root. Cleanup always scans first and lists what each item
+  removes. Removing needs a second, confirming click. pacman and journal cleanup ask for the password through
+  `pkexec`.
+- **Update** compares the local clone with its own remote and branch: the upstream if one is set, otherwise
+  `origin/<branch>`. It also reports the GitHub API status and rate limit.
+- **YouTube Music** (th-ch desktop app) does not expose shuffle or repeat over MPRIS. To use those buttons,
+  enable its *API Server* plugin and either set authorization to *No authorization* or paste a token in
+  Settings → Bar. The default port is 26538.
+- Covers of the last 50 played tracks are cached in `~/.cache/quickshell-monolith/covers`.
+- **Player title** grows with the track name between a minimum and a maximum number of characters
+  (Settings → Bar → *Player title: minimum / maximum*). In the media menu, the title font shrinks for long
+  names and grows for short ones.
+- **Recently played**: clicking a track sends it to the current player over MPRIS (`OpenUri`) and presses Play
+  until it starts, so players that only load the page (YouTube Music) start playback too. Players without
+  `OpenUri` fall back to the browser.
+- **Bluetooth scan** keeps the request alive for 60 s: if BlueZ drops discovery right after it starts, the shell
+  asks again by itself, so one click on **Scan** is enough.

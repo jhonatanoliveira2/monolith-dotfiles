@@ -40,6 +40,7 @@ node_modules/
 Thumbs.db
 .idea/
 .vscode/
+.claude/
 
 # --- local state created by the scripts ------------------------------------------
 .local/state/

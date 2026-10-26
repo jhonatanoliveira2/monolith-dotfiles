@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
-import Quickshell.Bluetooth
 import "../core"
+import "../services"
 import "../components"
 
 MenuWindow {
@@ -12,43 +12,39 @@ MenuWindow {
     Column {
         width: parent.width
         spacing: 2
-        readonly property var adapter: Bluetooth.defaultAdapter
-        readonly property var devices: Bluetooth.devices.values.slice().sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || String(a.name).localeCompare(String(b.name)))
 
         ToggleRow {
             width: parent.width; icon: Theme.glyph.btOn; label: "Bluetooth"
-            checked: parent.adapter ? parent.adapter.enabled : false
-            onToggled: c => { if (parent.adapter) parent.adapter.enabled = c }
+            checked: Bt.enabled
+            onToggled: c => Bt.setEnabled(c)
         }
+        Txt { visible: Bt.blocked; width: parent.width; leftPadding: 10; text: Strings.t("btBlocked"); color: Theme.grayMid; font.pixelSize: Theme.small }
         Item {
-            visible: parent.adapter !== null && parent.adapter !== undefined && parent.adapter.enabled
+            visible: Bt.enabled
             width: parent.width; height: 34
             Btn {
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 compact: true
                 icon: Theme.glyph.refresh
-                text: parent.parent.adapter && parent.parent.adapter.discovering ? Strings.t("stopScan") : Strings.t("scanDevices")
-                active: parent.parent.adapter ? parent.parent.adapter.discovering : false
-                onActivated: parent.parent.adapter.discovering = !parent.parent.adapter.discovering
+                text: Bt.discovering ? Strings.t("stopScan") : Strings.t("scanDevices")
+                active: Bt.discovering
+                onActivated: Bt.scan(!Bt.discovering)
             }
         }
+        Txt { visible: Bt.message !== ""; width: parent.width; leftPadding: 10; text: Bt.message; color: Theme.foreground; font.pixelSize: Theme.small; wrapMode: Text.Wrap; elide: Text.ElideNone }
 
-        Section { width: parent.width; text: Strings.t("devices"); visible: parent.devices.length > 0 }
+        Section { width: parent.width; text: Strings.t("devices"); visible: Bt.enabled && Bt.devices.length > 0 }
         Repeater {
-            model: parent.devices
+            model: Bt.enabled ? Bt.devices : []
             delegate: ListRow {
                 required property var modelData
                 width: parent.width
                 icon: modelData.connected ? Theme.glyph.btConn : Theme.glyph.btOn
                 title: String(modelData.name || modelData.address)
-                subtitle: modelData.connected ? Strings.t("connected") + (modelData.batteryAvailable ? "  ·  " + Math.round(modelData.battery * 100) + "%" : "")
-                                              : modelData.paired ? Strings.t("paired") : Strings.t("new")
+                subtitle: Bt.status(modelData)
+                dim: Bt.busy(modelData)
                 selected: modelData.connected
-                onClicked: m => {
-                    if (m.button === Qt.RightButton) { if (modelData.paired) modelData.forget(); return }
-                    if (modelData.paired) modelData.connected = !modelData.connected
-                    else modelData.pair()
-                }
+                onClicked: m => { if (m.button === Qt.RightButton) Bt.forget(modelData); else Bt.activate(modelData) }
             }
         }
         Item { width: 1; height: 6 }

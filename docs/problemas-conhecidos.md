@@ -46,7 +46,7 @@ ls -t ~/.local/state/monolith-dotfiles/*.log | head -1
 ./scripts/restore.sh
 ```
 
-A restauração padrão usa o snapshot mais recente. Para escolher outro, passe `--id ID`. Use `--remove-new` apenas se também quiser remover os arquivos que não existiam antes; faça uma simulação antes. O passo a passo completo está em [Instalação e recuperação](Instalacao.md#backup-e-recuperação).
+A restauração padrão usa o snapshot mais recente. Para escolher outro, passe `--id ID`. Use `--remove-new` apenas se também quiser remover os arquivos que não existiam antes; faça uma simulação antes. O passo a passo completo está em [Instalação e recuperação](instalacao.md#backup-e-recuperação).
 
 ## Pedir ajuda
 

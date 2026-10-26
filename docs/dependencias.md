@@ -30,6 +30,7 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 | `pipewire`, `pipewire-pulse`, `wireplumber`, `playerctl` | Áudio e controles de mídia |
 | `brightnessctl` | Controle de brilho |
 | `networkmanager`, `network-manager-applet`, `blueman`, `curl` | Rede, Bluetooth e verificação de conectividade |
+| `udisks2`, `pciutils`, `pacman-contrib` | Saúde dos discos, nome da GPU e limpeza do cache do pacman (Configurações) |
 
 ## Repositórios oficiais — opcionais
 

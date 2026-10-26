@@ -35,5 +35,32 @@ MenuWindow {
         Meter { icon: Theme.glyph.cpu; name: "CPU"; fraction: Stats.cpu / 100; value: (Stats.cpu >= 0 ? Stats.cpu + "%" : "-") + (Stats.cpuTemp >= 0 ? "  " + Stats.cpuTemp + "°C" : "") }
         Meter { visible: Stats.gpu >= 0 || Stats.gpuTemp >= 0; icon: Theme.glyph.gpu; name: "GPU"; fraction: Stats.gpu / 100; value: (Stats.gpu >= 0 ? Stats.gpu + "%" : "-") + (Stats.gpuTemp >= 0 ? "  " + Stats.gpuTemp + "°C" : "") }
         Meter { icon: Theme.glyph.ram; name: "RAM"; fraction: Stats.ramPct / 100; value: Stats.ramUsed + " / " + Stats.ramTotal + " G" }
+
+        // history: one column per sample (plain rectangles, nothing to repaint on a canvas)
+        component Spark: Item {
+            property var samples: []
+            property string label: ""
+            width: parent.width; height: 46
+            Txt { x: 10; text: parent.label; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
+            Row {
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: 10; rightMargin: 10 }
+                height: 30
+                spacing: 1
+                Repeater {
+                    model: parent.parent.samples
+                    delegate: Rectangle {
+                        required property var modelData
+                        anchors.bottom: parent.bottom
+                        width: Math.max(1, (parent.width - (Stats.historyLength - 1)) / Stats.historyLength)
+                        height: Math.max(1, parent.height * modelData / 100)
+                        color: modelData >= 85 ? Theme.white : Theme.grayMid
+                        opacity: 0.85
+                    }
+                }
+            }
+        }
+        Section { width: parent.width; text: Strings.t("history") }
+        Spark { label: "CPU %"; samples: Stats.cpuHistory }
+        Spark { label: "RAM %"; samples: Stats.ramHistory }
     }
 }

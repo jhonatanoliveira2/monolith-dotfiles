@@ -3,6 +3,7 @@ import Quickshell
 import "../core"
 import "../services"
 import "../components"
+import "../settings"
 
 // System menu: quick switches, sliders, Hyprland runtime options, shortcuts and session actions.
 MenuWindow {
@@ -21,6 +22,8 @@ MenuWindow {
             width: parent.width; height: 36
             Txt { anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter } text: Theme.glyph.arch + "   MONOLITH"; color: Theme.white; font.pixelSize: 15 }
         }
+
+        Btn { width: parent.width; icon: Theme.glyph.cog; text: Labels.t("settingsTitle"); onActivated: Popups.openApp("system") }
 
         // ── quick switches ──
         Section { width: parent.width; text: Strings.t("quick") }
@@ -49,7 +52,6 @@ MenuWindow {
         ToggleRow { width: parent.width; icon: Theme.glyph.animations; label: Strings.t("animations"); checked: !!Sys.values.animations; onToggled: c => Sys.setValue("animations", c ? 1 : 0) }
         ToggleRow { width: parent.width; icon: Theme.glyph.config; label: Strings.t("blur"); checked: !!Sys.values.blur; onToggled: c => Sys.setValue("blur", c ? 1 : 0) }
         ToggleRow { width: parent.width; icon: Theme.glyph.config; label: Strings.t("shadows"); checked: !!Sys.values.shadow; onToggled: c => Sys.setValue("shadow", c ? 1 : 0) }
-        ToggleRow { width: parent.width; icon: Theme.glyph.config; label: "New Render Scheduling"; checked: !!Sys.values.newRenderScheduling; onToggled: c => Sys.setValue("newRenderScheduling", c ? 1 : 0) }
         SettingSlider { width: parent.width; label: Strings.t("gapsIn"); from: 0; to: 30; value: Sys.values.gapsIn || 0; onCommit: v => Sys.setValue("gapsIn", v) }
         SettingSlider { width: parent.width; label: Strings.t("gapsOut"); from: 0; to: 60; value: Sys.values.gapsOut || 0; onCommit: v => Sys.setValue("gapsOut", v) }
         SettingSlider { width: parent.width; label: Strings.t("border"); from: 0; to: 8; value: Sys.values.borderSize || 0; suffix: "px"; onCommit: v => Sys.setValue("borderSize", v) }

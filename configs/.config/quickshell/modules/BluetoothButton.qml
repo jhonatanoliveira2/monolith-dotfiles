@@ -1,18 +1,16 @@
 import QtQuick
-import Quickshell.Bluetooth
 import "../core"
+import "../services"
 import "../components"
 
 MenuButton {
     id: root
     menu: "bluetooth"
-    readonly property var adapter: Bluetooth.defaultAdapter
-    readonly property bool anyConnected: Bluetooth.devices.values.some(d => d.connected)
-    visible: adapter !== null && adapter !== undefined
-    onAlt: m => { if (m.button === Qt.MiddleButton && adapter) adapter.enabled = !adapter.enabled }
+    visible: Bt.present
+    onAlt: m => { if (m.button === Qt.MiddleButton) Bt.setEnabled(!Bt.enabled) }
     Txt {
         font.pixelSize: 15
-        text: !root.adapter || !root.adapter.enabled ? Theme.glyph.btOff : root.anyConnected ? Theme.glyph.btConn : Theme.glyph.btOn
-        color: root.adapter && root.adapter.enabled ? Theme.grayLight : Theme.grayMid
+        text: !Bt.enabled ? Theme.glyph.btOff : Bt.anyConnected ? Theme.glyph.btConn : Theme.glyph.btOn
+        color: Bt.enabled ? Theme.grayLight : Theme.grayMid
     }
 }

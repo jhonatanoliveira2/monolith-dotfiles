@@ -67,4 +67,31 @@ configs/
 └── .local/bin/       utilitários chamados pelos atalhos
 ```
 
-Para instalar ou desfazer a instalação, consulte o [guia de instalação](Instalacao.md).
+Para instalar ou desfazer a instalação, consulte o [guia de instalação](instalacao.md).
+
+## Aplicativo de configurações
+
+Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`). Abas: Sistema, Tela, Configs, Barra,
+Áudio, Microfone, Notificações, Rede, Bluetooth, Energia (só em notebooks), Armazenamento, Entrada e Atualização.
+
+- **Tela** e **Configs** aplicam as mudanças na hora pela API Lua do Hyprland (`hyprctl eval`) e as salvam em
+  `~/.config/hypr/generated/monitors.lua` e `~/.config/hypr/generated/settings.lua`. O `hyprland.lua` carrega
+  esses dois arquivos por último. Apague um arquivo para voltar aos seus `modules/*.lua`. Uma mudança de
+  monitor é revertida após 15 segundos se você não clicar em **Manter**.
+- **Armazenamento** lê a saúde dos discos pelo UDisks2, sem root. A limpeza sempre analisa antes e mostra o que
+  cada item remove. Apagar exige um segundo clique de confirmação. A limpeza do pacman e do journal pede a
+  senha via `pkexec`.
+- **Atualização** compara o clone local com o próprio remoto e branch dele: o upstream, se houver, senão
+  `origin/<branch>`. Também mostra o status e o limite de requisições da API do GitHub.
+- **YouTube Music** (app da th-ch) não expõe aleatório nem repetir via MPRIS. Para usar esses botões, ative o
+  plugin *API Server* e escolha a autorização *Sem autorização* ou cole um token em Configurações → Barra. A
+  porta padrão é 26538.
+- As capas das últimas 50 músicas tocadas ficam em cache em `~/.cache/quickshell-monolith/covers`.
+- **Título do player** acompanha o nome da faixa, entre um mínimo e um máximo de caracteres
+  (Configurações → Barra → *Título do player: mínimo / máximo*). No menu de mídia, a fonte do título diminui
+  em nomes longos e aumenta em nomes curtos.
+- **Tocadas recentemente**: clicar em uma faixa envia ela ao player atual via MPRIS (`OpenUri`) e aperta Play
+  até ela começar, então players que só carregam a página (YouTube Music) também começam a tocar. Players sem
+  `OpenUri` abrem no navegador.
+- **Busca de Bluetooth** mantém o pedido ativo por 60 s: se o BlueZ derrubar a descoberta logo após iniciar, o
+  shell pede de novo sozinho, então um clique em **Procurar** basta.

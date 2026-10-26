@@ -14,10 +14,12 @@ Rectangle {
 
     implicitWidth: label.implicitWidth + 20
     implicitHeight: compact ? 26 : 30
-    color: active ? Theme.selected : mouse.containsMouse ? Theme.hover : "transparent"
+    radius: Theme.radius
+    color: mouse.pressed ? Theme.pressed : active ? Theme.selected : mouse.containsMouse ? Theme.hover : "transparent"
     border.width: 1
     border.color: active ? Theme.accent : Theme.line
     Behavior on color { ColorAnimation { duration: Theme.dur(100) } }
+    Behavior on border.color { ColorAnimation { duration: Theme.dur(100) } }
 
     Text {
         id: label

@@ -54,12 +54,15 @@ local function screenshot(area)
         capture = [[geometry=$(slurp) || exit 0; grim -g "$geometry"]]
         message = "Selected area saved and copied"
     else
-        capture = [[grim -o DP-1]]
+        -- capture the monitor that has focus (not a hard-coded output)
+        local monitor = hl.get_active_monitor()
+        capture = "grim" .. (monitor and (" -o " .. monitor.name) or "")
         message = "Full screen saved and copied"
     end
 
+    -- the shell shows a toast with a preview; notify-send only when Quickshell is not running
     local command = string.format(
-        [[bash -c 'dir="$HOME/Pictures"; mkdir -p "$dir"; file="$dir/$(date +%%Y-%%m-%%d_%%H-%%M-%%S).png"; if %s "$file" && wl-copy < "$file"; then notify-send -a Screenshot "Screenshot" "%s"; qs ipc call screenshot notify "$file"; else notify-send -u critical "Screenshot error" "Unable to capture screenshot"; fi']],
+        [[bash -c 'dir="$HOME/Pictures"; mkdir -p "$dir"; file="$dir/$(date +%%Y-%%m-%%d_%%H-%%M-%%S).png"; if %s "$file" && wl-copy < "$file"; then qs ipc call screenshot notify "$file" 2>/dev/null || notify-send -a Screenshot -i "$file" "Screenshot" "%s"; else notify-send -u critical "Screenshot error" "Unable to capture screenshot"; fi']],
         capture,
         message
     )
@@ -101,10 +104,15 @@ exec({
 })
 
 -- Session exit
-hl.bind(mainMod .. " + SHIFT + X", hl.dsp.exec_cmd(
-    "command -v hyprshutdown >/dev/null 2>&1 && " ..
-    "hyprshutdown || hyprctl dispatch exit"
-))
+local hasHyprshutdown = os.execute("command -v hyprshutdown >/dev/null 2>&1") == true
+
+hl.bind(mainMod .. " + SHIFT + X", function()
+    if hasHyprshutdown then
+        hl.dispatch(hl.dsp.exec_cmd("hyprshutdown"))
+    else
+        hl.dispatch(hl.dsp.exit())
+    end
+end)
 
 -- Window management
 hl.bind(mainMod .. " + Space", function()
@@ -121,6 +129,35 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({
     mode = "fullscreen",
     action = "toggle",
 }))
+
+hl.bind(mainMod .. " + P", hl.dsp.window.pin())
+hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
+hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
+hl.bind(mainMod .. " + grave", hl.dsp.focus({ urgent_or_last = true }))
+
+-- Previous / next occupied workspace
+hl.bind(mainMod .. " + CTRL + LEFT", hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + CTRL + RIGHT", hl.dsp.focus({ workspace = "e+1" }))
+
+-- Swap with the neighbour window
+for _, item in ipairs({
+    { key = "H", direction = "l" },
+    { key = "L", direction = "r" },
+    { key = "K", direction = "u" },
+    { key = "J", direction = "d" },
+}) do
+    hl.bind(mainMod .. " + CTRL + " .. item.key, hl.dsp.window.swap({ direction = item.direction }))
+end
+
+-- Shell (Quickshell global shortcuts, see shell.qml)
+for _, item in ipairs({
+    { key = "N", name = "notifications" },
+    { key = "M", name = "media" },
+    { key = "comma", name = "settingsApp" },
+    { key = "Escape", name = "session" },
+}) do
+    hl.bind(mainMod .. " + " .. item.key, hl.dsp.global("quickshell:" .. item.name))
+end
 
 -- Move windows with Shift + arrows
 local directions = {
@@ -200,7 +237,7 @@ end
 
 -- Cursor zoom
 local function zoom(value)
-    local current = hl.get_config("cursor:zoom_factor")
+    local current = hl.get_config("cursor.zoom_factor")
     if current == nil then
         return
     end

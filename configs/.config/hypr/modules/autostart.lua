@@ -7,7 +7,8 @@ hl.on("hyprland.start", function()
         "wallpaper-menu --restore",
     }
 
+    -- exec_cmd already detaches the process
     for _, command in ipairs(startupCommands) do
-        hl.exec_cmd(command .. " &")
+        hl.exec_cmd(command)
     end
 end)

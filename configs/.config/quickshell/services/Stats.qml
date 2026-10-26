@@ -14,6 +14,10 @@ Singleton {
     property int ramPct: 0
     property string ramUsed: "0.0"
     property string ramTotal: "0.0"
+    property var cpuHistory: []         // last samples (one per interval), drawn by the stats menu
+    property var ramHistory: []
+    readonly property int historyLength: 40
+    function push(list, v) { const l = list.concat([v]); return l.length > historyLength ? l.slice(l.length - historyLength) : l }
     readonly property int hottest: Math.max(cpuTemp, gpuTemp)
     readonly property string level: hottest >= 90 ? "critical" : hottest >= 80 ? "warning" : "normal"
 
@@ -34,6 +38,8 @@ Singleton {
                     else if (k === "ramused") root.ramUsed = v
                     else if (k === "ramtotal") root.ramTotal = v
                 }
+                if (root.cpu >= 0) root.cpuHistory = root.push(root.cpuHistory, root.cpu)
+                root.ramHistory = root.push(root.ramHistory, root.ramPct)
             }
         }
     }

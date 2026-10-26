@@ -30,6 +30,7 @@ The installer does not run `pacman -Sy`. If a package cannot be found, update th
 | `pipewire`, `pipewire-pulse`, `wireplumber`, `playerctl` | Audio and media controls |
 | `brightnessctl` | Brightness controls |
 | `networkmanager`, `network-manager-applet`, `blueman`, `curl` | Network, Bluetooth and connectivity checks |
+| `udisks2`, `pciutils`, `pacman-contrib` | Disk health, GPU name and pacman cache cleanup (Settings app) |
 
 ## Official repositories — optional
 

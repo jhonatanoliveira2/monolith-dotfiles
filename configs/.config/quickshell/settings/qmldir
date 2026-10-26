@@ -1,0 +1,16 @@
+singleton Labels 1.0 Labels.qml
+singleton Registry 1.0 Registry.qml
+EntryList 1.0 EntryList.qml
+SettingRow 1.0 SettingRow.qml
+SettingsApp 1.0 SettingsApp.qml
+SettingsWindow 1.0 SettingsWindow.qml
+PageSystem 1.0 PageSystem.qml
+PageAudio 1.0 PageAudio.qml
+PageStorage 1.0 PageStorage.qml
+PageBluetooth 1.0 PageBluetooth.qml
+PageNetwork 1.0 PageNetwork.qml
+PageUpdate 1.0 PageUpdate.qml
+PageDisplay 1.0 PageDisplay.qml
+PageMic 1.0 PageMic.qml
+PageNotifications 1.0 PageNotifications.qml
+PagePower 1.0 PagePower.qml

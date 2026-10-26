@@ -15,7 +15,7 @@ Obrigado por contribuir com o MONOLITH. Alterações claras, verificáveis e seg
 
 Scripts, comentários, nomes internos e logs técnicos usam inglês. Apenas mensagens voltadas ao usuário são traduzidas. As mensagens do instalador ficam em `scripts/lib/messages.sh`; mantenha os placeholders na mesma ordem nos dois idiomas.
 
-A documentação também é bilíngue. Ao alterar um guia, atualize os dois arquivos correspondentes em `docs/` e mantenha comandos, caminhos, opções e identificadores técnicos iguais. Os pares usam os nomes `configuracao.md` e `config.md`, `Dependencias.md` e `dependencies.md`, `Instalacao.md` e `Installation.md`, `Problemas-conhecidos.md` e `Troubleshooting.md`.
+A documentação também é bilíngue. Ao alterar um guia, atualize os dois arquivos correspondentes em `docs/` e mantenha comandos, caminhos, opções e identificadores técnicos iguais. Os pares usam os nomes `configuracao.md` e `config.md`, `dependencias.md` e `dependencies.md`, `instalacao.md` e `installation.md`, `problemas-conhecidos.md` e `troubleshooting.md`.
 
 Ao alterar dependências, atualize `packages.txt` e explique o motivo de cada pacote. Não transforme referências em comentários em dependências ativas sem confirmar o uso real.
 
@@ -46,4 +46,4 @@ Os testes do instalador usam ambientes temporários. Se alterar o comportamento 
 
 ## Capturas e prévias
 
-Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. O arquivo `assets/screenshots/screenshot-slot.svg` é apenas uma moldura substituível para os READMEs. As prévias do instalador são geradas por `tools/ansi2svg.py`; consulte o [guia de recursos visuais](assets/VISUAL-GUIDE.md).
+Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. Os READMEs usam `1.png`, `2.png` e `3.png`. As prévias do instalador são geradas por `tools/ansi2svg.py`.

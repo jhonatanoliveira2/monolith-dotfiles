@@ -1,6 +1,6 @@
 ---- LOOK AND FEEL ----
 
-hl.config({ render = { expand_undersized_textures = false}})
+hl.config({ render = { expand_undersized_textures = false } })
 hl.config({
     general = {
         gaps_in = 4,
@@ -22,8 +22,5 @@ hl.config({
             range = 8,
             render_power = 3,
         },
-    },
-    animations = {
-        enabled = true,
     },
 })

@@ -5,6 +5,7 @@ import "../core"
 Item {
     id: root
     property bool checked: false
+    property bool interactive: true      // false when a parent row already handles the click
     signal toggled(bool checked)
     implicitWidth: 36
     implicitHeight: 18
@@ -23,7 +24,7 @@ Item {
         color: Theme.foreground
         Behavior on x { NumberAnimation { duration: Theme.dur(120); easing.type: Easing.OutCubic } }
     }
-    MouseArea { anchors.fill: parent; onClicked: root.toggled(!root.checked) }
+    MouseArea { anchors.fill: parent; enabled: root.interactive; onClicked: root.toggled(!root.checked) }
 }
 
 

@@ -13,7 +13,8 @@ Rectangle {
     signal clicked(var mouse)
 
     implicitHeight: subtitle ? 40 : 32
-    color: mouse.containsMouse ? Theme.hover : "transparent"
+    radius: Theme.radius
+    color: mouse.pressed ? Theme.pressed : mouse.containsMouse ? Theme.hover : "transparent"
     border.width: 1
     border.color: selected ? Theme.selectedBorder : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.dur(100) } }

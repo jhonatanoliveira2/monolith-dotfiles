@@ -29,8 +29,9 @@ Singleton {
         path: root.device ? root.device + "/max_brightness" : ""
         onLoaded: root.max = parseInt(text())
     }
-    // brightness keys change the value behind our back: re-read it every few seconds (only when a backlight exists)
-    Timer { interval: 4000; repeat: true; running: root.available; onTriggered: cur.reload() }
+    // the brightness keys go through the shell (see hypr/modules/media-keys.lua); this slow re-read only
+    // catches outside changes such as hypridle dimming (and only runs when a backlight exists)
+    Timer { interval: 10000; repeat: true; running: root.available; onTriggered: cur.reload() }
 
     function set(fraction) {
         const pct = Math.max(1, Math.min(100, Math.round(fraction * 100)))

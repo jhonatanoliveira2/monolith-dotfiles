@@ -15,9 +15,12 @@ MenuWindow {
         width: parent.width
         spacing: 2
         property string pending: ""
-        Component.onCompleted: { Net.refresh(); Net.scan() }
+        Component.onCompleted: Net.scan()
+        // keep the scanner alive while the menu is open (it stops by itself 30 s after closing)
+        Timer { interval: 20000; repeat: true; running: true; onTriggered: Net.scan() }
 
-        ToggleRow { width: parent.width; icon: Theme.glyph.wifi; label: "Wi-Fi"; checked: Net.wifiEnabled; onToggled: c => Net.setWifi(c) }
+        ToggleRow { visible: Net.hasWifi; width: parent.width; icon: Theme.glyph.wifi; label: "Wi-Fi"; checked: Net.wifiEnabled; onToggled: c => Net.setWifi(c) }
+        Txt { visible: Net.hasWifi && Net.wifiEnabled && !Net.wifiHardware; width: parent.width; leftPadding: 10; text: Strings.t("wifiHwOff"); color: Theme.grayMid; font.pixelSize: Theme.small }
 
         // current connection
         Rectangle {
@@ -40,8 +43,8 @@ MenuWindow {
         }
         Txt { visible: Net.message !== ""; width: parent.width; leftPadding: 10; text: Net.message; color: Theme.foreground; font.pixelSize: Theme.small; wrapMode: Text.Wrap; elide: Text.ElideNone }
 
-        Section { width: parent.width; text: Strings.t("networks"); visible: Net.wifiEnabled }
-        Txt { visible: Net.scanning; leftPadding: 10; text: Strings.t("scanning"); color: Theme.grayMid; font.bold: false }
+        Section { width: parent.width; text: Strings.t("networks"); visible: Net.hasWifi && Net.wifiEnabled }
+        Txt { visible: Net.scanning && Net.networks.length === 0; leftPadding: 10; text: Strings.t("scanning"); color: Theme.grayMid; font.bold: false }
         Repeater {
             model: Net.wifiEnabled ? Net.networks : []
             delegate: Column {
@@ -51,12 +54,13 @@ MenuWindow {
                     width: parent.width
                     icon: modelData.secure ? Theme.g(0xf023) : Theme.glyph.wifi
                     title: modelData.ssid
-                    subtitle: modelData.active ? Strings.t("online") : modelData.known ? Strings.t("saved") : modelData.secure ? Strings.t("secured") : Strings.t("open")
+                    subtitle: modelData.busy || (Net.busy && Net.pendingSsid === modelData.ssid) ? Strings.t("connecting")
+                        : modelData.active ? Strings.t("online") : modelData.known ? Strings.t("saved") : modelData.secure ? Strings.t("secured") : Strings.t("open")
                     trailing: modelData.signal + "%"
                     selected: modelData.active
                     onClicked: m => {
                         if (m.button === Qt.RightButton) { if (modelData.known) Net.forget(modelData.ssid); return }
-                        if (modelData.active) return
+                        if (modelData.active || Net.busy) return
                         if (modelData.known || !modelData.secure) Net.connectTo(modelData.ssid, "")
                         else { col.pending = col.pending === modelData.ssid ? "" : modelData.ssid; pw.text = ""; pw.forceActiveFocus() }
                     }
@@ -83,7 +87,7 @@ MenuWindow {
         Item { width: 1; height: 6 }
         Flow {
             width: parent.width; spacing: 4
-            Btn { text: Strings.t("rescan"); icon: Theme.glyph.refresh; onActivated: Net.scan() }
+            Btn { visible: Net.hasWifi; text: Strings.t("rescan"); icon: Theme.glyph.refresh; active: Net.scanning; onActivated: Net.scan(true) }
             Btn { text: Strings.t("advanced"); onActivated: { Popups.close(); Quickshell.execDetached(["nm-connection-editor"]) } }
         }
     }

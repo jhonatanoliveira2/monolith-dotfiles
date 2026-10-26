@@ -1,230 +1,165 @@
 import QtQuick
-import Quickshell.Services.Mpris
 import "../core"
+import "../services"
 import "../components"
 
-// Collapsed: "<symbol> title". On hover it expands: previous / play-pause / next + progress and time.
+// Bar player. Collapsed: cover + equalizer + "title · artist" with a thin progress line (click opens the media
+// menu, middle click plays/pauses, right click skips, scroll seeks). Hovering slides out the miniplayer next to
+// the title: elapsed / total time, shuffle, previous, play-pause, next and repeat. The miniplayer is its own
+// item (outside the button's mouse area) so its controls receive their clicks; it is independent of MediaMenu.
 Item {
     id: root
-
-    readonly property var player: pick()
-    readonly property bool expanded: hover.hovered
-    readonly property bool playing: player !== null && player.isPlaying
-
-    // Local values used by the UI (protect against the length == position fallback)
-    property real displayPosition: 0
-    property real displayLength: 0
-
-    function pick() {
-        const l = Mpris.players.values
-        let paused = null
-        for (let i = 0; i < l.length; i++) {
-            if (l[i].isPlaying)
-                return l[i]
-            if (!paused && l[i].playbackState === MprisPlaybackState.Paused)
-                paused = l[i]
-        }
-        return paused
-    }
-
-    function fmt(s) {
-        s = Math.max(0, Math.floor(s))
-        const m = Math.floor(s / 60)
-        const r = s % 60
-        return m + ":" + (r < 10 ? "0" : "") + r
-    }
-
-    function bar(pos, len) {
-        const cells = 8
-        let idx = Math.min(cells - 1, Math.floor(pos * cells / len))
-        let out = ""
-        for (let i = 0; i < cells; i++)
-            out += i < idx ? "━" : i === idx ? "●" : "─"
-        return out
-    }
-
-    // Safely update position + length
-    function sync() {
-        if (!player) {
-            displayPosition = 0
-            displayLength = 0
-            return
-        }
-
-        const pos = player.position
-        const len = player.length
-
-        displayPosition = pos
-
-        // Only accept length if it is reasonable.
-        // After seek many players set lengthSupported=false and length
-        // starts returning the current position → 0:34/0:34.
-        if (len > pos + 1.0) {
-            displayLength = len
-        } else if (displayLength <= 0 && len > 0) {
-            // first time / track without length yet
-            displayLength = len
-        }
-        // otherwise keep the last good length
-    }
-
-    readonly property string title: {
-        if (!player)
-            return ""
-        const t = String(player.trackTitle || player.identity || "")
-        return t.length > Config.titleMax
-            ? t.slice(0, Config.titleMax - 1) + "…"
-            : t
-    }
-
-    readonly property string progress: {
-        if (!player)
-            return ""
-        const pos = displayPosition
-        const len = displayLength
-        return len > 0
-            ? bar(pos, len) + "  " + fmt(pos) + "/" + fmt(len)
-            : fmt(pos)
-    }
-
-    // Reset cache when the player changes
-    onPlayerChanged: sync()
-
-    // Also reset when the track changes (title changes)
-    onTitleChanged: {
-        displayLength = 0          // force accepting the next good length
-        sync()
-    }
-
-    visible: Config.showPlayer && player !== null
+    property string screenName: ""
+    visible: Config.showPlayer && Media.player !== null
+    implicitWidth: lead.implicitWidth + mini.width
     implicitHeight: parent ? parent.height : Theme.barHeight
-    implicitWidth: lead.implicitWidth + ctl.width
 
+    readonly property bool menuOpen: lead.active
+    // stays open briefly after the pointer leaves, so moving between title and controls never flickers
+    property bool expanded: false
     HoverHandler {
         id: hover
-    }
-
-    WheelHandler {
-        enabled: root.player !== null && root.player.canSeek
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-
-        onWheel: event => {
-            if (!root.player || !root.player.canSeek)
-                return
-
-            const delta = event.angleDelta.y
-            if (delta === 0)
-                return
-
-            root.player.seek(delta > 0 ? 5 : -5)
-
-            // Update the UI on the next frame (after Seeked arrives)
-            Qt.callLater(root.sync)
-
-            event.accepted = true
+        onHoveredChanged: {
+            if (hovered) { closeMini.stop(); openMini.restart() }
+            else { openMini.stop(); closeMini.restart() }
         }
     }
+    Timer { id: openMini; interval: 120; onTriggered: root.expanded = true }
+    Timer { id: closeMini; interval: 450; onTriggered: root.expanded = false }
 
-    // Continuous update (only reads, never emits signals)
-    Timer {
-        interval: 1000
-        repeat: true
-        triggeredOnStart: true
-        running: root.expanded && root.playing && root.player !== null
-        onTriggered: root.sync()
-    }
+    Component.onCompleted: Media.consumers++
+    Component.onDestruction: Media.consumers--
 
-    BarItem {
+    MenuButton {
         id: lead
+        menu: "media"
+        screenName: root.screenName
         height: parent.height
+        pad: 4
+        spacing: 6
 
-        onClicked: m => {
-            if (root.player && root.player.canTogglePlaying)
-                root.player.togglePlaying()
+        onAlt: m => {
+            if (m.button === Qt.MiddleButton) Media.toggle()
+            else if (m.button === Qt.RightButton) Media.next()
+        }
+        property real acc: 0
+        onScrolled: w => {
+            acc += w.angleDelta.y
+            while (Math.abs(acc) >= 120) { Media.seekBy(acc > 0 ? 5 : -5); acc -= acc > 0 ? 120 : -120 }
         }
 
-        Txt {
-            text: root.playing ? Theme.glyph.note : Theme.glyph.pause
-            color: root.playing ? Theme.grayLight : Theme.grayMid
+        CoverArt {
+            anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+            width: 20; height: 20; size: 40
+            source: Media.art
+            opacity: Media.playing ? 1 : 0.6
+            Behavior on opacity { NumberAnimation { duration: Theme.dur(200) } }
         }
 
-        Txt {
-            text: root.title
-            color: root.playing ? Theme.grayLight : Theme.grayMid
-        }
-    }
-
-    Item {
-        id: ctl
-        anchors.left: lead.right
-        height: parent.height
-        width: root.expanded ? ctlRow.implicitWidth + 6 : 0
-        clip: true
-        opacity: root.expanded ? 1 : 0
-
-        Behavior on width {
-            NumberAnimation {
-                duration: Theme.dur(180)
-                easing.type: Easing.OutCubic
+        Item {
+            width: Settings.showEqualizer ? eq.implicitWidth : glyph.implicitWidth
+            height: Theme.barHeight
+            Equalizer {
+                id: eq
+                visible: Settings.showEqualizer
+                anchors.centerIn: parent
+                height: 12
+                running: Media.playing
+                level: Media.level
+                color: Theme.grayLight
+            }
+            Txt {
+                id: glyph
+                visible: !Settings.showEqualizer
+                anchors.centerIn: parent
+                text: Media.playing ? Theme.glyph.note : Theme.glyph.pause
+                color: Media.playing ? Theme.grayLight : Theme.grayMid
             }
         }
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.dur(140)
+
+        Item {
+            width: label.width
+            height: Theme.barHeight
+            TextMetrics { id: cw; font: label.font; text: "0" }
+            Txt {
+                id: label
+                anchors.verticalCenter: parent.verticalCenter
+                // follows the text, clamped to the min / max characters set in Settings › Bar
+                width: Math.max(Config.titleMin * cw.advanceWidth, Math.min(implicitWidth, Config.titleMax * cw.advanceWidth))
+                text: Media.title + (Media.artist ? "  ·  " + Media.artist : "")
+                color: Media.playing || root.expanded ? Theme.grayLight : Theme.grayMid
+                Behavior on color { ColorAnimation { duration: Theme.dur(200) } }
             }
-        }
-
-        Row {
-            id: ctlRow
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 2
-
-            Repeater {
-                model: [
-                    { g: Theme.glyph.prev, act: 0 },
-                    { g: root.playing ? Theme.glyph.pause : Theme.glyph.play, act: 1 },
-                    { g: Theme.glyph.next, act: 2 }
-                ]
-
-                delegate: Item {
-                    required property var modelData
-                    width: 24
-                    height: 22
-
-                    Rectangle {
-                        anchors.fill: parent
-                        color: m.containsMouse ? Theme.hover : "transparent"
-                    }
-
-                    Txt {
-                        anchors.centerIn: parent
-                        text: modelData.g
-                        color: m.containsMouse ? Theme.foreground : Theme.grayMid
-                    }
-
-                    MouseArea {
-                        id: m
-                        anchors.fill: parent
-                        hoverEnabled: true
-
-                        onClicked: {
-                            if (!root.player)
-                                return
-                            if (modelData.act === 0)
-                                root.player.previous()
-                            else if (modelData.act === 1)
-                                root.player.togglePlaying()
-                            else
-                                root.player.next()
-                        }
-                    }
+            Rectangle {   // progress line
+                visible: Media.length > 0
+                anchors { left: parent.left; bottom: parent.bottom; bottomMargin: 6 }
+                width: parent.width; height: 1
+                color: Theme.grayDark
+                Rectangle {
+                    width: parent.width * Media.progress; height: 1
+                    color: Theme.grayLight
+                    Behavior on width { NumberAnimation { duration: Theme.dur(900); easing.type: Easing.Linear } }
                 }
             }
+        }
+    }
 
-            Txt {
-                text: root.progress
-                color: Theme.grayMid
-                leftPadding: 6
+    // ── miniplayer (hover) ─────────────────────────────────────────────
+    Item {
+        id: mini
+        anchors.left: lead.right
+        height: parent.height
+        width: root.expanded && !root.menuOpen ? box.width + 4 : 0
+        clip: true
+        Behavior on width { NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+
+        Rectangle {
+            id: box
+            x: 4
+            anchors.verticalCenter: parent.verticalCenter
+            width: ctl.implicitWidth + 12
+            height: parent.height - 10
+            radius: 4
+            color: Theme.hover
+            border.width: 1
+            border.color: Theme.line
+            opacity: root.expanded && !root.menuOpen ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.dur(180) } }
+            transform: Translate {
+                x: root.expanded && !root.menuOpen ? 0 : -10
+                Behavior on x { NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+            }
+
+            Row {
+                id: ctl
+                anchors.centerIn: parent
+                spacing: 0
+                component Ctl: Item {
+                    id: c
+                    property string g: ""
+                    property bool on: false
+                    property bool usable: true
+                    signal hit()
+                    visible: usable
+                    width: 22; height: 22
+                    Rectangle { anchors.fill: parent; radius: 4; color: m.pressed ? Theme.pressed : m.containsMouse ? Theme.hover : "transparent"
+                                border.width: c.on ? 1 : 0; border.color: Theme.grayMid }
+                    Txt { anchors.centerIn: parent; text: c.g; color: m.containsMouse || c.on ? Theme.white : Theme.grayMid; font.pixelSize: 12
+                          scale: m.pressed ? 0.88 : 1; Behavior on scale { NumberAnimation { duration: Theme.dur(90) } } }
+                    MouseArea { id: m; anchors.fill: parent; hoverEnabled: true; onClicked: c.hit() }
+                }
+                Txt {
+                    visible: Media.length > 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    rightPadding: 6
+                    text: Media.fmt(Media.position) + " / " + Media.fmt(Media.length)
+                    color: Theme.grayMid; font.pixelSize: Theme.small
+                }
+                Ctl { g: Theme.glyph.shuffle; usable: Media.canShuffle; on: Media.shuffle; onHit: Media.setShuffle(!Media.shuffle) }
+                Ctl { g: Theme.glyph.prev; onHit: Media.previous() }
+                Ctl { g: Media.playing ? Theme.glyph.pause : Theme.glyph.play; onHit: Media.toggle() }
+                Ctl { g: Theme.glyph.next; onHit: Media.next() }
+                Ctl { g: Media.loop === "track" ? Theme.glyph.repeatOne : Theme.glyph.repeat; usable: Media.canLoop; on: Media.loop !== "none"; onHit: Media.cycleLoop() }
             }
         }
     }

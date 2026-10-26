@@ -13,8 +13,8 @@ MenuButton {
     readonly property bool charging: dev && dev.state === UPowerDeviceState.Charging
     readonly property bool low: pct <= 20 && !charging
     visible: present
+    alert: low
 
-    Rectangle { visible: root.low; anchors.fill: parent; color: Theme.critical; z: -1 }
     Txt { text: root.charging ? Theme.glyph.bolt : Theme.glyph.battery[Math.min(4, Math.round(root.pct / 25))]; color: root.low ? Theme.white : Theme.grayLight }
     Txt { text: Math.round(root.pct) + "%"; color: root.low ? Theme.white : Theme.grayLight }
 }

@@ -13,6 +13,6 @@ Item {
     HoverHandler { id: hov }
     Txt { id: ic; anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter } width: 20; text: root.icon; color: Theme.grayMid; font.pixelSize: 15 }
     Txt { anchors { left: ic.right; leftMargin: 8; verticalCenter: parent.verticalCenter } text: root.label }
-    Toggle { anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter } checked: root.checked; onToggled: c => root.toggled(c) }
+    Toggle { anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter } checked: root.checked; interactive: false }
     TapHandler { onTapped: root.toggled(!root.checked) }
 }

@@ -15,7 +15,7 @@ Thank you for contributing to MONOLITH. Clear, verifiable and safe changes help 
 
 Scripts, comments, internal names and technical logs use English. Only user-facing messages are translated. Installer messages live in `scripts/lib/messages.sh`; keep placeholders in the same order in both languages.
 
-Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `Dependencias.md` and `dependencies.md`, `Instalacao.md` and `Installation.md`, and `Problemas-conhecidos.md` and `Troubleshooting.md`.
+Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`.
 
 When changing dependencies, update `packages.txt` and explain why each package is needed. Do not promote commented references to active dependencies without confirming actual use.
 
@@ -46,4 +46,4 @@ Installer tests use temporary environments. If you change installer behaviour, a
 
 ## Screenshots and previews
 
-Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. `assets/screenshots/screenshot-slot.svg` is only a replaceable frame for the READMEs. Installer previews are generated with `tools/ansi2svg.py`; see the [visual assets guide](assets/VISUAL-GUIDE.md).
+Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. The READMEs use `1.png`, `2.png` and `3.png`. Installer previews are generated with `tools/ansi2svg.py`.
