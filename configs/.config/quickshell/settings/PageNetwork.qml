@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Io
 import "../core"
 import "../services"
 import "../components"
@@ -7,27 +6,18 @@ import "../components"
 Column {
     id: root
     spacing: 6
-    property string ip: ""
-    property string gw: ""
     property string pending: ""          // ssid waiting for a password
 
-    Component.onCompleted: { Net.scan(); info.running = true }
+    Component.onCompleted: { Net.scan(); Net.refreshInfo() }
     Timer { interval: 20000; repeat: true; running: true; onTriggered: Net.scan() }   // keep scanning while the page is open
-    Connections { target: Net; function onKindChanged() { info.running = true } }
-    Process {
-        id: info
-        command: ["sh", "-c", "nmcli -t -g IP4.ADDRESS,IP4.GATEWAY device show \"$(nmcli -t -f DEVICE,STATE device | awk -F: '$2==\"connected\"{print $1; exit}')\" 2>/dev/null"]
-        stdout: StdioCollector {
-            onStreamFinished: { const l = text.split("\n"); root.ip = l[0] || ""; root.gw = l[1] || "" }
-        }
-    }
 
     Rectangle {
         width: parent.width; height: 64; color: "transparent"; border.width: 1; border.color: Theme.line
         Column {
             x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 2
             Txt { color: Theme.white; text: Net.connected ? (Net.connection || Net.device) + "  ·  " + Strings.t(Net.status) : Strings.t("disconnected") }
-            Txt { color: Theme.grayMid; font.pixelSize: Theme.small; visible: root.ip !== ""; text: Labels.t("ip") + " " + root.ip + "   " + Labels.t("gateway") + " " + root.gw }
+            Txt { color: Theme.grayMid; font.pixelSize: Theme.small; visible: Net.ip !== ""; text: Labels.t("ip") + " " + Net.ip + "   " + Labels.t("gateway") + " " + Net.gateway }
+            Txt { color: Theme.grayMid; font.pixelSize: Theme.small; visible: Net.dns !== "" || Net.available; text: (Net.dns !== "" ? "DNS " + Net.dns + "   " : "") + (Net.backend + (Net.resolved ? " + systemd-resolved" : "")) }
         }
         Btn { anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter } compact: true; visible: Net.connected; text: Labels.t("disconnect"); onActivated: Net.disconnect() }
     }

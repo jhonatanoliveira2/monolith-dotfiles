@@ -25,6 +25,12 @@ Singleton {
         netGone: "Rede fora de alcance", netTimeout: "Tempo esgotado ao conectar", netFail: "Falha ao conectar",
         wifiHwOff: "Wi-Fi bloqueado pelo hardware (botão/rfkill)", btBlocked: "Bluetooth bloqueado (rfkill) — ative para desbloquear",
         btPairFail: "Falha ao parear", monOverlap: "Monitores sobrepostos: ajuste as posições", btConnFail: "Falha ao conectar",
+        accept: "Aceitar", reject: "Recusar", cancel: "Cancelar",
+        bt_confirm: "Confirme se este código é o mesmo exibido no dispositivo", bt_passkey: "Digite a chave numérica exibida no dispositivo",
+        bt_pin: "Digite o PIN do dispositivo (geralmente 0000 ou 1234)", bt_display: "Digite este código no dispositivo e pressione Enter",
+        bt_authorize: "O dispositivo quer parear com este computador", bt_service: "O dispositivo pede acesso a um serviço",
+        btPairHint: "confirme o pedido no dispositivo; se persistir, remova este computador da lista dele e tente de novo",
+        btNoAgent: "agente de pareamento indisponível (bluetoothctl/script)",
         ytmOff: "API do YouTube Music inacessível", ytmAuth: "API do YouTube Music recusou o acesso", ytmHttp: "Erro da API do YouTube Music",
         ytmHint: "Aleatório/repetir no YouTube Music exigem o plugin \"API Server\" (autorização: nenhuma, ou token em Configurações > Barra)"
     })
@@ -49,6 +55,12 @@ Singleton {
         netGone: "Network out of range", netTimeout: "Timed out while connecting", netFail: "Connection failed",
         wifiHwOff: "Wi-Fi blocked by hardware (switch/rfkill)", btBlocked: "Bluetooth blocked (rfkill) — switch on to unblock",
         btPairFail: "Pairing failed", monOverlap: "Monitors overlap: adjust the positions", btConnFail: "Connection failed",
+        accept: "Accept", reject: "Reject", cancel: "Cancel",
+        bt_confirm: "Confirm this code matches the one shown on the device", bt_passkey: "Type the passkey shown on the device",
+        bt_pin: "Type the device PIN (usually 0000 or 1234)", bt_display: "Type this code on the device and press Enter",
+        bt_authorize: "The device wants to pair with this computer", bt_service: "The device asks for access to a service",
+        btPairHint: "accept the request on the device; if it persists, remove this computer from its list and try again",
+        btNoAgent: "pairing agent unavailable (bluetoothctl/script)",
         ytmOff: "YouTube Music API unreachable", ytmAuth: "YouTube Music API denied access", ytmHttp: "YouTube Music API error",
         ytmHint: "Shuffle/repeat in YouTube Music need its \"API Server\" plugin (authorization: none, or a token in Settings > Bar)"
     })

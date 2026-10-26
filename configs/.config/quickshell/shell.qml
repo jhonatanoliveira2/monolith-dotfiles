@@ -27,6 +27,7 @@ ShellRoot {
             MenuSlot { name: "network"; screen: scope.modelData; NetworkMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "bluetooth"; screen: scope.modelData; BluetoothMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "power"; screen: scope.modelData; PowerMenu { screen: scope.modelData; bar: barWin } }
+            MenuSlot { name: "brightness"; screen: scope.modelData; BrightnessMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "notifications"; screen: scope.modelData; NotificationCenter { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "calendar"; screen: scope.modelData; CalendarMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "stats"; screen: scope.modelData; StatsMenu { screen: scope.modelData; bar: barWin } }

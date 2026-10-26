@@ -88,7 +88,7 @@ MenuWindow {
         Flow {
             width: parent.width; spacing: 4
             Btn { visible: Net.hasWifi; text: Strings.t("rescan"); icon: Theme.glyph.refresh; active: Net.scanning; onActivated: Net.scan(true) }
-            Btn { text: Strings.t("advanced"); onActivated: { Popups.close(); Quickshell.execDetached(["nm-connection-editor"]) } }
+            Btn { text: Strings.t("advanced"); visible: Net.available; onActivated: { Popups.close(); Net.advanced() } }
         }
     }
 }

@@ -5,7 +5,7 @@ import "../core"
 import "../services"
 import "../components"
 
-// Battery, power profile and screen brightness.
+// Battery and power profile (brightness has its own menu: BrightnessMenu.qml).
 MenuWindow {
     menu: "power"
     panelWidth: 340
@@ -58,19 +58,6 @@ MenuWindow {
             Btn { text: Strings.t("saver"); icon: Theme.glyph.saver; active: PowerProfiles.profile === PowerProfile.PowerSaver; onActivated: PowerProfiles.profile = PowerProfile.PowerSaver }
             Btn { text: Strings.t("balanced"); icon: Theme.glyph.balanced; active: PowerProfiles.profile === PowerProfile.Balanced; onActivated: PowerProfiles.profile = PowerProfile.Balanced }
             Btn { visible: PowerProfiles.hasPerformanceProfile; text: Strings.t("performance"); icon: Theme.glyph.perf; active: PowerProfiles.profile === PowerProfile.Performance; onActivated: PowerProfiles.profile = PowerProfile.Performance }
-        }
-
-        Section { width: parent.width; text: Strings.t("brightness"); visible: Brightness.available }
-        Item {
-            visible: Brightness.available
-            width: parent.width; height: 30
-            Txt { id: sun; anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter } text: Theme.glyph.backlight; font.pixelSize: 16 }
-            ThinSlider {
-                anchors { left: sun.right; leftMargin: 12; right: bp.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                value: Brightness.fraction
-                onMoved: v => Brightness.set(v)
-            }
-            Txt { id: bp; anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter } width: 40; horizontalAlignment: Text.AlignRight; text: Math.round(Brightness.fraction * 100) + "%" }
         }
     }
 }

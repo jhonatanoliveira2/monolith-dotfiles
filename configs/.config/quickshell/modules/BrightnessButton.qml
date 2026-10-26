@@ -3,10 +3,10 @@ import "../core"
 import "../services"
 import "../components"
 
-// Laptops only (needs a backlight). Scroll to change; click opens the power menu.
+// Laptops only (needs a backlight). Scroll to change; click opens the brightness menu.
 MenuButton {
     id: root
-    menu: "power"
+    menu: "brightness"
     property real acc: 0
     visible: Brightness.available
     onScrolled: w => {

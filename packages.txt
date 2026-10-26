@@ -56,9 +56,10 @@ pipewire-pulse              # PulseAudio compatibility for applications
 wireplumber                 # wpctl: media keys and the Quickshell output selector
 playerctl                   # media keys and hyprlock now-playing (the bar player uses MPRIS directly)
 brightnessctl               # media-keys.lua brightness keys and the Quickshell brightness slider
-networkmanager              # Quickshell network menu (native D-Bus backend) and nmcli
+networkmanager              # Quickshell network menu (native D-Bus backend) and nmcli; iwd / systemd-networkd also work
 network-manager-applet      # nm-connection-editor ("Advanced" in the network menu)
 blueman                     # "Manager" button of the Bluetooth menu (blueman-manager)
+bluez-utils                 # bluetoothctl: pairing agent of the Quickshell Bluetooth menu (PIN / passkey prompts)
 curl                        # Quickshell cover cache, YouTube Music API and update check
 udisks2                     # disk health (SMART / NVMe wear) in Settings > Storage
 pciutils                    # lspci: GPU name in Settings > System
