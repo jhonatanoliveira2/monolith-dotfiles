@@ -1,4 +1,5 @@
 singleton Audio 1.0 Audio.qml
+singleton BarLayout 1.0 BarLayout.qml
 singleton Battery 1.0 Battery.qml
 singleton Brightness 1.0 Brightness.qml
 singleton Displays 1.0 Displays.qml
@@ -7,5 +8,8 @@ singleton Media 1.0 Media.qml
 singleton Net 1.0 Net.qml
 singleton Notifs 1.0 Notifs.qml
 singleton Osd 1.0 Osd.qml
+singleton Profile 1.0 Profile.qml
+singleton QuickMenu 1.0 QuickMenu.qml
 singleton Stats 1.0 Stats.qml
 singleton Sys 1.0 Sys.qml
+singleton Wallpapers 1.0 Wallpapers.qml

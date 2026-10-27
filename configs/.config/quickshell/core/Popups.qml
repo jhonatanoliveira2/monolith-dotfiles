@@ -10,6 +10,7 @@ Singleton {
     property string current: ""
     property string screenName: ""
     property real anchorX: 0
+    property real anchorY: 0            // center of the button in its bar (menus of a vertical bar use it)
     property var buttons: ({})
     property bool pinned: false          // opened by click / shortcut: hover-out does not close it
 
@@ -18,6 +19,18 @@ Singleton {
     property string appPage: "system"
     function openApp(page) { appPage = page || "system"; appOpen = true; close() }
     function closeApp() { appOpen = false }
+
+    // full-screen overlays (app launcher, wallpaper picker): one at a time, on the focused monitor
+    property string overlay: ""
+    property string overlayScreen: ""
+    function toggleOverlay(name) {
+        if (overlay === name) { overlay = ""; return }
+        const m = Hyprland.focusedMonitor
+        overlayScreen = m ? m.name : (Quickshell.screens.length ? Quickshell.screens[0].name : "")
+        close()
+        overlay = name
+    }
+    function closeOverlay() { overlay = "" }
 
     Timer { id: closeTimer; interval: 350; onTriggered: if (!root.pinned) root.close() }
 
@@ -35,7 +48,9 @@ Singleton {
         if (!name || !screen) return
         closeTimer.stop()
         const it = item || buttons[screen + ":" + name]
-        anchorX = it ? it.mapToItem(null, it.width / 2, 0).x : 0
+        const p = it ? it.mapToItem(null, it.width / 2, it.height / 2) : null
+        anchorX = p ? p.x : 0
+        anchorY = p ? p.y : 0
         screenName = screen
         current = name
     }

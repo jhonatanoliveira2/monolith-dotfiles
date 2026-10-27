@@ -22,7 +22,8 @@ Rectangle {
 
     function pageFile(p) {
         return ({ system: "PageSystem", display: "PageDisplay", audio: "PageAudio", mic: "PageMic", notifications: "PageNotifications",
-                  power: "PagePower", storage: "PageStorage", bluetooth: "PageBluetooth", network: "PageNetwork", update: "PageUpdate" })[p]
+                  power: "PagePower", storage: "PageStorage", bluetooth: "PageBluetooth", network: "PageNetwork", update: "PageUpdate",
+                  appearance: "PageAppearance", profile: "PageProfile", bar: "PageBar" })[p]
     }
     // a page that is not available here (e.g. Power on a desktop) falls back to System
     onPageChanged: { if (!Registry.pages.some(x => x.id === page)) page = "system"; flick.contentY = 0 }
@@ -35,7 +36,19 @@ Rectangle {
         color: Qt.rgba(0, 0, 0, 0.35)
         Rectangle { anchors { right: parent.right; top: parent.top; bottom: parent.bottom } width: 1; color: Theme.line }
 
-        Txt { id: logo; x: 14; y: 14; height: 24; text: Theme.glyph.arch + "   MONOLITH"; color: Theme.white; font.pixelSize: 15 }
+        // profile (or the MONOLITH logo); a click opens the Profile page
+        Item {
+            id: logo
+            x: 14; y: 12; width: parent.width - 28; height: 40
+            Avatar { id: av; width: 36; height: 36; anchors.verticalCenter: parent.verticalCenter; source: Profile.avatar; initial: Profile.initial }
+            Column {
+                anchors { left: av.right; leftMargin: 10; right: parent.right; verticalCenter: parent.verticalCenter }
+                spacing: 1
+                Txt { width: parent.width; text: Profile.name; color: Theme.white; font.pixelSize: 14 }
+                Txt { width: parent.width; text: Profile.subtitle; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
+            }
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { app.query = ""; input.text = ""; app.page = "profile" } }
+        }
 
         Rectangle {
             id: box

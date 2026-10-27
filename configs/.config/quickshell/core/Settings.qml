@@ -45,8 +45,49 @@ Singleton {
     property alias autoProfile: adapter.autoProfile
     property alias batterySaver: adapter.batterySaver
     property alias touchpadEnabled: adapter.touchpadEnabled
+    property alias quickSections: adapter.quickSections
+    property alias quickToggles: adapter.quickToggles
+    property alias quickShortcuts: adapter.quickShortcuts
+    property alias quickSession: adapter.quickSession
+    property alias clock24: adapter.clock24
+    property alias clockSeconds: adapter.clockSeconds
+    property alias clockDate: adapter.clockDate
+    property alias clockSep: adapter.clockSep
+    property alias clockCustom: adapter.clockCustom
+    property alias profileName: adapter.profileName
+    property alias profileSubtitle: adapter.profileSubtitle
+    property alias profileAvatar: adapter.profileAvatar
+    property alias profileInMenu: adapter.profileInMenu
+    property alias profileOnLock: adapter.profileOnLock
+    property alias profileAsLogo: adapter.profileAsLogo
+    property alias barPosition: adapter.barPosition
+    property alias barModules: adapter.barModules
+    property alias barGapStart: adapter.barGapStart
+    property alias barGapCenter: adapter.barGapCenter
+    property alias barGapEnd: adapter.barGapEnd
+    property alias menuStyle: adapter.menuStyle
+    property alias shellBlur: adapter.shellBlur
+    property alias launcherIcons: adapter.launcherIcons
+    property alias launcherComments: adapter.launcherComments
+    property alias launcherSort: adapter.launcherSort
+    property alias launcherMax: adapter.launcherMax
+    property alias launcherUsage: adapter.launcherUsage
+    property alias launcherCalc: adapter.launcherCalc
+    property alias launcherCommands: adapter.launcherCommands
+    property alias launcherTerminal: adapter.launcherTerminal
+    property alias wpStaticDir: adapter.wpStaticDir
+    property alias wpLiveDir: adapter.wpLiveDir
+    property alias wpTransition: adapter.wpTransition
+    property alias wpDuration: adapter.wpDuration
+    property alias wpLiveAudio: adapter.wpLiveAudio
+    property alias wpLivePause: adapter.wpLivePause
+    property alias wpColumns: adapter.wpColumns
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
 
+    readonly property bool barVertical: barPosition === "left" || barPosition === "right"
+    // pattern of the bar clock (Qt.formatDateTime)
+    readonly property string clockPattern: clockCustom.trim() !== "" ? clockCustom
+        : (clock24 ? "HH:mm" : "h:mm") + (clockSeconds ? ":ss" : "") + (clock24 ? "" : " AP") + (clockDate ? clockSep + clockDate : "")
     readonly property string dir: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/quickshell-monolith"
     property bool ready: false
     property bool loaded: false          // true once settings.json was read (or created)
@@ -60,12 +101,18 @@ Singleton {
         onExited: root.ready = true
     }
 
+    // Writes are batched (several changes in a row become one write) and the change notification caused by
+    // our own write is ignored: reloading it would bring back a half-written state and drop later changes.
+    // Edits made to the file by hand are still picked up.
+    property double lastWrite: 0
+    Timer { id: writeSoon; interval: 80; onTriggered: { root.lastWrite = Date.now(); file.writeAdapter() } }
     FileView {
+        id: file
         path: root.ready ? root.dir + "/settings.json" : ""
         watchChanges: true
-        onFileChanged: reload()
+        onFileChanged: if (!writeSoon.running && Date.now() - root.lastWrite > 1000) reload()
         onLoaded: root.markLoaded()
-        onAdapterUpdated: writeAdapter()
+        onAdapterUpdated: writeSoon.restart()
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) writeAdapter()
             root.markLoaded()
@@ -109,6 +156,49 @@ Singleton {
             property string autoProfile: "off"     // off | balanced | performance (profile on AC; saver on battery)
             property bool batterySaver: false      // blur, shadows and animations off on battery
             property bool touchpadEnabled: true
+            // quick menu (Arch button): sections in order, quick switches, shortcuts and session buttons (services/QuickMenu.qml)
+            property var quickSections: []        // [{ id, on }] — empty = defaults
+            property var quickToggles: ["wifi", "dnd", "keepAwake", "darkMode"]
+            property var quickShortcuts: null     // [{ k: "builtin" | "app" | "page", v, l }] — null = defaults
+            property var quickSession: ["lock", "suspend", "logout", "reboot", "poweroff"]
+            // bar clock: clockCustom (Qt date format) wins over the presets
+            property bool clock24: true
+            property bool clockSeconds: false
+            property string clockDate: "dd/MM/yy"  // "" = no date
+            property string clockSep: " ~ "
+            property string clockCustom: ""
+            // profile (services/Profile.qml)
+            property string profileName: ""        // "" = real name from passwd, else the user name
+            property string profileSubtitle: ""    // "" = user@host
+            property string profileAvatar: ""      // copy kept in the state dir
+            property bool profileInMenu: true
+            property bool profileOnLock: true
+            property bool profileAsLogo: false
+            // bar: edge of the screen and the modules of each zone (services/BarLayout.qml)
+            property string barPosition: "top"     // top | bottom | left | right
+            property var barModules: null          // { start: [ids], center: [ids], end: [ids] } — null = defaults
+            property int barGapStart: 6            // px between the modules of each zone
+            property int barGapCenter: 6
+            property int barGapEnd: 6
+            property string menuStyle: "auto"      // auto (attached on the sides / bottom) | attached | floating
+            property bool shellBlur: true          // compositor blur behind the bar, menus, toasts and OSD
+            // app launcher (menus/Launcher.qml)
+            property bool launcherIcons: true
+            property bool launcherComments: true
+            property string launcherSort: "usage"  // usage | name
+            property int launcherMax: 8
+            property var launcherUsage: ({})       // desktop entry id -> launches
+            property bool launcherCalc: true       // "2+2" shows the result
+            property bool launcherCommands: true   // "> cmd" runs a command
+            property string launcherTerminal: "ghostty"   // for Terminal=true apps
+            // wallpaper picker (menus/WallpaperPicker.qml -> ~/.local/bin/wallpaper-menu)
+            property string wpStaticDir: ""        // "" = ~/Pictures/Wallpapers
+            property string wpLiveDir: ""          // "" = ~/Videos/wallpaper-live
+            property string wpTransition: "fade"   // awww transition type
+            property real wpDuration: 0.7
+            property bool wpLiveAudio: false
+            property bool wpLivePause: true        // pause live wallpapers while covered
+            property int wpColumns: 4
             property var overrides: ({})
         }
     }

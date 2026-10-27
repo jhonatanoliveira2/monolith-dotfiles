@@ -77,10 +77,22 @@ exec({ key = "C", cmd = programs.ide })
 exec({ key = "TAB", cmd = programs.browser })
 exec({ key = "Z", cmd = programs.lockScreen })
 
+-- Launcher and wallpaper picker: the shell's own (Quickshell overlays) while it runs, rofi otherwise.
+local function shellRunning()
+    return #hl.get_layers({ namespace = "qs-bar" }) > 0
+end
+local function shellOr(shortcut, fallback)
+    return function()
+        if shellRunning() then
+            hl.dispatch(hl.dsp.global("quickshell:" .. shortcut))
+        else
+            hl.dispatch(hl.dsp.exec_cmd(fallback))
+        end
+    end
+end
+
 -- Launcher
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(
-    "pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu
-))
+hl.bind(mainMod .. " + A", shellOr("launcher", "pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu))
 
 -- Screenshots
 hl.bind(mainMod .. " + Delete", function()
@@ -97,11 +109,8 @@ exec({
     cmd = "~/.config/hypr/scripts/toggle-gsr.sh",
 })
 
--- Wallpaper menu
-exec({
-    key = "D",
-    cmd = "~/.local/bin/wallpaper-menu &",
-})
+-- Wallpaper picker
+hl.bind(mainMod .. " + D", shellOr("wallpaper", "~/.local/bin/wallpaper-menu &"))
 
 -- Session exit
 local hasHyprshutdown = os.execute("command -v hyprshutdown >/dev/null 2>&1") == true

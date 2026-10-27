@@ -16,5 +16,5 @@ MenuButton {
     onAlt: m => { if (m.button === Qt.MiddleButton) Net.setWifi(!Net.wifiEnabled) }
 
     Txt { text: root.icon; color: root.tone }
-    Txt { text: root.label; color: root.tone }
+    Txt { visible: !Settings.barVertical; text: root.label; color: root.tone }   // icon only on a vertical bar
 }

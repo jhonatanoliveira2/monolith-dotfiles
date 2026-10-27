@@ -34,6 +34,9 @@ ShellRoot {
             MenuSlot { name: "settings"; screen: scope.modelData; SettingsMenu { screen: scope.modelData; bar: barWin } }
             LazyLoader { active: Notifs.popups.length + Notifs.internal.length > 0; Toasts { screen: scope.modelData } }
             OsdWindow { screen: scope.modelData }
+            // full-screen overlays, on the monitor that was focused when they opened
+            OverlaySlot { name: "launcher"; screen: scope.modelData; Launcher { screen: scope.modelData } }
+            OverlaySlot { name: "wallpaper"; screen: scope.modelData; WallpaperPicker { screen: scope.modelData } }
         }
     }
 
@@ -54,6 +57,8 @@ ShellRoot {
     Key { name: "mediaNext"; onPressed: { Media.next(); Osd.show("media") } }
     Key { name: "mediaPrev"; onPressed: { Media.previous(); Osd.show("media") } }
     Key { name: "notifications"; onPressed: Popups.toggleFocused("notifications") }
+    Key { name: "launcher"; onPressed: Popups.toggleOverlay("launcher") }
+    Key { name: "wallpaper"; onPressed: Popups.toggleOverlay("wallpaper") }
     Key { name: "media"; onPressed: Popups.toggleFocused("media") }
     Key { name: "session"; onPressed: Popups.toggleFocused("settings") }
     Key { name: "settingsApp"; onPressed: Popups.appOpen ? Popups.closeApp() : Popups.openApp("system") }
@@ -63,6 +68,9 @@ ShellRoot {
         target: "shell"
         function toggle(name: string): void { Popups.toggleFocused(name) }
         function close(): void { Popups.close() }
+        function launcher(): void { Popups.toggleOverlay("launcher") }
+        function wallpaper(): void { Popups.toggleOverlay("wallpaper") }
+        function bar(position: string): void { if (["top", "bottom", "left", "right"].indexOf(position) >= 0) Settings.barPosition = position }
         function settings(page: string): void { Popups.openApp(page) }
         function dnd(): void { Settings.dnd = !Settings.dnd }
         function reload(): void { Quickshell.reload(true) }

@@ -196,6 +196,17 @@ Singleton {
     }
     function reapply() { apply(chosen()); if (!Settings.touchpadEnabled) applyTouchpad() }
 
+    // Blur behind the shell's surfaces: hypr/modules/window-rules.lua reads generated/shell-blur (0 / 1) when the
+    // config loads, so a change writes the flag and reloads Hyprland (Sys then reapplies the Settings choices).
+    // At startup the flag is only rewritten (and Hyprland reloaded) when it differs from the setting.
+    function setShellBlur(on) { Settings.shellBlur = on; syncBlur() }
+    function syncBlur() {
+        blurProc.command = ["sh", "-c", "f=\"$1/shell-blur\"; [ \"$(cat \"$f\" 2>/dev/null || echo 1)\" = \"$2\" ] && exit 0; " +
+                            "mkdir -p \"$1\" && printf %s \"$2\" > \"$f\" && hyprctl reload >/dev/null", "sh", hyprDir + "/generated", Settings.shellBlur ? "1" : "0"]
+        blurProc.running = true
+    }
+    Process { id: blurProc }
+
     // Touchpad on / off: per-device config (hl.device) for every touchpad Hyprland reports.
     // Runtime only, like the rest: reapplied at startup and after each reload.
     function setTouchpad(on) { Settings.touchpadEnabled = on; applyTouchpad() }
@@ -254,7 +265,7 @@ Singleton {
 
     Connections {
         target: Settings
-        function onLoadedOnce() { root.reapply(); if (Object.keys(root.chosen()).length) writeSoon.restart() }
+        function onLoadedOnce() { root.syncBlur(); root.reapply(); if (Object.keys(root.chosen()).length) writeSoon.restart() }
     }
     // `hyprctl reload` re-runs hyprland.lua and drops runtime changes: put the menu's choices back.
     Connections {

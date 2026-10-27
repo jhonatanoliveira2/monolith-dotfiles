@@ -26,6 +26,7 @@ Singleton {
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int barHeight: 32
+    readonly property int barSize: Settings.barVertical ? 42 : barHeight   // thickness of the bar on any edge
     readonly property int menuRadius: 12
     readonly property int radius: 6        // buttons, rows, cards inside menus
     readonly property int gap: 3           // distance between the bar and a menu

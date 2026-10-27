@@ -3,16 +3,18 @@ import "../core"
 import "../services"
 import "../components"
 
-// Bar player. Collapsed: cover + equalizer + "title · artist" with a thin progress line (click opens the media
+// Bar player. Collapsed: cover + equalizer + the track title (artists only in the media menu) with a thin progress line (click opens the media
 // menu, middle click plays/pauses, right click skips, scroll seeks). Hovering slides out the miniplayer next to
 // the title: elapsed / total time, shuffle, previous, play-pause, next and repeat. The miniplayer is its own
 // item (outside the button's mouse area) so its controls receive their clicks; it is independent of MediaMenu.
 Item {
     id: root
     property string screenName: ""
-    visible: Config.showPlayer && Media.player !== null
-    implicitWidth: lead.implicitWidth + mini.width
-    implicitHeight: parent ? parent.height : Theme.barHeight
+    // a vertical bar only has room for the cover and the equalizer (the title and the miniplayer are hidden)
+    readonly property bool vertical: Settings.barVertical
+    visible: Media.player !== null
+    implicitWidth: vertical ? Theme.barSize : lead.implicitWidth + mini.width
+    implicitHeight: vertical ? lead.implicitHeight : Theme.barSize
 
     readonly property bool menuOpen: lead.active
     // stays open briefly after the pointer leaves, so moving between title and controls never flickers
@@ -20,7 +22,7 @@ Item {
     HoverHandler {
         id: hover
         onHoveredChanged: {
-            if (hovered) { closeMini.stop(); openMini.restart() }
+            if (hovered && !root.vertical) { closeMini.stop(); openMini.restart() }
             else { openMini.stop(); closeMini.restart() }
         }
     }
@@ -34,7 +36,6 @@ Item {
         id: lead
         menu: "media"
         screenName: root.screenName
-        height: parent.height
         pad: 4
         spacing: 6
 
@@ -49,7 +50,6 @@ Item {
         }
 
         CoverArt {
-            anchors.verticalCenter: parent ? parent.verticalCenter : undefined
             width: 20; height: 20; size: 40
             source: Media.art
             opacity: Media.playing ? 1 : 0.6
@@ -58,7 +58,7 @@ Item {
 
         Item {
             width: Settings.showEqualizer ? eq.implicitWidth : glyph.implicitWidth
-            height: Theme.barHeight
+            height: root.vertical ? 16 : Theme.barSize
             Equalizer {
                 id: eq
                 visible: Settings.showEqualizer
@@ -78,15 +78,16 @@ Item {
         }
 
         Item {
+            visible: !root.vertical
             width: label.width
-            height: Theme.barHeight
+            height: Theme.barSize
             TextMetrics { id: cw; font: label.font; text: "0" }
             Txt {
                 id: label
                 anchors.verticalCenter: parent.verticalCenter
                 // follows the text, clamped to the min / max characters set in Settings › Bar
                 width: Math.max(Config.titleMin * cw.advanceWidth, Math.min(implicitWidth, Config.titleMax * cw.advanceWidth))
-                text: Media.title + (Media.artist ? "  ·  " + Media.artist : "")
+                text: Media.title
                 color: Media.playing || root.expanded ? Theme.grayLight : Theme.grayMid
                 Behavior on color { ColorAnimation { duration: Theme.dur(200) } }
             }
@@ -107,6 +108,7 @@ Item {
     // ── miniplayer (hover) ─────────────────────────────────────────────
     Item {
         id: mini
+        visible: !root.vertical
         anchors.left: lead.right
         height: parent.height
         width: root.expanded && !root.menuOpen ? box.width + 4 : 0

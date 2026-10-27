@@ -14,3 +14,7 @@ PageDisplay 1.0 PageDisplay.qml
 PageMic 1.0 PageMic.qml
 PageNotifications 1.0 PageNotifications.qml
 PagePower 1.0 PagePower.qml
+CatHeader 1.0 CatHeader.qml
+PageAppearance 1.0 PageAppearance.qml
+PageProfile 1.0 PageProfile.qml
+PageBar 1.0 PageBar.qml

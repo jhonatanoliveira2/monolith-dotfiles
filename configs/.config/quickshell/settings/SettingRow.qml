@@ -12,7 +12,7 @@ Rectangle {
     readonly property var cur: drag !== null ? drag : (entry.get ? entry.get() : 0)
 
     width: parent ? parent.width : 400
-    height: 40
+    height: 44
     color: hov.hovered ? Theme.hover : "transparent"
     border.width: 1
     border.color: Theme.line
@@ -20,7 +20,7 @@ Rectangle {
 
     Column {
         anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-        Txt { text: Registry.text(row.entry); color: Theme.grayLight; width: row.width * 0.45 }
+        Txt { text: Registry.text(row.entry); color: Theme.foreground; width: row.width * 0.45 }
         Txt { visible: row.crumb; text: Labels.t("page_" + row.entry.page); color: Theme.grayMid; font.pixelSize: Theme.small; width: row.width * 0.45 }
     }
 

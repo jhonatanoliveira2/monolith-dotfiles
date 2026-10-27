@@ -22,27 +22,29 @@ Item {
         return !!o && !!o.name
     }
     readonly property int cell: 20
+    readonly property bool vertical: Settings.barVertical
 
     function go(id) { Hyprland.dispatch("hl.dsp.focus({ workspace = " + id + " })") }
     function ws(id) { return real.find(w => w.id === id) || null }
 
-    implicitWidth: row.width + (specialOpen ? 18 : 0)
-    implicitHeight: parent ? parent.height : Theme.barHeight
+    implicitWidth: vertical ? Theme.barSize : row.width + (specialOpen ? 18 : 0)
+    implicitHeight: vertical ? row.height + (specialOpen ? 18 : 0) : Theme.barSize
 
     // active pill, slides between slots
     Rectangle {
         readonly property int idx: root.ids.indexOf(root.activeId)
         visible: idx >= 0
-        x: idx * root.cell + 2
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.cell - 4; height: 8; radius: 4
+        x: root.vertical ? (parent.width - width) / 2 : idx * root.cell + 2
+        y: root.vertical ? idx * root.cell + 2 : (parent.height - height) / 2
+        width: root.vertical ? 8 : root.cell - 4; height: root.vertical ? root.cell - 4 : 8; radius: 4
         color: Theme.foreground
-        Behavior on x { NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+        Behavior on x { enabled: !root.vertical; NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+        Behavior on y { enabled: root.vertical; NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
     }
 
-    Row {
+    Grid {
         id: row
-        height: parent.height
+        columns: root.vertical ? 1 : 64
         Repeater {
             model: root.ids
             delegate: Item {
@@ -52,8 +54,8 @@ Item {
                 readonly property bool active: modelData === root.activeId
                 readonly property bool occupied: w !== null && (w.toplevels ? w.toplevels.values.length > 0 : true)
                 readonly property bool urgent: w !== null && w.urgent === true
-                width: root.cell
-                height: parent.height
+                width: root.vertical ? Theme.barSize : root.cell
+                height: root.vertical ? root.cell : Theme.barSize
 
                 Rectangle {
                     anchors.centerIn: parent
@@ -84,7 +86,8 @@ Item {
     // special workspace ("magic") indicator
     Txt {
         visible: root.specialOpen
-        anchors { left: row.right; leftMargin: 4; verticalCenter: parent.verticalCenter }
+        x: root.vertical ? (parent.width - width) / 2 : row.width + 4
+        y: root.vertical ? row.height + 2 : (parent.height - height) / 2
         text: "✦"; color: Theme.white; font.pixelSize: 11
     }
 

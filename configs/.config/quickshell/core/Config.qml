@@ -21,7 +21,9 @@ Singleton {
 
     // Commands used by the settings menu
     property var lockCommand: ["hyprlock"]
-    property var wallpaperCommand: ["wallpaper-menu"]
+    // by full path: the session PATH Quickshell inherits from Hyprland usually lacks ~/.local/bin
+    readonly property string wallpaperMenu: Quickshell.env("HOME") + "/.local/bin/wallpaper-menu"
+    property var wallpaperCommand: [wallpaperMenu]
     property var logoutCommand: ["sh", "-c", "command -v hyprshutdown >/dev/null 2>&1 && exec hyprshutdown || exec hyprctl dispatch 'hl.dsp.exit()'"]
     property var hyprEval: ["hyprctl", "eval"]   // runtime option changes go through the Lua API (hl.config)
 }

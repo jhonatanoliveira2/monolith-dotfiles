@@ -14,5 +14,5 @@ MenuButton {
         while (Math.abs(acc) >= 60) { Brightness.nudge(acc > 0 ? 5 : -5); acc -= acc > 0 ? 60 : -60 }
     }
     Txt { text: Theme.glyph.backlight }
-    Txt { text: Math.round(Brightness.fraction * 100) + "%" }
+    Txt { text: Math.round(Brightness.fraction * 100) + "%"; font.pixelSize: Settings.barVertical ? Theme.small : Theme.fontSize }
 }

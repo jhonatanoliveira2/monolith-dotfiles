@@ -41,17 +41,27 @@ hl.window_rule({
 
 -- Quickshell surfaces: the menus/toasts/OSD animate themselves in QML, so skip the compositor
 -- animation (no double fade); blur only what is translucent.
+-- Settings > Bar > "Blur" writes generated/shell-blur ("0" turns it off); missing file = blur on.
+local function shellBlur()
+    local f = io.open(os.getenv("HOME") .. "/.config/hypr/generated/shell-blur", "r")
+    if not f then return true end
+    local v = f:read("l")
+    f:close()
+    return v ~= "0"
+end
+local blur = shellBlur()
+
 hl.layer_rule({
     name = "qs-bar",
     match = { namespace = "^qs-bar$" },
-    blur = true,
+    blur = blur,
     ignore_alpha = 0.2,
 })
 
 hl.layer_rule({
     name = "qs-popups",
-    match = { namespace = "^qs-(menu|toasts|osd)$" },
-    blur = true,
+    match = { namespace = "^qs-(menu|toasts|osd|launcher|wallpaper)$" },
+    blur = blur,
     ignore_alpha = 0.3,
     no_anim = true,
 })

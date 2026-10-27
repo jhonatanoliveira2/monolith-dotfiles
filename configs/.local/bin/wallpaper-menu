@@ -2,16 +2,21 @@
 # wallpaper-menu — MONOLITH wallpaper picker
 #   static wallpapers : awww        live wallpapers : mpvpaper        menu : rofi (with previews)
 #
-# Usage:  wallpaper-menu              open the menu (run it again to close it)
+# Usage:  wallpaper-menu              open the rofi menu (run it again to close it)
 #         wallpaper-menu --restore    re-apply the last choice (put it in your autostart)
 #         wallpaper-menu --clear-cache   delete the generated previews
+#         wallpaper-menu --list <image|video>              path<TAB>preview per line (used by the shell picker)
+#         wallpaper-menu --set <static|live> <file> [ALL|out1,out2]   apply without a menu (used by the shell)
+# The Quickshell picker (Settings > Wallpapers) passes its options through the WALLPAPER_* variables below.
 #
 # Dependencies: rofi hyprctl jq awww mpvpaper  |  previews: ffmpeg  |  notifications: libnotify (optional)
 # Theme: ~/.config/hypr/rofi/wallpaper-menu.rasi (colours and border are variables at its top)
 set -uo pipefail
+QUIET=0
 
 # ───────────────────────────── configuration ─────────────────────────────
 STATIC_DIR="${WALLPAPER_STATIC_DIR:-$HOME/Pictures/Wallpapers}"
+STATIC_DIR="${STATIC_DIR/#\~/$HOME}"
 
 # Folders scanned for live wallpapers (not recursive) ...
 LIVE_DIRS=(
@@ -30,9 +35,11 @@ STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper-menu/last"
 THUMB_W=480 THUMB_H=270                 # preview size (16:9)
 GRID_COLUMNS=4 GRID_LINES=3             # wallpaper grid
 
-AWWW_ARGS=(--transition-type fade --transition-duration 0.7)
-MPVPAPER_FLAGS=(-p)                     # -p: pause playback while the wallpaper is fully covered
-MPV_OPTIONS="no-audio loop-file=inf hwdec=auto-safe panscan=1.0"
+AWWW_ARGS=(--transition-type "${WALLPAPER_TRANSITION:-fade}" --transition-duration "${WALLPAPER_TRANSITION_DURATION:-0.7}")
+MPVPAPER_FLAGS=()
+[[ ${WALLPAPER_LIVE_PAUSE:-1} == 1 ]] && MPVPAPER_FLAGS=(-p)    # -p: pause playback while the wallpaper is fully covered
+MPV_OPTIONS="loop-file=inf hwdec=auto-safe panscan=1.0"
+[[ ${WALLPAPER_LIVE_AUDIO:-0} == 1 ]] || MPV_OPTIONS="no-audio $MPV_OPTIONS"
 
 IMG_EXT=(jpg jpeg png webp gif bmp)
 VID_EXT=(mp4 mkv webm mov avi gif)
@@ -99,7 +106,7 @@ build_thumbs() {
     local f
     for f in "$@"; do [[ -s $(thumb_path "$f") ]] || missing+=("$f"); done
     (( ${#missing[@]} )) || return 0
-    (( ${#missing[@]} > 6 )) && notify "Generating ${#missing[@]} previews (first run only)…"
+    (( ${#missing[@]} > 6 && ! QUIET )) && notify "Generating ${#missing[@]} previews (first run only)…"
     export -f make_thumb thumb_path
     export CACHE_DIR THUMB_W THUMB_H
     printf '%s\0' "${missing[@]}" | xargs -0 -r -P "$(nproc 2>/dev/null || echo 4)" -I{} bash -c 'make_thumb "$1"' _ {}
@@ -216,6 +223,11 @@ apply_static() {
     local file
     file=$(choose_file "Static wallpaper" image "$STATIC_DIR") || return 0
     choose_monitor || return 0
+    set_static "$file"
+}
+set_static() { # set_static <file>   (TARGETS / ALL_TARGETS already chosen)
+    local file=$1
+    need awww || die "Missing dependency: awww"
     stop_live
     ensure_awww || die "Could not start awww-daemon."
     awww img --outputs "$(join_by_comma "${TARGETS[@]}")" "${AWWW_ARGS[@]}" "$file" || die "awww failed to set the wallpaper."
@@ -227,6 +239,11 @@ apply_live() {
     local file
     file=$(choose_file "Live wallpaper" video "${LIVE_DIRS[@]}" "${LIVE_FILES[@]}") || return 0
     choose_monitor || return 0
+    set_live "$file"
+}
+set_live() { # set_live <file>   (TARGETS / ALL_TARGETS already chosen)
+    local file=$1
+    need mpvpaper || die "Missing dependency: mpvpaper"
     stop_live
     # All monitors: stop awww so its image never covers the video. One monitor: keep awww for the others.
     if (( ALL_TARGETS )) && need awww; then awww kill >/dev/null 2>&1; fi
@@ -260,6 +277,25 @@ case ${1:-} in
     -h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --clear-cache) rm -rf -- "$CACHE_DIR/thumbs"; echo "previews removed"; exit 0 ;;
     --restore) need hyprctl && need jq || exit 1; restore_last ;;
+    --list)
+        QUIET=1
+        if [[ ${2:-} == video ]]; then mapfile -d '' -t files < <(collect_files video "${LIVE_DIRS[@]}" "${LIVE_FILES[@]}")
+        else mapfile -d '' -t files < <(collect_files image "$STATIC_DIR"); fi
+        (( ${#files[@]} )) && build_thumbs "${files[@]}"
+        for f in "${files[@]}"; do
+            t=$(thumb_path "$f"); [[ -s $t ]] || t=""
+            printf '%s\t%s\n' "$f" "$t"
+        done
+        exit 0 ;;
+    --set)
+        kind=${2:-} file=${3:-} outs=${4:-ALL}
+        [[ -f $file ]] || die "File not found: $file"
+        need hyprctl && need jq || die "Missing dependency: hyprctl / jq"
+        load_monitors
+        if [[ $outs == ALL ]]; then TARGETS=("${MONITORS[@]}") ALL_TARGETS=1
+        else IFS=, read -r -a TARGETS <<<"$outs"; ALL_TARGETS=0; fi
+        case $kind in static) set_static "$file" ;; live) set_live "$file" ;; *) die "Unknown kind: $kind" ;; esac
+        exit 0 ;;
 esac
 
 # second press closes the menu
