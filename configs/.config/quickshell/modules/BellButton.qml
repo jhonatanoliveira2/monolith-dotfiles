@@ -7,6 +7,6 @@ MenuButton {
     id: root
     menu: "notifications"
     onAlt: m => { if (m.button === Qt.MiddleButton) Settings.dnd = !Settings.dnd }
-    Txt { text: Settings.dnd ? Theme.glyph.bellOff : Theme.glyph.bell; color: Settings.dnd ? Theme.grayMid : Theme.grayLight }
+    Txt { text: Settings.dnd ? Theme.glyph.bellOff : Theme.glyph.bell; color: Settings.dnd ? Theme.grayMid : Theme.grayLight; font.pixelSize: Theme.barIcon }
     Txt { visible: Notifs.count > 0; text: Notifs.count; color: Theme.foreground }
 }

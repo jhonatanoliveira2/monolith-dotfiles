@@ -122,7 +122,8 @@ Item {
             width: ctl.implicitWidth + 12
             height: parent.height - 10
             radius: 4
-            color: Theme.hover
+            // light glass over the bar (follows its opacity setting); the bright controls keep it readable
+            color: Palettes.alpha(Theme.p.panel, Math.min(0.5, Config.barOpacity * 0.6))
             border.width: 1
             border.color: Theme.line
             opacity: root.expanded && !root.menuOpen ? 1 : 0
@@ -145,8 +146,8 @@ Item {
                     visible: usable
                     width: 22; height: 22
                     Rectangle { anchors.fill: parent; radius: 4; color: m.pressed ? Theme.pressed : m.containsMouse ? Theme.hover : "transparent"
-                                border.width: c.on ? 1 : 0; border.color: Theme.grayMid }
-                    Txt { anchors.centerIn: parent; text: c.g; color: m.containsMouse || c.on ? Theme.white : Theme.grayMid; font.pixelSize: 12
+                                border.width: c.on ? 1 : 0; border.color: Theme.accent }
+                    Txt { anchors.centerIn: parent; text: c.g; color: m.containsMouse || c.on ? Theme.white : Theme.grayLight; font.pixelSize: 13
                           scale: m.pressed ? 0.88 : 1; Behavior on scale { NumberAnimation { duration: Theme.dur(90) } } }
                     MouseArea { id: m; anchors.fill: parent; hoverEnabled: true; onClicked: c.hit() }
                 }
@@ -155,7 +156,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     rightPadding: 6
                     text: Media.fmt(Media.position) + " / " + Media.fmt(Media.length)
-                    color: Theme.grayMid; font.pixelSize: Theme.small
+                    color: Theme.foreground; font.pixelSize: Theme.small
                 }
                 Ctl { g: Theme.glyph.shuffle; usable: Media.canShuffle; on: Media.shuffle; onHit: Media.setShuffle(!Media.shuffle) }
                 Ctl { g: Theme.glyph.prev; onHit: Media.previous() }

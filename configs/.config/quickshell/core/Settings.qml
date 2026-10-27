@@ -82,6 +82,9 @@ Singleton {
     property alias wpLiveAudio: adapter.wpLiveAudio
     property alias wpLivePause: adapter.wpLivePause
     property alias wpColumns: adapter.wpColumns
+    property alias themeMode: adapter.themeMode
+    property alias themePreset: adapter.themePreset
+    property alias themePalette: adapter.themePalette
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
 
     readonly property bool barVertical: barPosition === "left" || barPosition === "right"
@@ -199,6 +202,10 @@ Singleton {
             property bool wpLiveAudio: false
             property bool wpLivePause: true        // pause live wallpapers while covered
             property int wpColumns: 4
+            // colour theme (Settings > Themes, core/Palettes.qml + services/Themes.qml)
+            property string themeMode: "default"   // default | dynamic | preset
+            property string themePreset: "nord"    // core/Palettes.qml presets
+            property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
             property var overrides: ({})
         }
     }

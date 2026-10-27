@@ -48,7 +48,7 @@ PanelWindow {
                         Layout.alignment: Qt.AlignCenter
                         menu: "settings"; screenName: zone.win.screenName; pad: 8
                         // the profile picture can replace the Arch logo (Settings > Profile)
-                        Txt { visible: !Settings.profileAsLogo; text: Theme.glyph.arch; color: Theme.white; font.pixelSize: 15 }
+                        Txt { visible: !Settings.profileAsLogo; text: Theme.glyph.arch; color: Theme.white; font.pixelSize: Settings.barVertical ? 18 : 15 }
                         Avatar { visible: Settings.profileAsLogo; width: 20; height: 20; source: Profile.avatar; initial: Profile.initial }
                     }
                 }

@@ -13,6 +13,6 @@ MenuButton {
         acc += w.angleDelta.y
         while (Math.abs(acc) >= 60) { Audio.nudge(acc > 0 ? Config.volumeStep : -Config.volumeStep); acc -= acc > 0 ? 60 : -60 }
     }
-    Txt { text: Audio.glyph(); color: Audio.muted ? Theme.grayMid : Theme.grayLight }
-    Txt { text: Math.round(Audio.volume * 100) + "%"; color: Audio.muted ? Theme.grayMid : Theme.grayLight; font.pixelSize: Settings.barVertical ? Theme.small : Theme.fontSize }
+    Txt { text: Audio.glyph(); color: Audio.muted ? Theme.grayMid : Theme.grayLight; font.pixelSize: Theme.barIcon }
+    Txt { text: Math.round(Audio.volume * 100) + "%"; color: Audio.muted ? Theme.grayMid : Theme.grayLight; visible: !root.vertical }   // icon only on a side bar
 }

@@ -4,7 +4,7 @@ import "../services"
 import "../components"
 
 // CPU / GPU temperature (hottest sensor) and RAM, like the old custom/sysmon module.
-// On a vertical bar each stat stacks its glyph over a smaller value.
+// On a side bar only the glyphs show (larger); the colour and the alert background still flag heat.
 MenuButton {
     id: root
     menu: "stats"
@@ -19,8 +19,8 @@ MenuButton {
         columns: Settings.barVertical ? 1 : 2
         columnSpacing: 4
         horizontalItemAlignment: Grid.AlignHCenter
-        Txt { text: parent.glyph; color: parent.tone }
-        Txt { text: parent.value; color: parent.tone; font.pixelSize: Settings.barVertical ? Theme.small : Theme.fontSize }
+        Txt { text: parent.glyph; color: parent.tone; font.pixelSize: Theme.barIcon }
+        Txt { visible: !Settings.barVertical; text: parent.value; color: parent.tone }
     }
     Stat { visible: Stats.cpuTemp >= 0; glyph: Theme.glyph.cpu; value: Stats.cpuTemp + "°"; tone: root.tone }
     Stat { visible: Stats.gpuTemp >= 0; glyph: Theme.glyph.gpu; value: Stats.gpuTemp + "°"; tone: root.tone }

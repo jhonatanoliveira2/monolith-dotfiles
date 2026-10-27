@@ -1,0 +1,44 @@
+// MONOLITH fastfetch: the name on top (monolith.txt, 3 lines of half blocks) and one compact box of system
+// basics below it, both 45 columns wide and indented 3 columns, in the shell's greys.
+// Box layout inspired by the caelestia dots (icon, key, right-aligned value, rounded frame).
+// Colours: {$1} reset to white, {$2} grey (keys), {$3} dim grey (frame).
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "type": "file",
+        "source": "~/.config/fastfetch/monolith.txt",
+        "position": "top",
+        "color": { "1": "white", "2": "38;5;250", "3": "38;5;245" },
+        "padding": { "left": 3, "top": 1, "right": 0 }
+    },
+    "display": {
+        "separator": "  ",
+        "color": "white",
+        "constants": ["\u001b[37m", "\u001b[38;5;245m", "\u001b[38;5;240m"]
+    },
+    "modules": [
+        { "type": "custom", "key": "{$3}   ╭───────────────────────────────────────────╮" },
+        { "type": "os",       "key": "{$3}   │{$1} 󰣇  {$2}distro{$1}", "format": "{pretty-name>30}{$3} │" },
+        { "type": "kernel",   "key": "{$3}   │{$1} 󰻀  {$2}kernel{$1}", "format": "{release>30}{$3} │" },
+        { "type": "wm",       "key": "{$3}   │{$1} 󱗃  {$2}wm    {$1}", "format": "{pretty-name>30}{$3} │" },
+        { "type": "shell",    "key": "{$3}   │{$1} 󰆍  {$2}shell {$1}", "format": "{pretty-name>30}{$3} │" },
+        { "type": "terminal", "key": "{$3}   │{$1} 󰞷  {$2}term  {$1}", "format": "{pretty-name>30}{$3} │" },
+        { "type": "packages", "key": "{$3}   │{$1} 󰏗  {$2}pkgs  {$1}", "format": "{all>30}{$3} │" },
+        {
+            "type": "command", "key": "{$3}   │{$1} 󰍛  {$2}memory{$1}",
+            "text": "free -m | awk 'NR==2{printf \"%.1f / %.1f GiB\", $3/1024, $2/1024}'",
+            "format": "{>30}{$3} │"
+        },
+        {
+            "type": "command", "key": "{$3}   │{$1} 󰅐  {$2}uptime{$1}",
+            "text": "uptime -p | sed 's/^up //; s/ hours\\?/h/; s/ minutes\\?/m/; s/ days\\?/d/; s/,//g'",
+            "format": "{>30}{$3} │"
+        },
+        {
+            "type": "command", "key": "{$3}   │{$1} 󰀄  {$2}user  {$1}",
+            "text": "echo \"$USER@$(cat /etc/hostname 2>/dev/null || uname -n)\"",
+            "format": "{>30}{$3} │"
+        },
+        { "type": "custom", "key": "{$3}   ╰───────────────────────────────────────────╯" }
+    ]
+}

@@ -18,3 +18,4 @@ CatHeader 1.0 CatHeader.qml
 PageAppearance 1.0 PageAppearance.qml
 PageProfile 1.0 PageProfile.qml
 PageBar 1.0 PageBar.qml
+PageThemes 1.0 PageThemes.qml

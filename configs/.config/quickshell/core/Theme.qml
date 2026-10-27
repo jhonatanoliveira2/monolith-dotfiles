@@ -5,28 +5,36 @@ import Quickshell
 // Visual identity: monochrome (white to black), translucent black, thin near-transparent borders.
 // Same palette, font and proportions as the previous Waybar (colors.css / style.css).
 Singleton {
-    readonly property color background: "#111111"
-    readonly property color foreground: "#eeeeee"
-    readonly property color white: "#ffffff"
-    readonly property color grayLight: "#cccccc"
-    readonly property color grayMid: "#888888"
-    readonly property color grayDark: "#444444"
-    readonly property color accent: "#ffffff"
+    // Colours come from the active theme (core/Palettes.qml, Settings > Themes); the default theme is the
+    // original palette below, unchanged: #111111 / #eeeeee / #ffffff / #cccccc / #888888 / #444444.
+    readonly property var p: Palettes.active
+    readonly property color background: p.background
+    readonly property color foreground: p.foreground
+    readonly property color white: p.white
+    readonly property color grayLight: p.grayLight
+    readonly property color grayMid: p.grayMid
+    readonly property color grayDark: p.grayDark
+    readonly property color accent: p.accent
+    readonly property color onAccent: p.onAccent          // text over an accent / white fill
+    readonly property color onForeground: p.onForeground  // text over a foreground fill
 
-    readonly property color line: Qt.rgba(200 / 255, 200 / 255, 200 / 255, 0.25)
-    readonly property color barBg: Qt.rgba(0, 0, 0, Config.barOpacity)
-    readonly property color panelBg: Qt.rgba(17 / 255, 17 / 255, 17 / 255, Config.menuOpacity)
-    readonly property color hover: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color pressed: Qt.rgba(1, 1, 1, 0.16)
-    readonly property color selected: Qt.rgba(1, 1, 1, 0.12)
+    readonly property color line: Palettes.alpha(p.line, 0.25)
+    readonly property color barBg: Palettes.alpha(p.bar, Config.barOpacity)
+    readonly property color panelBg: Palettes.alpha(p.panel, Config.menuOpacity)
+    readonly property color hover: tint(0.08)
+    readonly property color pressed: tint(0.16)
+    readonly property color selected: Palettes.alpha(p.accent, 0.12)
     readonly property color selectedBorder: grayLight
-    readonly property color critical: Qt.rgba(1, 1, 1, 0.14)
+    readonly property color critical: tint(0.14)
+    // translucent light overlay (white on the default theme)
+    function tint(a) { return Palettes.alpha(p.tint, a) }
 
     readonly property string font: "JetBrainsMono Nerd Font"
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int barHeight: 32
     readonly property int barSize: Settings.barVertical ? 42 : barHeight   // thickness of the bar on any edge
+    readonly property int barIcon: Settings.barVertical ? 17 : fontSize     // module glyphs (larger on a side bar, which has no text)
     readonly property int menuRadius: 12
     readonly property int radius: 6        // buttons, rows, cards inside menus
     readonly property int gap: 3           // distance between the bar and a menu

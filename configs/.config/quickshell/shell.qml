@@ -11,7 +11,7 @@ import "components"
 
 // MONOLITH shell: bar + menus + notifications. Start with `quickshell` (or `qs`).
 ShellRoot {
-    Component.onCompleted: Sys.init()
+    Component.onCompleted: { Sys.init(); Themes.init() }
 
     SettingsWindow {}
 
@@ -74,6 +74,19 @@ ShellRoot {
         function settings(page: string): void { Popups.openApp(page) }
         function dnd(): void { Settings.dnd = !Settings.dnd }
         function reload(): void { Quickshell.reload(true) }
+    }
+
+    // Colour theme:  qs ipc call theme set dynamic   |   qs ipc call theme preset nord   |   qs ipc call theme regenerate
+    IpcHandler {
+        target: "theme"
+        function set(mode: string): void { if (["default", "dynamic", "preset"].indexOf(mode) >= 0) Themes.setMode(mode) }
+        function preset(id: string): void { if (Palettes.preset(id)) Themes.setMode("preset", id) }
+        function regenerate(): void { Settings.themeMode = "dynamic"; Themes.regenerate() }
+        function status(): string {
+            const p = Settings.themePalette
+            return [Settings.themeMode, Themes.status, Themes.error, Theme.background, Theme.foreground, Theme.accent,
+                    p ? p.source : "", p ? p.outputs : ""].join("\t")
+        }
     }
 
     IpcHandler {

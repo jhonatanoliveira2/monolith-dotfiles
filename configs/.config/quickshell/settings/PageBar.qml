@@ -24,7 +24,7 @@ Item {
         property string mid: ""
         property string zone: ""
         width: chipRow.implicitWidth + 22; height: 32; radius: 4
-        color: drop.containsDrag ? Theme.hover : chipMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+        color: drop.containsDrag ? Theme.hover : chipMouse.containsMouse ? Theme.tint(0.04) : "transparent"
         border.width: 1; border.color: drop.containsDrag ? Theme.white : Theme.line
         opacity: page && page.dragging && page.dragId === mid ? 0.3 : 1
         Row {
@@ -66,7 +66,7 @@ Item {
         property string zone: ""
         readonly property var mods: zone === "hidden" ? BarLayout.hidden : BarLayout.zones[zone]
         width: parent ? parent.width : 600; height: flow.implicitHeight + 46
-        color: zoneDrop.containsDrag ? Qt.rgba(1, 1, 1, 0.05) : "transparent"
+        color: zoneDrop.containsDrag ? Theme.tint(0.05) : "transparent"
         border.width: 1; border.color: zoneDrop.containsDrag ? Theme.grayLight : Theme.line
         radius: 6
         DropArea { id: zoneDrop; anchors.fill: parent; keys: ["barmod"]; onDropped: BarLayout.move(zoneBox.page.dragId, zoneBox.zone, "") }

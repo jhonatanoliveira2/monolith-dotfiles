@@ -3,8 +3,12 @@ import Quickshell.Hyprland
 import "../core"
 import "../components"
 
-// Workspace dots: the active one stretches into a pill (animated), occupied ones are brighter, urgent ones pulse.
-// Scroll to move between workspaces. Settings.persistentWorkspaces keeps slots 1..N visible even when empty.
+// Workspace indicator. The active workspace is a pill that moves elastically (its number shows for a few
+// seconds after a switch or while hovered, then fades and the pill slims down): its leading
+// edge runs ahead and the trailing one catches up, so it stretches toward the target and settles. Occupied
+// workspaces are filled dots, empty (persistent) ones hollow rings, urgent ones pulse; hovering a slot shows
+// its number. Click to go there, scroll to move between workspaces. Horizontal or vertical (side bars).
+// Settings.persistentWorkspaces keeps slots 1..N visible even when empty.
 Item {
     id: root
     property string screenName: ""
@@ -21,29 +25,68 @@ Item {
         const o = m && m.lastIpcObject ? m.lastIpcObject.specialWorkspace : null
         return !!o && !!o.name
     }
-    readonly property int cell: 20
     readonly property bool vertical: Settings.barVertical
+    readonly property int cell: 22                // slot pitch along the bar
+    readonly property int pill: 16                // thickness of the active pill
+    readonly property int extent: ids.length * cell
 
     function go(id) { Hyprland.dispatch("hl.dsp.focus({ workspace = " + id + " })") }
     function ws(id) { return real.find(w => w.id === id) || null }
 
-    implicitWidth: vertical ? Theme.barSize : row.width + (specialOpen ? 18 : 0)
-    implicitHeight: vertical ? row.height + (specialOpen ? 18 : 0) : Theme.barSize
+    implicitWidth: vertical ? Theme.barSize : extent + (specialOpen ? 18 : 0)
+    implicitHeight: vertical ? extent + (specialOpen ? 18 : 0) : Theme.barSize
 
-    // active pill, slides between slots
+    // ── elastic active pill: `a` / `b` are its two ends along the bar ──
+    readonly property int idx: ids.indexOf(activeId)
+    property int lastIdx: -1
+    property bool forward: true
+    property bool settled: false               // no animation for the first placement
+    property real a: 0
+    property real b: 0
+    function place() {
+        if (idx < 0) return
+        forward = idx >= lastIdx
+        lastIdx = idx
+        a = idx * cell + 1                     // 20 px along the bar, 16 across: a pill, not a dot
+        b = idx * cell + cell - 1
+        flashNumber()
+    }
+    // the number shows for a moment after each switch (and while hovered), then fades and the pill slims down
+    property bool showNumber: true
+    property real thick: showNumber ? pill : 8
+    Behavior on thick { NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+    function flashNumber() { showNumber = true; if (!hover.hovered) hideNumber.restart() }
+    Timer { id: hideNumber; interval: 2500; onTriggered: root.showNumber = false }
+    HoverHandler {
+        id: hover
+        onHoveredChanged: { if (hovered) { root.showNumber = true; hideNumber.stop() } else hideNumber.restart() }
+    }
+    onIdxChanged: place()
+    onExtentChanged: place()
+    Component.onCompleted: { place(); settled = true }
+    Behavior on a { enabled: root.settled; NumberAnimation { duration: Theme.dur(root.forward ? 340 : 170); easing.type: Easing.OutCubic } }
+    Behavior on b { enabled: root.settled; NumberAnimation { duration: Theme.dur(root.forward ? 170 : 340); easing.type: Easing.OutCubic } }
+
     Rectangle {
-        readonly property int idx: root.ids.indexOf(root.activeId)
-        visible: idx >= 0
-        x: root.vertical ? (parent.width - width) / 2 : idx * root.cell + 2
-        y: root.vertical ? idx * root.cell + 2 : (parent.height - height) / 2
-        width: root.vertical ? 8 : root.cell - 4; height: root.vertical ? root.cell - 4 : 8; radius: 4
+        visible: root.idx >= 0
+        x: root.vertical ? (parent.width - root.thick) / 2 : root.a
+        y: root.vertical ? root.a : (parent.height - root.thick) / 2
+        width: root.vertical ? root.thick : root.b - root.a
+        height: root.vertical ? root.b - root.a : root.thick
+        radius: root.thick / 2
         color: Theme.foreground
-        Behavior on x { enabled: !root.vertical; NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
-        Behavior on y { enabled: root.vertical; NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutCubic } }
+        Text {
+            anchors.centerIn: parent
+            text: root.activeId
+            color: Theme.onForeground
+            opacity: root.showNumber ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.dur(180) } }
+            font.family: Theme.font; font.bold: true; font.pixelSize: 10
+        }
     }
 
     Grid {
-        id: row
+        id: slots
         columns: root.vertical ? 1 : 64
         Repeater {
             model: root.ids
@@ -57,13 +100,17 @@ Item {
                 width: root.vertical ? Theme.barSize : root.cell
                 height: root.vertical ? root.cell : Theme.barSize
 
+                // dot (occupied), ring (empty) or, while hovered, the number
                 Rectangle {
                     anchors.centerIn: parent
                     visible: !slot.active
-                    width: ma.containsMouse ? 8 : 6; height: width; radius: width / 2
-                    color: slot.urgent ? Theme.white : ma.containsMouse ? Theme.grayLight : slot.occupied ? Theme.grayLight : Theme.grayDark
-                    Behavior on width { NumberAnimation { duration: Theme.dur(120) } }
-                    Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
+                    width: ma.containsMouse ? 14 : slot.occupied || slot.urgent ? 7 : 6
+                    height: width; radius: width / 2
+                    color: ma.containsMouse ? Theme.hover : slot.urgent ? Theme.white : slot.occupied ? Theme.grayLight : "transparent"
+                    border.width: slot.occupied || slot.urgent || ma.containsMouse ? 0 : 1.5
+                    border.color: Theme.grayMid
+                    Behavior on width { NumberAnimation { duration: Theme.dur(140); easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: Theme.dur(140) } }
                     property real pulse: 1
                     opacity: slot.urgent ? pulse : 1
                     SequentialAnimation on pulse {
@@ -72,11 +119,19 @@ Item {
                         NumberAnimation { to: 0.3; duration: 500 }
                         NumberAnimation { to: 1; duration: 500 }
                     }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: ma.containsMouse
+                        text: slot.modelData
+                        color: Theme.white
+                        font.family: Theme.font; font.bold: true; font.pixelSize: 10
+                    }
                 }
                 MouseArea {
                     id: ma
                     anchors.fill: parent
                     hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: root.go(slot.modelData)
                 }
             }
@@ -86,8 +141,8 @@ Item {
     // special workspace ("magic") indicator
     Txt {
         visible: root.specialOpen
-        x: root.vertical ? (parent.width - width) / 2 : row.width + 4
-        y: root.vertical ? row.height + 2 : (parent.height - height) / 2
+        x: root.vertical ? (parent.width - width) / 2 : root.extent + 4
+        y: root.vertical ? root.extent + 2 : (parent.height - height) / 2
         text: "✦"; color: Theme.white; font.pixelSize: 11
     }
 

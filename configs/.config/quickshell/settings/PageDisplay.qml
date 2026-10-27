@@ -64,7 +64,7 @@ Column {
                 width: lg.w * stage.k; height: lg.h * stage.k
                 z: drag.pressed ? 2 : 1
                 radius: 4
-                color: modelData.name === root.sel ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.06)
+                color: modelData.name === root.sel ? Theme.tint(0.16) : Theme.tint(0.06)
                 border.width: modelData.name === root.sel ? 2 : 1
                 border.color: modelData.name === root.sel ? Theme.white : Theme.grayMid
                 Behavior on x { enabled: !drag.pressed; NumberAnimation { duration: Theme.dur(160); easing.type: Easing.OutCubic } }

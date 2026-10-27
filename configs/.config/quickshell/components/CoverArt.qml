@@ -23,7 +23,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(1, 1, 1, 0.06)
+        color: Theme.tint(0.06)
         Text {
             anchors.centerIn: parent
             visible: !root.hasArt

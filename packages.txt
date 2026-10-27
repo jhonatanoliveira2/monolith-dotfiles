@@ -86,7 +86,7 @@ xorg-xwayland               # X11 applications (window-rules.lua has an xwayland
 awww                        # autostart: awww-daemon; static wallpapers in wallpaper-menu (may be in official repos)
 mpvpaper                    # wallpaper-menu: animated wallpapers (may be in official repos)
 ttf-material-icons-git	    # quickshell glyphs icons
-wpgtk                       # wpg command used by wpg/wp_init.sh and wpg/ settings
+wpgtk                       # wpg: dynamic palette of Settings > Themes (monolith-theme), wpg/ settings
 
 [aur:optional]
 zen-browser-bin             # SUPER+TAB launches "zen-browser", replace it with your favorite browser

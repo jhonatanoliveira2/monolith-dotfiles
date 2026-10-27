@@ -17,6 +17,7 @@ Singleton {
     readonly property bool laptop: UPower.displayDevice !== null && UPower.displayDevice.isPresent && UPower.displayDevice.isLaptopBattery
     readonly property var allPages: [
         { id: "system", glyph: 0xf108 }, { id: "profile", glyph: 0xf007 }, { id: "appearance", glyph: 0xf1fc },
+        { id: "themes", glyph: 0xf03d8 },
         { id: "launcher", glyph: 0xf135 }, { id: "wallpaper", glyph: 0xf03e },
         { id: "display", glyph: 0xf26c }, { id: "configs", glyph: 0xf013 },
         { id: "bar", glyph: 0xf0c9 }, { id: "audio", glyph: 0xf028 }, { id: "mic", glyph: 0xf130 },
@@ -222,6 +223,13 @@ Singleton {
         { page: "launcher", cat: "search", id: "lnTerm", type: "text", label: ["Terminal para apps de terminal", "Terminal for terminal apps"], kw: "launcher terminal ghostty kitty",
           get: () => Settings.launcherTerminal, set: v => Settings.launcherTerminal = v.trim() || "ghostty" },
         btn("launcher", "search", "lnReset", ["Zerar histórico de uso", "Clear usage history"], "launcher histórico usage", () => Settings.launcherUsage = ({}), { confirm: true }),
+
+        // ── themes (drawn by PageThemes; these entries feed the search) ──
+        cho("themes", "themeMode", "themeMode", ["Tema de cores", "Colour theme"], "tema theme cores colors paleta palette wpgtk wal pywal dinâmico dynamic",
+            [{ v: "default", l: root.lbl("Padrão", "Default") }, { v: "dynamic", l: root.lbl("Dinâmico", "Dynamic") }, { v: "preset", l: root.lbl("Predefinido", "Preset") }],
+            () => Settings.themeMode, v => Themes.setMode(v)),
+        btn("themes", "themeDynamic", "themeRegen", ["Regenerar paleta do wallpaper", "Regenerate wallpaper palette"], "tema theme paleta palette wpgtk cores colors",
+            () => { if (Settings.themeMode !== "dynamic") Settings.themeMode = "dynamic"; Themes.regenerate() }),
 
         // ── wallpapers (menus/WallpaperPicker.qml -> wallpaper-menu: awww / mpvpaper) ──
         btn("wallpaper", "general", "wpOpen", ["Abrir o seletor (Super+D)", "Open the picker (Super+D)"], "wallpaper papel de parede fundo",

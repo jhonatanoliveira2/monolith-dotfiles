@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# monolith-theme — colour palette of a wallpaper for the Monolith Shell (Settings > Themes)
+#
+# Usage:  monolith-theme check                    dependency report: name<TAB>ok|missing<TAB>detail per line
+#         monolith-theme generate <file> [--force]   palette JSON on stdout (wpgtk, "wal" backend)
+#         monolith-theme clear-cache              delete the generated palettes and video frames
+#
+# Only generates: applying the colours is the shell's job (core/Palette.qml), and wallpapers stay with
+# wallpaper-menu. wpgtk runs in its own home (XDG_CONFIG_HOME / XDG_CACHE_HOME below) and only with
+# -a / -o / -d, which never set a wallpaper, reload programs or touch ~/.config/wpg, ~/.cache/wal, GTK or terminals.
+# Videos (and GIFs): one representative frame (ffmpeg "thumbnail" filter), cached per file + mtime + size,
+# so a video is read once when it is chosen, never while it plays.
+set -uo pipefail
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/monolith-theme"
+WPG_HOME="$CACHE_DIR/wpg"            # XDG_CONFIG_HOME of wpgtk -> $WPG_HOME/wpg/{wallpapers,schemes,samples}
+SRC_DIR="$CACHE_DIR/src"             # links / copies of images and extracted video frames
+IMG_EXT=(jpg jpeg png webp bmp)
+
+need() { command -v "$1" >/dev/null 2>&1; }
+die() { printf '%s\n' "$1" >&2; exit "${2:-1}"; }
+
+wpg_isolated() {
+    XDG_CONFIG_HOME="$WPG_HOME" XDG_CACHE_HOME="$WPG_HOME/cache" timeout 90 wpg "$@"
+}
+
+# wpgtk settings of the private home: nothing is set, reloaded or sent to terminals even if a flag slips.
+write_wpg_conf() {
+    mkdir -p "$WPG_HOME/wpg"
+    local conf="$WPG_HOME/wpg/wpg.conf"
+    grep -q '^set_wallpaper = false' "$conf" 2>/dev/null && return 0
+    cat >"$conf" <<'EOF'
+[settings]
+set_wallpaper = false
+gtk = false
+active = 0
+light_theme = false
+editor = true
+execute_cmd = false
+command = true
+backend = wal
+alpha = 100
+smart_sort = true
+auto_adjust = false
+reload = false
+terminal = false
+
+[keywords]
+EOF
+}
+
+check() {
+    local ok=0 v
+    if need wpg; then
+        v=$(wpg --version 2>/dev/null | sed -n 's/.*version: *//p')
+        printf 'wpgtk\tok\t%s\n' "${v:-?}"
+    else
+        printf 'wpgtk\tmissing\twpg\n'; ok=1
+    fi
+    if need magick || need convert; then printf 'imagemagick\tok\t%s\n' "$(command -v magick || command -v convert)"
+    else printf 'imagemagick\tmissing\tmagick\n'; ok=1; fi
+    for v in ffmpeg ffprobe jq; do
+        if need "$v"; then printf '%s\tok\t%s\n' "$v" "$(command -v "$v")"; else printf '%s\tmissing\t%s\n' "$v" "$v"; ok=1; fi
+    done
+    if need fish; then printf 'fish\tok\t%s\n' "$(fish --version 2>/dev/null | grep -o '[0-9][0-9.]*' | head -1)"
+    else printf 'fish\tmissing\tfish (optional)\n'; fi
+    return $ok
+}
+
+is_image() {
+    local ext=${1##*.} e
+    ext=${ext,,}
+    for e in "${IMG_EXT[@]}"; do [[ $ext == "$e" ]] && return 0; done
+    return 1
+}
+
+# extract_frame <video> <out.jpg>: a representative frame around 20% of the clip, downscaled.
+extract_frame() {
+    local f=$1 out=$2 dur seek=0 tmp="$2.$$.tmp.jpg"
+    dur=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 -- "$f" 2>/dev/null)
+    [[ $dur =~ ^[0-9]+([.][0-9]+)?$ ]] && seek=$(awk -v d="$dur" 'BEGIN { printf "%.2f", d * 0.2 }')
+    local vf="thumbnail=48,scale='min(960,iw)':-2"
+    timeout 60 ffmpeg -loglevel error -y -ss "$seek" -i "$f" -vf "$vf" -frames:v 1 -q:v 3 "$tmp" 2>/dev/null \
+        || timeout 60 ffmpeg -loglevel error -y -i "$f" -vf "$vf" -frames:v 1 -q:v 3 "$tmp" 2>/dev/null
+    if [[ -s $tmp ]]; then mv -f "$tmp" "$out"; else rm -f "$tmp"; return 1; fi
+}
+
+generate() {
+    local file=$1 force=${2:-}
+    [[ -f $file ]] || die "File not found: $file"
+    need wpg || die "wpgtk (wpg) is not installed" 3
+    need jq || die "jq is not installed" 3
+    file=$(realpath -- "$file")
+    mkdir -p "$SRC_DIR"
+    write_wpg_conf
+
+    # one run at a time (the shell serialises, but rofi / a terminal could call us too)
+    exec 9>"$CACHE_DIR/.lock"
+    flock -w 120 9 || die "Another palette is being generated"
+
+    local key name src kind=image
+    key=$(printf '%s|%s' "$file" "$(stat -c '%Y-%s' -- "$file")" | sha1sum | cut -c1-16)
+    if is_image "$file"; then
+        name="$key.${file##*.}"
+        name=${name,,}
+        src="$SRC_DIR/$name"
+        # a hard link (or a copy across filesystems): wpgtk resolves symlinks and would name the theme
+        # after the original file, mixing up files that share a name in different folders
+        [[ -f $src ]] || ln -f -- "$file" "$src" 2>/dev/null || cp -f -- "$file" "$src" || die "Could not read $file"
+    else
+        kind=video
+        need ffmpeg || die "ffmpeg is not installed" 3
+        name="$key.jpg"
+        src="$SRC_DIR/$name"
+        [[ -s $src ]] || extract_frame "$file" "$src" || die "Could not extract a frame from $file"
+    fi
+
+    local out="$CACHE_DIR/$key.json" log
+    [[ -n $force ]] && { wpg_isolated -d "$name" >/dev/null 2>&1; rm -f -- "$out"; }
+    if [[ ! -s $out ]]; then
+        local rc=0
+        log=$(wpg_isolated -a "$src" 2>&1) || rc=$?
+        if (( rc )); then
+            wpg_isolated -d "$name" >/dev/null 2>&1
+            grep -q 'CalledProcessError' <<<"$log" && die "wpgtk: ImageMagick could not read ${file##*/}"
+            log=$(grep -v -i 'convert command is deprecated' <<<"$log" | grep . | tail -n1 | cut -c1-200)
+            die "wpgtk failed: ${log:-no output, exit code $rc}"
+        fi
+        # wpgtk falls back to a random theme when pywal exits with an error: treat it as a failure
+        if grep -q '^\[E\]' <<<"$log"; then
+            wpg_isolated -d "$name" >/dev/null 2>&1
+            die "wpgtk failed: $(grep '^\[E\]' <<<"$log" | tail -n1)"
+        fi
+        wpg_isolated -o "$name" "$out.tmp" >/dev/null 2>&1 && [[ -s $out.tmp ]] || { rm -f -- "$out.tmp"; die "wpgtk did not export the palette"; }
+        mv -f -- "$out.tmp" "$out"
+    fi
+
+    jq -ce --arg src "$file" --arg kind "$kind" --arg frame "$src" '
+        def hex: type == "string" and test("^#[0-9a-fA-F]{6}$");
+        [.colors | to_entries | sort_by(.key | ltrimstr("color") | tonumber) | .[].value] as $c
+        | if ($c | length) == 16 and ($c | all(hex)) and (.special.background | hex) and (.special.foreground | hex)
+          then { source: $src, kind: $kind, frame: $frame, background: .special.background, foreground: .special.foreground,
+                 colors: ($c | map(ascii_downcase)) }
+          else error("invalid palette") end' "$out" 2>/dev/null || { rm -f -- "$out"; die "wpgtk produced an invalid palette"; }
+}
+
+case ${1:-} in
+    check) check ;;
+    generate) [[ -n ${2:-} ]] || die "Usage: monolith-theme generate <file> [--force]"
+              generate "$2" "$( [[ ${3:-} == --force ]] && echo 1 )" ;;
+    clear-cache) rm -rf -- "$CACHE_DIR"; echo "palettes removed" ;;
+    -h | --help | "") sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) die "Unknown command: $1" ;;
+esac

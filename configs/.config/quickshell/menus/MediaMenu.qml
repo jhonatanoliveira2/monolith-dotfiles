@@ -105,7 +105,7 @@ MenuWindow {
                 signal hit()
                 width: big ? 46 : 34; height: width; radius: width / 2
                 opacity: usable ? 1 : 0.35
-                color: m.pressed ? Theme.pressed : big ? Qt.rgba(1, 1, 1, m.containsMouse ? 0.2 : 0.12) : m.containsMouse ? Theme.hover : "transparent"
+                color: m.pressed ? Theme.pressed : big ? Theme.tint(m.containsMouse ? 0.2 : 0.12) : m.containsMouse ? Theme.hover : "transparent"
                 border.width: on ? 1 : 0
                 border.color: Theme.grayLight
                 scale: m.pressed ? 0.92 : 1

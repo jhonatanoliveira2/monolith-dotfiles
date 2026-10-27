@@ -16,6 +16,10 @@ Singleton {
     property string error: ""
     property string current: ""
     property string currentKind: ""
+    property string currentOutputs: ""        // monitors of the last change: "ALL" or "DP-1,HDMI-A-1"
+    property int loads: 0                     // state file reads; the first one is the session's restored wallpaper
+    // emitted on every read of the state file (a choice from here, rofi or a terminal), even for the same file
+    signal changed()
 
     readonly property var env: ({
         WALLPAPER_STATIC_DIR: Settings.wpStaticDir.trim() || null,
@@ -74,8 +78,13 @@ Singleton {
         printErrors: false
         onFileChanged: reload()
         onLoaded: {
-            const [kind, , file] = text().trim().split("\t")
-            if (file) { root.current = file; root.currentKind = kind === "live" ? "video" : "image" }
+            const [kind, outputs, file] = text().trim().split("\t")
+            if (!file) return
+            root.current = file
+            root.currentKind = kind === "live" ? "video" : "image"
+            root.currentOutputs = outputs || "ALL"
+            root.loads++
+            root.changed()
         }
     }
 }

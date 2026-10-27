@@ -23,7 +23,7 @@ Rectangle {
     function pageFile(p) {
         return ({ system: "PageSystem", display: "PageDisplay", audio: "PageAudio", mic: "PageMic", notifications: "PageNotifications",
                   power: "PagePower", storage: "PageStorage", bluetooth: "PageBluetooth", network: "PageNetwork", update: "PageUpdate",
-                  appearance: "PageAppearance", profile: "PageProfile", bar: "PageBar" })[p]
+                  appearance: "PageAppearance", themes: "PageThemes", profile: "PageProfile", bar: "PageBar" })[p]
     }
     // a page that is not available here (e.g. Power on a desktop) falls back to System
     onPageChanged: { if (!Registry.pages.some(x => x.id === page)) page = "system"; flick.contentY = 0 }

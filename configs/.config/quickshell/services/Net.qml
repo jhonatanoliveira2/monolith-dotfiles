@@ -45,6 +45,8 @@ Singleton {
     readonly property string connection: !nm ? fb.connection
         : kind === "wifi" ? activeWifi.name : kind === "wired" ? (wiredName || wired.name) : ""
     readonly property int signal: nm ? (activeWifi ? pct(activeWifi.signalStrength) : 0) : fb.signal
+    // waves lit in the Wi-Fi icon (components/WifiIcon.qml): 4 strong .. 1 weak
+    readonly property int signalLevel: signal >= 75 ? 4 : signal >= 50 ? 3 : signal >= 25 ? 2 : signal > 0 ? 1 : 0
     readonly property string status: kind === "none" ? "disconnected"
         : !nm ? (fb.online ? "online" : "nointernet")
         : (Networking.connectivity === NetworkConnectivity.Full || Networking.connectivity === NetworkConnectivity.Unknown) ? "online" : "nointernet"

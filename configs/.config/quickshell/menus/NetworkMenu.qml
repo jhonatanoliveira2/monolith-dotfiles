@@ -26,12 +26,23 @@ MenuWindow {
         Rectangle {
             width: parent.width; height: 48
             color: "transparent"; border.width: 1; border.color: Theme.line
-            Txt {
+            Item {
                 id: st
                 anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                font.pixelSize: 18
-                text: Net.status === "disconnected" ? Theme.glyph.offline : Net.status === "online" ? (Net.kind === "wifi" ? Theme.glyph.wifi : Theme.glyph.wired) : Theme.glyph.wifiOff
-                color: Net.status === "online" ? Theme.foreground : Theme.grayMid
+                width: 20; height: 20
+                // Wi-Fi: the signal waves; wired / offline: the font glyph
+                WifiIcon {
+                    visible: Net.kind === "wifi"
+                    anchors.centerIn: parent; size: 20; level: Net.signalLevel
+                    color: Net.status === "online" ? Theme.foreground : Theme.grayMid; dimColor: Theme.tint(0.16)
+                }
+                Txt {
+                    visible: Net.kind !== "wifi"
+                    anchors.centerIn: parent
+                    font.pixelSize: 18
+                    text: Net.status === "disconnected" ? Theme.glyph.offline : Net.status === "online" ? Theme.glyph.wired : Theme.glyph.wiredOff
+                    color: Net.status === "online" ? Theme.foreground : Theme.grayMid
+                }
             }
             Column {
                 anchors { left: st.right; leftMargin: 10; right: dis.left; rightMargin: 8; verticalCenter: parent.verticalCenter }

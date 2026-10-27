@@ -5,6 +5,7 @@ import Quickshell
 // All user-facing text. Switch the language with Config.language ("pt" | "en"); add a language by adding a map.
 Singleton {
     readonly property var pt: ({
+        thNoWallpaper: "Nenhum wallpaper definido ainda: escolha um no seletor (Super+D)", thNoScript: "~/.local/bin/monolith-theme não encontrado",
         online: "Conectado", nointernet: "Sem internet", disconnected: "Desconectado", disconnect: "Desconectar",
         connect: "Conectar", connected: "Conectado", saved: "Salva", secured: "Protegida", open: "Aberta", password: "Senha",
         networks: "Redes", scanning: "Procurando redes...", rescan: "Reescanear", advanced: "Avançado", network: "Rede",
@@ -40,6 +41,7 @@ Singleton {
         ytmHint: "Aleatório/repetir no YouTube Music exigem o plugin \"API Server\" (autorização: nenhuma, ou token em Configurações > Barra)"
     })
     readonly property var en: ({
+        thNoWallpaper: "No wallpaper set yet: choose one in the picker (Super+D)", thNoScript: "~/.local/bin/monolith-theme not found",
         online: "Connected", nointernet: "No internet", disconnected: "Disconnected", disconnect: "Disconnect",
         connect: "Connect", connected: "Connected", saved: "Saved", secured: "Secured", open: "Open", password: "Password",
         networks: "Networks", scanning: "Scanning...", rescan: "Rescan", advanced: "Advanced", network: "Network",

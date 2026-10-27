@@ -41,6 +41,10 @@ The `SUPER+D` shortcut opens the Rofi menu configured in `hypr/rofi/wallpaper-me
 
 The installer creates these destinations and copies the wallpapers shipped with the project. The menu uses `ffmpeg` to generate cached previews; `wallpaper-menu --clear-cache` clears the cache.
 
+### Colour themes
+
+Settings > Themes switches between the original Monolith theme, preset themes and a dynamic palette. The dynamic palette comes from the wallpaper changed most recently, on any monitor: `~/.local/bin/monolith-theme` runs `wpgtk` in its own folder (`~/.cache/monolith-theme`), so it never sets wallpapers or touches `~/.config/wpg`. For videos it reads one representative frame when the video is chosen. The choice and the palette are saved in `~/.local/state/quickshell-monolith/settings.json`; `fish/conf.d/monolith-theme.fish` applies the same colours to Fish, in new and open sessions. `monolith-theme check` lists the dependencies and `monolith-theme clear-cache` removes the generated palettes.
+
 ## Import exclusions
 
 The importer avoids copying some machine-specific data and artefacts, including:

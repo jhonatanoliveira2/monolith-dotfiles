@@ -13,6 +13,6 @@ MenuButton {
         acc += w.angleDelta.y
         while (Math.abs(acc) >= 60) { Brightness.nudge(acc > 0 ? 5 : -5); acc -= acc > 0 ? 60 : -60 }
     }
-    Txt { text: Theme.glyph.backlight }
+    Txt { text: Theme.glyph.backlight; font.pixelSize: Theme.barIcon }
     Txt { text: Math.round(Brightness.fraction * 100) + "%"; font.pixelSize: Settings.barVertical ? Theme.small : Theme.fontSize }
 }

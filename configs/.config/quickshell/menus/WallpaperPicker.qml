@@ -140,11 +140,11 @@ Overlay {
                     Txt { visible: !cell.modelData.thumb; anchors.centerIn: parent; text: String.fromCodePoint(win.kind === "video" ? 0xf03d : 0xf03e); color: Theme.grayMid; font.pixelSize: 26 }
                     Rectangle {
                         anchors { right: parent.right; top: parent.top; margins: 8 }
-                        width: 22; height: 22; radius: 11; color: Theme.white
+                        width: 22; height: 22; radius: 11; color: Theme.accent
                         scale: cell.isCurrent ? 1 : 0
                         visible: scale > 0
                         Behavior on scale { NumberAnimation { duration: Theme.dur(260); easing.type: Easing.OutBack } }
-                        Txt { anchors.centerIn: parent; text: String.fromCodePoint(0xf00c); color: "black"; font.pixelSize: 11 }
+                        Txt { anchors.centerIn: parent; text: String.fromCodePoint(0xf00c); color: Theme.onAccent; font.pixelSize: 11 }
                     }
                 }
                 Txt { anchors { top: frame.bottom; topMargin: 6; left: frame.left; right: frame.right } horizontalAlignment: Text.AlignHCenter

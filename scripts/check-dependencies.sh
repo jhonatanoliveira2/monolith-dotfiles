@@ -58,13 +58,13 @@ EXPECTED_FILES=(
     ".config/hypr/scripts/password-cursor.sh|used by hypr/hyprlock.conf (cursor label)"
     ".config/hypr/scripts/now-playing.sh|used by hypr/hyprlock.conf (media label)"
     ".local/bin/wallpaper-menu|used by the SUPER+D binding"
+    ".local/bin/monolith-theme|palette generator of Settings > Themes (wpgtk)"
+    ".config/fish/conf.d/monolith-theme.fish|fish colours of Settings > Themes"
     ".config/hypr/rofi/wallpaper-menu.rasi|theme of wallpaper-menu"
-    ".config/fastfetch/random_logo.sh|used by fastfetch/config.jsonc"
+    ".config/fastfetch/monolith.txt|MONOLITH logo of fastfetch/config.jsonc"
 )
 # Directories that must exist and contain at least one file.
-EXPECTED_DIRS=(
-    ".config/fastfetch/pngs|logos picked by fastfetch/random_logo.sh"
-)
+EXPECTED_DIRS=()
 
 MISSING_REQUIRED=0
 

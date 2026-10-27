@@ -1,5 +1,5 @@
 # ===== AUTO START HYPRLAND (TTY1) =====
-cat ~/.config/wpg/sequences &
+# terminal palette + fish colours: conf.d/monolith-theme.fish (Settings > Themes; default = ~/.config/wpg/sequences)
 
 set -U fish_greeting
 
@@ -18,7 +18,7 @@ if status is-interactive
     #end
 
     # ===== FASTFETCH =====
-   # fastfetch --logo "$(~/.config/fastfetch/random_logo.sh)"
+    # fastfetch                 # MONOLITH logo + system box (fastfetch/config.jsonc)
     
     # ===== ATUIN =====
     atuin init fish | source
