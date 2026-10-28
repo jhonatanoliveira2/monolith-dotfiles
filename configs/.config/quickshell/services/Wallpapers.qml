@@ -30,6 +30,19 @@ Singleton {
         WALLPAPER_LIVE_PAUSE: Settings.wpLivePause ? "1" : "0"
     })
 
+    // first run: apply the shipped default (copied to the static folder by install.sh) once, unless
+    // wallpaper-menu already has a saved choice
+    readonly property string defaultWallpaper: "blue_sky.png"
+    function applyDefault() {
+        if (!Settings.loaded || Settings.wpDefaultDone) return
+        Settings.wpDefaultDone = true
+        const dir = (Settings.wpStaticDir.trim() || "~/Pictures/Wallpapers").replace(/^~/, Quickshell.env("HOME"))
+        defaultProc.command = ["sh", "-c", "[ -s \"$1\" ] || [ ! -f \"$2\" ] || echo \"$2\"", "sh", stateFile.path, dir + "/" + defaultWallpaper]
+        defaultProc.running = true
+    }
+    Component.onCompleted: applyDefault()
+    Connections { target: Settings; function onLoadedOnce() { root.applyDefault() } }
+
     // list both kinds (previews are generated on the first run, in parallel)
     function refresh() {
         if (loading) return
@@ -68,11 +81,16 @@ Singleton {
         onExited: root.loading = false
     }
     Process {
+        id: defaultProc
+        stdout: StdioCollector { onStreamFinished: if (text.trim()) root.apply("static", text.trim(), "ALL") }
+    }
+    Process {
         id: setProc
         stderr: StdioCollector { onStreamFinished: if (text.trim()) root.error = text.trim().split("\n").pop() }
     }
 
     FileView {
+        id: stateFile
         path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/wallpaper-menu/last"
         watchChanges: true
         printErrors: false

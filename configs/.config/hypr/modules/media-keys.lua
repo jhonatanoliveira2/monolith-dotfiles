@@ -5,8 +5,9 @@ local function shellRunning()
     return #hl.get_layers({ namespace = "qs-bar" }) > 0
 end
 
-local function bindMedia(key, shortcut, fallback, repeating)
-    hl.bind(key, function()
+-- combos by id: modules/bind-defaults.lua / Settings > Input (bind from keybindings.lua)
+local function bindMedia(id, shortcut, fallback, repeating)
+    _G.monolithBind(id, function()
         if shellRunning() then
             hl.dispatch(hl.dsp.global("quickshell:" .. shortcut))
         else
@@ -15,21 +16,21 @@ local function bindMedia(key, shortcut, fallback, repeating)
     end, { locked = true, repeating = repeating or false })
 end
 
-bindMedia("XF86AudioRaiseVolume", "volumeUp", "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", true)
-bindMedia("XF86AudioLowerVolume", "volumeDown", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", true)
-bindMedia("XF86AudioMute", "volumeMute", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
-bindMedia("XF86AudioMicMute", "micMute", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle")
+bindMedia("hw.volUp", "volumeUp", "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+", true)
+bindMedia("hw.volDown", "volumeDown", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-", true)
+bindMedia("hw.mute", "volumeMute", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
+bindMedia("hw.micMute", "micMute", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle")
 
-bindMedia("XF86MonBrightnessUp", "brightnessUp", "brightnessctl -e4 -n2 set 5%+", true)
-bindMedia("XF86MonBrightnessDown", "brightnessDown", "brightnessctl -e4 -n2 set 5%-", true)
+bindMedia("hw.brightUp", "brightnessUp", "brightnessctl -e4 -n2 set 5%+", true)
+bindMedia("hw.brightDown", "brightnessDown", "brightnessctl -e4 -n2 set 5%-", true)
 
 -- laptops: touchpad on / off (Settings > Input keeps the state) and keyboard backlight
-bindMedia("XF86TouchpadToggle", "touchpadToggle", "notify-send Touchpad 'Quickshell is not running'")
-bindMedia("XF86KbdBrightnessUp", "kbdUp", "brightnessctl -q -d '*::kbd_backlight' set +1", true)
-bindMedia("XF86KbdBrightnessDown", "kbdDown", "brightnessctl -q -d '*::kbd_backlight' set 1-", true)
-bindMedia("XF86KbdLightOnOff", "kbdCycle", "brightnessctl -q -d '*::kbd_backlight' set +1")
+bindMedia("hw.touchpad", "touchpadToggle", "notify-send Touchpad 'Quickshell is not running'")
+bindMedia("hw.kbdUp", "kbdUp", "brightnessctl -q -d '*::kbd_backlight' set +1", true)
+bindMedia("hw.kbdDown", "kbdDown", "brightnessctl -q -d '*::kbd_backlight' set 1-", true)
+bindMedia("hw.kbdLight", "kbdCycle", "brightnessctl -q -d '*::kbd_backlight' set +1")
 
-bindMedia("XF86AudioNext", "mediaNext", "playerctl next")
-bindMedia("XF86AudioPrev", "mediaPrev", "playerctl previous")
-bindMedia("XF86AudioPlay", "mediaToggle", "playerctl play-pause")
-bindMedia("XF86AudioPause", "mediaToggle", "playerctl play-pause")
+bindMedia("hw.next", "mediaNext", "playerctl next")
+bindMedia("hw.prev", "mediaPrev", "playerctl previous")
+bindMedia("hw.play", "mediaToggle", "playerctl play-pause")
+bindMedia("hw.pause", "mediaToggle", "playerctl play-pause")

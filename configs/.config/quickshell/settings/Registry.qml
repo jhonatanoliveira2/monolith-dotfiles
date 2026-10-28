@@ -52,6 +52,7 @@ Singleton {
         cho("system", "general", "language", ["Idioma", "Language"], "language idioma português english",
             [{ v: "pt", l: "Português" }, { v: "en", l: "English" }], () => Settings.language, v => Settings.language = v),
         tog("system", "general", "keepAwake", ["Manter acordado", "Keep awake"], "idle caffeine suspender sleep", () => Settings.keepAwake, v => Settings.keepAwake = v),
+        btn("system", "general", "welcome", ["Tela de boas-vindas", "Welcome screen"], "welcome boas-vindas tutorial atalhos shortcuts início introdução", () => Popups.openWelcome()),
         btn("system", "session", "lock", ["Bloquear", "Lock"], "hyprlock tela screen", () => Sys.lock()),
         btn("system", "session", "suspend", ["Suspender", "Suspend"], "sleep", () => Sys.suspend()),
         btn("system", "session", "logout", ["Sair", "Log out"], "sessão session exit", () => Sys.logout(), { confirm: true }),

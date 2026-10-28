@@ -20,13 +20,23 @@ Singleton {
     function openApp(page) { appPage = page || "system"; appOpen = true; close() }
     function closeApp() { appOpen = false }
 
+    // first-run welcome (menus/Welcome.qml), on the focused monitor
+    property bool welcomeOpen: false
+    property string welcomeScreen: ""
+    function openWelcome() { welcomeScreen = focusedScreen(); close(); closeOverlay(); welcomeOpen = true }
+    function closeWelcome() { welcomeOpen = false }
+
+    function focusedScreen() {
+        const m = Hyprland.focusedMonitor
+        return m ? m.name : (Quickshell.screens.length ? Quickshell.screens[0].name : "")
+    }
+
     // full-screen overlays (app launcher, wallpaper picker): one at a time, on the focused monitor
     property string overlay: ""
     property string overlayScreen: ""
     function toggleOverlay(name) {
         if (overlay === name) { overlay = ""; return }
-        const m = Hyprland.focusedMonitor
-        overlayScreen = m ? m.name : (Quickshell.screens.length ? Quickshell.screens[0].name : "")
+        overlayScreen = focusedScreen()
         close()
         overlay = name
     }
@@ -69,8 +79,6 @@ Singleton {
 
     // Used by IPC / global shortcuts: opens the menu on the focused monitor.
     function toggleFocused(name) {
-        const m = Hyprland.focusedMonitor
-        const s = m ? m.name : (Quickshell.screens.length ? Quickshell.screens[0].name : "")
-        toggle(name, s, null)
+        toggle(name, focusedScreen(), null)
     }
 }

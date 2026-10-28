@@ -1,12 +1,41 @@
 
-local mainMod = "SUPER"
 local programs = _G.programs
 local menu = "~/.config/hypr/rofi/launcher.sh"
+local configDir = os.getenv("HOME") .. "/.config/hypr"
+
+-- Combos by bind id: modules/bind-defaults.lua, overridden by generated/binds.lua (written by
+-- Settings > Input in Quickshell; delete it to go back to the defaults). "" leaves a bind off.
+local combos = dofile(configDir .. "/modules/bind-defaults.lua")
+do
+    local path = configDir .. "/generated/binds.lua"
+    local fh = io.open(path, "r")
+    if fh then
+        fh:close()
+        local ok, chosen = pcall(dofile, path)
+        if ok and type(chosen) == "table" then
+            for id, combo in pairs(chosen) do
+                combos[id] = combo
+            end
+        else
+            hl.notification.create({ text = "MONOLITH: generated/binds.lua: " .. tostring(chosen), timeout = 8000 })
+        end
+    end
+end
+
+local function bind(id, action, opts)
+    local combo = combos[id]
+    if combo == nil or combo == "" then
+        return
+    end
+    if opts then
+        hl.bind(combo, action, opts)
+    else
+        hl.bind(combo, action)
+    end
+end
+_G.monolithBind = bind -- media-keys.lua
 
 -- Helpers
-local function exec(command)
-    hl.bind(mainMod .. " + " .. command.key, hl.dsp.exec_cmd(command.cmd))
-end
 
 local function toggleFloat(center)
     local window = hl.get_active_window()
@@ -71,11 +100,11 @@ local function screenshot(area)
 end
 
 -- Applications
-exec({ key = "Return", cmd = programs.terminal })
-exec({ key = "X", cmd = programs.fileManager })
-exec({ key = "C", cmd = programs.ide })
-exec({ key = "TAB", cmd = programs.browser })
-exec({ key = "Z", cmd = programs.lockScreen })
+bind("app.terminal", hl.dsp.exec_cmd(programs.terminal))
+bind("app.files", hl.dsp.exec_cmd(programs.fileManager))
+bind("app.ide", hl.dsp.exec_cmd(programs.ide))
+bind("app.browser", hl.dsp.exec_cmd(programs.browser))
+bind("session.lock", hl.dsp.exec_cmd(programs.lockScreen))
 
 -- Launcher and wallpaper picker: the shell's own (Quickshell overlays) while it runs, rofi otherwise.
 local function shellRunning()
@@ -92,30 +121,27 @@ local function shellOr(shortcut, fallback)
 end
 
 -- Launcher
-hl.bind(mainMod .. " + A", shellOr("launcher", "pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu))
+bind("shell.launcher", shellOr("launcher", "pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu))
 
 -- Screenshots
-hl.bind(mainMod .. " + Delete", function()
+bind("capture.screen", function()
     screenshot(false)
 end)
 
-hl.bind(mainMod .. " + SHIFT + Delete", function()
+bind("capture.area", function()
     screenshot(true)
 end)
 
 -- Screen recording
-exec({
-    key = "R",
-    cmd = "~/.config/hypr/scripts/toggle-gsr.sh",
-})
+bind("capture.record", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle-gsr.sh"))
 
 -- Wallpaper picker
-hl.bind(mainMod .. " + D", shellOr("wallpaper", "~/.local/bin/wallpaper-menu &"))
+bind("shell.wallpaper", shellOr("wallpaper", "~/.local/bin/wallpaper-menu &"))
 
 -- Session exit
 local hasHyprshutdown = os.execute("command -v hyprshutdown >/dev/null 2>&1") == true
 
-hl.bind(mainMod .. " + SHIFT + X", function()
+bind("session.exit", function()
     if hasHyprshutdown then
         hl.dispatch(hl.dsp.exec_cmd("hyprshutdown"))
     else
@@ -124,61 +150,61 @@ hl.bind(mainMod .. " + SHIFT + X", function()
 end)
 
 -- Window management
-hl.bind(mainMod .. " + Space", function()
+bind("win.float", function()
     toggleFloat(true)
 end)
 
-hl.bind(mainMod .. " + S", function()
+bind("win.floatKeep", function()
     toggleFloat(false)
 end)
 
-hl.bind(mainMod .. " + Q", hl.dsp.window.close())
+bind("win.close", hl.dsp.window.close())
 
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({
+bind("win.fullscreen", hl.dsp.window.fullscreen({
     mode = "fullscreen",
     action = "toggle",
 }))
 
-hl.bind(mainMod .. " + P", hl.dsp.window.pin())
-hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))
-hl.bind(mainMod .. " + G", hl.dsp.group.toggle())
-hl.bind(mainMod .. " + grave", hl.dsp.focus({ urgent_or_last = true }))
+bind("win.pin", hl.dsp.window.pin())
+bind("win.split", hl.dsp.layout("togglesplit"))
+bind("win.group", hl.dsp.group.toggle())
+bind("focus.last", hl.dsp.focus({ urgent_or_last = true }))
 
 -- Previous / next occupied workspace
-hl.bind(mainMod .. " + CTRL + LEFT", hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(mainMod .. " + CTRL + RIGHT", hl.dsp.focus({ workspace = "e+1" }))
+bind("ws.prev", hl.dsp.focus({ workspace = "e-1" }))
+bind("ws.next", hl.dsp.focus({ workspace = "e+1" }))
 
 -- Swap with the neighbour window
 for _, item in ipairs({
-    { key = "H", direction = "l" },
-    { key = "L", direction = "r" },
-    { key = "K", direction = "u" },
-    { key = "J", direction = "d" },
+    { id = "swap.left", direction = "l" },
+    { id = "swap.right", direction = "r" },
+    { id = "swap.up", direction = "u" },
+    { id = "swap.down", direction = "d" },
 }) do
-    hl.bind(mainMod .. " + CTRL + " .. item.key, hl.dsp.window.swap({ direction = item.direction }))
+    bind(item.id, hl.dsp.window.swap({ direction = item.direction }))
 end
 
 -- Shell (Quickshell global shortcuts, see shell.qml)
 for _, item in ipairs({
-    { key = "N", name = "notifications" },
-    { key = "M", name = "media" },
-    { key = "comma", name = "settingsApp" },
-    { key = "Escape", name = "session" },
+    { id = "shell.notifications", name = "notifications" },
+    { id = "shell.media", name = "media" },
+    { id = "shell.settings", name = "settingsApp" },
+    { id = "shell.session", name = "session" },
 }) do
-    hl.bind(mainMod .. " + " .. item.key, hl.dsp.global("quickshell:" .. item.name))
+    bind(item.id, hl.dsp.global("quickshell:" .. item.name))
 end
 
 -- Move windows with Shift + arrows
 local directions = {
-    { key = "LEFT", direction = "l" },
-    { key = "RIGHT", direction = "r" },
-    { key = "UP", direction = "u" },
-    { key = "DOWN", direction = "d" },
+    { id = "move.left", direction = "l" },
+    { id = "move.right", direction = "r" },
+    { id = "move.up", direction = "u" },
+    { id = "move.down", direction = "d" },
 }
 
 for _, item in ipairs(directions) do
-    hl.bind(
-        mainMod .. " + SHIFT + " .. item.key,
+    bind(
+        item.id,
         hl.dsp.window.move({
             direction = item.direction,
             group_aware = true,
@@ -189,57 +215,55 @@ end
 
 -- Focus
 for _, item in ipairs({
-    { key = "LEFT", direction = "left" },
-    { key = "RIGHT", direction = "right" },
-    { key = "UP", direction = "up" },
-    { key = "DOWN", direction = "down" },
+    { id = "focus.left", direction = "left" },
+    { id = "focus.right", direction = "right" },
+    { id = "focus.up", direction = "up" },
+    { id = "focus.down", direction = "down" },
 }) do
-    hl.bind(
-        mainMod .. " + " .. item.key,
+    bind(
+        item.id,
         hl.dsp.focus({ direction = item.direction })
     )
 end
 
 -- Resize with Alt + arrows
 local resizeBindings = {
-    { key = "RIGHT", x = 40, y = 0 },
-    { key = "LEFT", x = -40, y = 0 },
-    { key = "UP", x = 0, y = -40 },
-    { key = "DOWN", x = 0, y = 40 },
+    { id = "resize.right", x = 40, y = 0 },
+    { id = "resize.left", x = -40, y = 0 },
+    { id = "resize.up", x = 0, y = -40 },
+    { id = "resize.down", x = 0, y = 40 },
 }
 
 for _, item in ipairs(resizeBindings) do
-    hl.bind(
-        mainMod .. " + ALT + " .. item.key,
+    bind(
+        item.id,
         hl.dsp.window.resize({ x = item.x, y = item.y }),
         { repeating = true }
     )
 end
 
 -- Special workspace
-hl.bind(mainMod .. " + W", hl.dsp.workspace.toggle_special("magic"))
+bind("ws.special", hl.dsp.workspace.toggle_special("magic"))
 
-hl.bind(
-    mainMod .. " + SHIFT + W",
+bind(
+    "ws.toSpecial",
     hl.dsp.window.move({ workspace = "special" })
 )
 
-hl.bind(
-    mainMod .. " + ALT + W",
+bind(
+    "ws.toMonitor",
     hl.dsp.window.move({ workspace = "m+" })
 )
 
 -- Workspaces 1-10
 for i = 1, 10 do
-    local key = tostring(i % 10)
-
-    hl.bind(
-        mainMod .. " + " .. key,
+    bind(
+        "ws.go" .. i,
         hl.dsp.focus({ workspace = i })
     )
 
-    hl.bind(
-        mainMod .. " + SHIFT + " .. key,
+    bind(
+        "ws.move" .. i,
         hl.dsp.window.move({ workspace = i })
     )
 end
@@ -260,32 +284,32 @@ local function zoom(value)
     })
 end
 
-hl.bind(mainMod .. " + mouse_down", function()
+bind("zoom.out", function()
     zoom(-0.5)
 end, { repeating = true })
 
-hl.bind(mainMod .. " + mouse_up", function()
+bind("zoom.in", function()
     zoom(0.5)
 end, { repeating = true })
 
 -- Keypad zoom
-hl.bind(mainMod .. " + code:82", function()
+bind("zoom.outPad", function()
     zoom(-0.3)
 end, { repeating = true })
 
-hl.bind(mainMod .. " + code:86", function()
+bind("zoom.inPad", function()
     zoom(0.3)
 end, { repeating = true })
 
 -- Mouse window controls
-hl.bind(
-    mainMod .. " + mouse:272",
+bind(
+    "win.drag",
     hl.dsp.window.drag(),
     { mouse = true }
 )
 
-hl.bind(
-    mainMod .. " + mouse:273",
+bind(
+    "win.resizeMouse",
     hl.dsp.window.resize(),
     { mouse = true }
 )

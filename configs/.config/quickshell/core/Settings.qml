@@ -85,6 +85,8 @@ Singleton {
     property alias themeMode: adapter.themeMode
     property alias themePreset: adapter.themePreset
     property alias themePalette: adapter.themePalette
+    property alias welcomeDone: adapter.welcomeDone   // first-run welcome seen (menus/Welcome.qml)
+    property alias wpDefaultDone: adapter.wpDefaultDone   // first-run default wallpaper handled (services/Wallpapers.qml)
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
 
     readonly property bool barVertical: barPosition === "left" || barPosition === "right"
@@ -206,6 +208,8 @@ Singleton {
             property string themeMode: "default"   // default | dynamic | preset
             property string themePreset: "nord"    // core/Palettes.qml presets
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
+            property bool welcomeDone: false
+            property bool wpDefaultDone: false
             property var overrides: ({})
         }
     }

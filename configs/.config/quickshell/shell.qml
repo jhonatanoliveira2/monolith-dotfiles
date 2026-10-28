@@ -14,6 +14,7 @@ ShellRoot {
     Component.onCompleted: { Sys.init(); Themes.init() }
 
     SettingsWindow {}
+    Welcome {}
 
     Variants {
         model: Quickshell.screens
@@ -63,7 +64,7 @@ ShellRoot {
     Key { name: "session"; onPressed: Popups.toggleFocused("settings") }
     Key { name: "settingsApp"; onPressed: Popups.appOpen ? Popups.closeApp() : Popups.openApp("system") }
 
-    // Key bindings:  qs ipc call shell toggle settings   |   qs ipc call shell close
+    // Key bindings:  qs ipc call shell toggle settings   |   qs ipc call shell close   |   qs ipc call shell welcome
     IpcHandler {
         target: "shell"
         function toggle(name: string): void { Popups.toggleFocused(name) }
@@ -72,6 +73,7 @@ ShellRoot {
         function wallpaper(): void { Popups.toggleOverlay("wallpaper") }
         function bar(position: string): void { if (["top", "bottom", "left", "right"].indexOf(position) >= 0) Settings.barPosition = position }
         function settings(page: string): void { Popups.openApp(page) }
+        function welcome(): void { Popups.openWelcome() }
         function dnd(): void { Settings.dnd = !Settings.dnd }
         function reload(): void { Quickshell.reload(true) }
     }
