@@ -555,6 +555,24 @@ apply_gtk_theme() {
     fi
 }
 
+# VS Code / Code - OSS / VSCodium: Vibrancy Continued + settings.json for the shell's colours (monolith-vscode).
+# An editor installed later is set up by the shell on its next start.
+configure_vscode() {
+    local tool=$TARGET_HOME/.local/bin/monolith-vscode rc
+    real_session || return 0
+    [[ -x $tool ]] || return 0
+    if ! command -v code >/dev/null 2>&1 && ! command -v code-oss >/dev/null 2>&1 && ! command -v codium >/dev/null 2>&1; then
+        ui_info "$(t vscode.absent)"
+        return 0
+    fi
+    if (( OPT_DRY )); then
+        ui_info "$(t vscode.would_apply)"
+        return 0
+    fi
+    HOME=$TARGET_HOME "$tool" >>"$LOG_FILE" 2>&1 && rc=0 || rc=$?
+    if (( rc == 0 )); then ui_ok "$(t vscode.applied)"; else warn_later "$(t vscode.failed)"; fi
+}
+
 step_verify() {
     ui_step 7 "$TOTAL_STEPS" "$(t step.verify)"
     if (( OPT_DRY )); then
@@ -562,6 +580,7 @@ step_verify() {
         ensure_user_dirs
         install_wallpapers
         apply_gtk_theme
+        configure_vscode
         configure_quickshell
         return 0
     fi
@@ -584,6 +603,7 @@ step_verify() {
     ensure_user_dirs
     install_wallpapers
     apply_gtk_theme
+    configure_vscode
     configure_quickshell
     printf '\n'
     bash "$SCRIPT_DIR/check-dependencies.sh" --section advice --where target ${OPT_NO_COLOR:+--no-color} || true

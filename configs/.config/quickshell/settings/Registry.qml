@@ -229,8 +229,12 @@ Singleton {
         cho("themes", "themeMode", "themeMode", ["Tema de cores", "Colour theme"], "tema theme cores colors paleta palette wpgtk wal pywal dinâmico dynamic",
             [{ v: "default", l: root.lbl("Padrão", "Default") }, { v: "dynamic", l: root.lbl("Dinâmico", "Dynamic") }, { v: "preset", l: root.lbl("Predefinido", "Preset") }],
             () => Settings.themeMode, v => Themes.setMode(v)),
+        tog("themes", "themeMode", "themeVscode", ["Aplicar as cores ao VS Code", "Apply the colours to VS Code"],
+            "tema theme cores colors vscode vs code editor", () => Settings.themeVscode, v => Settings.themeVscode = v),
         btn("themes", "themeDynamic", "themeRegen", ["Regenerar paleta do wallpaper", "Regenerate wallpaper palette"], "tema theme paleta palette wpgtk cores colors",
             () => { if (Settings.themeMode !== "dynamic") Settings.themeMode = "dynamic"; Themes.regenerate() }),
+        tog("themes", "themeDynamic", "themeFollow", ["Mudar o tema junto com o wallpaper", "Change the theme with the wallpaper"],
+            "tema theme dinâmico dynamic automático automatic seguir follow wallpaper", () => Settings.themeFollow, v => Settings.themeFollow = v),
 
         // ── wallpapers (menus/WallpaperPicker.qml -> wallpaper-menu: awww / mpvpaper) ──
         btn("wallpaper", "general", "wpOpen", ["Abrir o seletor (Super+D)", "Open the picker (Super+D)"], "wallpaper papel de parede fundo",
@@ -246,6 +250,9 @@ Singleton {
         tog("wallpaper", "live", "wpAudio", ["Som dos vídeos", "Video sound"], "wallpaper mpvpaper áudio audio som", () => Settings.wpLiveAudio, v => Settings.wpLiveAudio = v),
         tog("wallpaper", "live", "wpPause", ["Pausar quando coberto por janelas", "Pause while covered by windows"], "wallpaper mpvpaper pausar pause energia",
             () => Settings.wpLivePause, v => Settings.wpLivePause = v),
+        cho("wallpaper", "picker", "wpOrder", ["Ordem", "Order"], "wallpaper ordem order ordenar sort aleatória random shuffle",
+            [{ v: "name", l: lbl("Nome (A–Z)", "Name (A–Z)") }, { v: "name_desc", l: lbl("Nome (Z–A)", "Name (Z–A)") }, { v: "random", l: lbl("Aleatória", "Random") }],
+            () => Settings.wpOrder, v => Settings.wpOrder = v),
         sld("wallpaper", "picker", "wpColumns", ["Colunas da grade", "Grid columns"], "wallpaper colunas columns grade grid", 2, 8, 1, "", () => Settings.wpColumns, v => Settings.wpColumns = v),
         btn("wallpaper", "picker", "wpClear", ["Apagar prévias geradas", "Delete generated previews"], "wallpaper cache prévias thumbnails",
             () => { root.run([Config.wallpaperMenu, "--clear-cache"]); Wallpapers.images = []; Wallpapers.videos = [] }),

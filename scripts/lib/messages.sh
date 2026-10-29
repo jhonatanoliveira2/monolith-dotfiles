@@ -126,6 +126,10 @@ _m gtk.already "GTK theme already set (Materia-dark, dark)." "Tema GTK já defin
 _m gtk.would_apply "Would set the GTK theme to Materia-dark (dark)." "Definiria o tema GTK como Materia-dark (escuro)."
 _m gtk.no_gsettings "gsettings not found: set the GTK theme manually (see docs/Installation.md)." "gsettings não encontrado: defina o tema GTK manualmente (veja docs/Instalacao.md)."
 _m gtk.failed "Could not apply the GTK theme. Run it inside your Hyprland session: gsettings set org.gnome.desktop.interface gtk-theme 'Materia-dark'" "Não foi possível aplicar o tema GTK. Execute dentro da sessão do Hyprland: gsettings set org.gnome.desktop.interface gtk-theme 'Materia-dark'"
+_m vscode.applied "VS Code: Vibrancy Continued installed and settings.json ready for the shell colours." "VS Code: Vibrancy Continued instalada e settings.json pronto para as cores do shell."
+_m vscode.would_apply "Would install Vibrancy Continued in VS Code and prepare its settings.json." "Instalaria a Vibrancy Continued no VS Code e prepararia o settings.json."
+_m vscode.absent "VS Code not installed: when you install it, the shell sets it up (Vibrancy Continued + colours) on its next start." "VS Code não instalado: ao instalá-lo, o shell o configura (Vibrancy Continued + cores) na próxima inicialização."
+_m vscode.failed "Could not set up VS Code (offline?). Run ~/.local/bin/monolith-vscode later." "Não foi possível configurar o VS Code (sem internet?). Execute ~/.local/bin/monolith-vscode depois."
 
 _m shell.ready "Quickshell configuration deployed (~/.config/quickshell)." "Configuração do Quickshell instalada (~/.config/quickshell)."
 _m shell.no_binary "Quickshell is not installed: install the 'quickshell' package (AUR/extra) to use the new shell." "O Quickshell não está instalado: instale o pacote 'quickshell' (AUR/extra) para usar o novo shell."

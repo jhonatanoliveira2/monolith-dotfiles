@@ -75,6 +75,7 @@ Column {
             onPicked: Themes.setMode("preset")
         }
     }
+    SettingRow { width: parent.width; entry: Registry.byPage("themes").find(e => e.id === "themeVscode") }
 
     // ── dynamic palette ──
     CatHeader { width: parent.width; text: Labels.t("cat_themeDynamic") }
@@ -138,6 +139,7 @@ Column {
                 text: Labels.t("thOutdated") + " " + root.fileName(Wallpapers.current)
             }
             Swatches { visible: root.hasPalette; colors: root.hasPalette ? root.pal.colors : []; size: 16 }
+            SettingRow { width: parent.width; entry: Registry.byPage("themes").find(e => e.id === "themeFollow") }
             Row {
                 spacing: 6
                 Btn { compact: true; icon: Theme.glyph.refresh; text: Labels.t("thRegenerate"); active: Themes.status === "loading"

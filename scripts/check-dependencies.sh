@@ -59,6 +59,7 @@ EXPECTED_FILES=(
     ".config/hypr/scripts/now-playing.sh|used by hypr/hyprlock.conf (media label)"
     ".local/bin/wallpaper-menu|used by the SUPER+D binding"
     ".local/bin/monolith-theme|palette generator of Settings > Themes (wpgtk)"
+    ".local/bin/monolith-vscode|VS Code setup (Vibrancy Continued) run by the installer and the shell"
     ".config/fish/conf.d/monolith-theme.fish|fish colours of Settings > Themes"
     ".config/hypr/rofi/wallpaper-menu.rasi|theme of wallpaper-menu"
     ".config/fastfetch/monolith.txt|MONOLITH logo of fastfetch/config.jsonc"

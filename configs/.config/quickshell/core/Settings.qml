@@ -82,9 +82,12 @@ Singleton {
     property alias wpLiveAudio: adapter.wpLiveAudio
     property alias wpLivePause: adapter.wpLivePause
     property alias wpColumns: adapter.wpColumns
+    property alias wpOrder: adapter.wpOrder
     property alias themeMode: adapter.themeMode
     property alias themePreset: adapter.themePreset
     property alias themePalette: adapter.themePalette
+    property alias themeFollow: adapter.themeFollow
+    property alias themeVscode: adapter.themeVscode
     property alias welcomeDone: adapter.welcomeDone   // first-run welcome seen (menus/Welcome.qml)
     property alias wpDefaultDone: adapter.wpDefaultDone   // first-run default wallpaper handled (services/Wallpapers.qml)
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
@@ -204,10 +207,13 @@ Singleton {
             property bool wpLiveAudio: false
             property bool wpLivePause: true        // pause live wallpapers while covered
             property int wpColumns: 4
+            property string wpOrder: "name"      // picker order: name | name_desc | random
             // colour theme (Settings > Themes, core/Palettes.qml + services/Themes.qml)
             property string themeMode: "default"   // default | dynamic | preset
             property string themePreset: "nord"    // core/Palettes.qml presets
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
+            property bool themeVscode: true        // workbench.colorCustomizations of VS Code follow the theme
+            property bool themeFollow: true        // dynamic theme regenerates on every wallpaper change (off: only on request)
             property bool welcomeDone: false
             property bool wpDefaultDone: false
             property var overrides: ({})

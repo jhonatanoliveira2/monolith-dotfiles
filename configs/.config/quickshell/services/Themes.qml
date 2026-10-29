@@ -8,7 +8,9 @@ import "../core"
 // Generation lives in ~/.local/bin/monolith-theme (wpgtk in its own home: it never sets wallpapers or outputs);
 // wallpapers stay with wallpaper-menu, whose state file (services/Wallpapers.qml) says which one changed last,
 // on any monitor. The palette and its source are saved in settings.json, so a restart applies them at once
-// without running wpgtk. Fish follows through ~/.config/fish/conf.d/monolith-theme.fish (see writeFish).
+// without running wpgtk. Fish follows through ~/.config/fish/conf.d/monolith-theme.fish (see writeFish) and
+// hyprlock through ~/.config/hypr/generated/lock-theme.conf (see writeLock) and VS Code through its
+// workbench.colorCustomizations (see writeCode).
 Singleton {
     id: root
     readonly property string script: Quickshell.env("HOME") + "/.local/bin/monolith-theme"
@@ -42,9 +44,22 @@ Singleton {
     }
     function checkDeps() { if (!depsProc.running) depsProc.running = true }
 
+    // dynamic theme from the wallpaper set last, on request (the wallpaper picker's "Apply theme"); also
+    // switches to the dynamic theme; coming from another theme it starts with following off, so later
+    // wallpaper changes keep these colours until it is pressed again
+    function applyWallpaper() {
+        if (!dynamic) Settings.themeFollow = false
+        Settings.themeMode = "dynamic"
+        error = ""
+        if (!Wallpapers.current) { fail(Strings.t("thNoWallpaper")); return }
+        generate(Wallpapers.current, Wallpapers.currentOutputs, false)
+    }
+
     // a wallpaper was set (or the state file was read at startup: `initial`)
     function follow(initial) {
         if (!dynamic || !Settings.loaded) return
+        // following off: keep the palette until applyWallpaper / regenerate (the first one is still made)
+        if (!Settings.themeFollow && Palettes.valid(Settings.themePalette)) return
         if (!Wallpapers.current) { if (!initial) fail(Strings.t("thNoWallpaper")); return }
         const cur = Settings.themePalette
         if (Palettes.valid(cur) && cur.source === Wallpapers.current) {
@@ -159,11 +174,156 @@ Singleton {
         fishRev.command = ["fish", "-c", "set -U __monolith_theme_rev " + Date.now()]
         fishRev.running = true
     }
-    Timer { id: fishSoon; interval: 400; onTriggered: root.writeFish() }
+    Timer { id: fishSoon; interval: 400; onTriggered: { root.writeFish(); root.writeLock(); root.writeCode() } }
     Connections {
         target: Palettes
         function onActiveChanged() { fishSoon.restart() }
     }
+    Connections {
+        target: Settings
+        function onLanguageChanged() { fishSoon.restart() }
+        function onThemeVscodeChanged() { if (Settings.themeVscode) codeSetup.done = false; root.writeCode(!Settings.themeVscode) }
+    }
     FileView { id: fishView; path: Settings.ready ? root.fishFile : ""; blockLoading: true; blockWrites: true; printErrors: false }
     Process { id: fishRev }
+
+    // ── hyprlock ──
+    // lock-theme.conf sets the $lock_* colours and texts that hypr/hyprlock.conf uses (it keeps defaults for
+    // when the file is missing); hyprlock reads it on every lock, so nothing has to be reloaded.
+    readonly property string lockFile: Quickshell.env("HOME") + "/.config/hypr/generated/lock-theme.conf"
+    property string lockWritten: ""
+    function lockBody() {
+        const a = Palettes.active, c = a.ansi
+        const col = (h, al) => "rgba(" + String(h).replace("#", "") + ("0" + Math.round((al === undefined ? 1 : al) * 255).toString(16)).slice(-2) + ")"
+        const en = Settings.language === "en"
+        const v = {
+            lock_text: col(a.foreground), lock_time: col(a.white), lock_date: col(a.grayLight), lock_layout: col(a.grayMid),
+            lock_inner: col(a.panel, 0.15), lock_line: col(a.line, 0.25), lock_check: col(a.accent),
+            lock_fail: col(c ? c[1] : "#e06c75"), lock_caps: col(c ? c[3] : "#e5c07b"),
+            lock_txt_password: en ? "Password" : "Senha", lock_txt_caps: en ? "Caps Lock is on" : "Caps Lock ativado"
+        }
+        let out = "# Monolith Shell lock screen theme, written by services/Themes.qml. Do not edit.\n"
+        for (const k in v) out += "$" + k + " = " + v[k] + "\n"
+        return out
+    }
+    function writeLock() {
+        if (!Settings.loaded) return
+        const body = lockBody()
+        if (body === lockWritten) return
+        if (lockProc.running) { fishSoon.restart(); return }
+        lockWritten = body
+        lockProc.command = ["sh", "-c", 'mkdir -p "${1%/*}" && printf %s "$2" > "$1.tmp" && mv -f "$1.tmp" "$1"', "sh", lockFile, body]
+        lockProc.running = true
+    }
+    Process { id: lockProc; onExited: code => { if (code !== 0) root.lockWritten = "" } }
+
+    // ── VS Code ──
+    // Sets "workbench.colorCustomizations" and "editor.tokenColorCustomizations" (syntax) in the user settings.json
+    // of Code / Code - OSS / VSCodium (VS Code applies them at once). jq rewrites the file, so one with comments
+    // (not plain JSON) is left alone. Turning the option off removes both keys once. Before the first write of a
+    // session, ~/.local/bin/monolith-vscode sets up an editor installed since (Vibrancy Continued, settings.json).
+    readonly property var codeFiles: ["Code", "Code - OSS", "VSCodium"].map(d => (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/" + d + "/User/settings.json")
+    property string codeWritten: ""
+    function codeColors() {
+        const a = Palettes.active, c = a.ansi
+        const h = (x, al) => String(x) + (al === undefined ? "" : ("0" + Math.round(al * 255).toString(16)).slice(-2))
+        const bg = a.background, bar = a.bar, fg = a.foreground, acc = a.accent, dark = a.grayDark, border = h(a.line, 0.15)
+        // the window is translucent: layers that stack over a pane stay clear, panes are glass, popups nearly opaque
+        const clear = h(bg, 0), glass = h(bg, 0.8), glassBar = h(bar, 0.8), pop = h(bar, 0.9)
+        const v = {
+            "foreground": fg, "focusBorder": h(acc, 0.5), "widget.border": border, "selection.background": h(acc, 0.3),
+            "editor.background": glass, "editor.foreground": fg, "editorCursor.foreground": acc, "editorPane.background": clear,
+            "editorStickyScroll.background": glass, "editorStickyScrollGutter.background": glass, "minimap.background": glass,
+            "sideBarStickyScroll.background": glassBar, "panelStickyScroll.background": glass, "terminalStickyScroll.background": glass,
+            "inlineChat.background": pop, "notificationCenterHeader.background": pop, "editorGroupHeader.noTabsBackground": clear,
+            "tab.unfocusedActiveBackground": clear, "tab.unfocusedInactiveBackground": glassBar, "sideBarTitle.background": glassBar,
+            "editor.selectionBackground": h(acc, 0.25), "editor.lineHighlightBackground": h(dark, 0.3), "editor.lineHighlightBorder": "#00000000",
+            "editorLineNumber.foreground": a.grayMid, "editorLineNumber.activeForeground": fg,
+            "editorGutter.background": clear, "editorIndentGuide.background1": h(dark, 0.6), "editorWhitespace.foreground": h(dark, 0.8),
+            "editorWidget.background": pop, "editorWidget.border": border, "editorHoverWidget.background": pop, "editorSuggestWidget.background": pop,
+            "editorGroup.border": border, "editorGroupHeader.tabsBackground": clear, "editorGroupHeader.tabsBorder": border,
+            "tab.activeBackground": clear, "tab.inactiveBackground": glassBar, "tab.activeForeground": a.white, "tab.inactiveForeground": a.grayMid,
+            "tab.activeBorderTop": acc, "tab.border": border, "tab.hoverBackground": h(dark, 0.4),
+            "titleBar.activeBackground": bar, "titleBar.inactiveBackground": bar, "titleBar.activeForeground": fg, "titleBar.inactiveForeground": a.grayMid, "titleBar.border": border,
+            "activityBar.background": glassBar, "activityBar.foreground": fg, "activityBar.inactiveForeground": a.grayMid, "activityBar.border": border,
+            "activityBar.activeBorder": acc, "activityBarBadge.background": acc, "activityBarBadge.foreground": a.onAccent,
+            "activityBarTop.foreground": fg, "activityBarTop.inactiveForeground": a.grayMid, "activityBarTop.activeBorder": acc,
+            "sideBar.background": glassBar, "sideBar.foreground": a.grayLight, "sideBar.border": border, "sideBarTitle.foreground": fg,
+            "sideBarSectionHeader.background": clear, "sideBarSectionHeader.foreground": fg, "sideBarSectionHeader.border": border,
+            "statusBar.background": bar, "statusBar.foreground": a.grayLight, "statusBar.border": border, "statusBar.noFolderBackground": bar,
+            "panel.background": clear, "panel.border": border, "panelTitle.activeForeground": fg, "panelTitle.inactiveForeground": a.grayMid, "panelTitle.activeBorder": acc,
+            "terminal.background": clear, "terminal.foreground": fg, "terminalCursor.foreground": acc,
+            "list.activeSelectionBackground": h(dark, 0.8), "list.activeSelectionForeground": a.white, "list.inactiveSelectionBackground": h(dark, 0.5),
+            "list.hoverBackground": h(dark, 0.4), "list.focusOutline": h(acc, 0.5), "list.highlightForeground": acc,
+            "input.background": bar, "input.foreground": fg, "input.border": border, "input.placeholderForeground": a.grayMid,
+            "dropdown.background": bar, "dropdown.border": border, "quickInput.background": pop, "menu.background": pop, "menu.foreground": fg,
+            "menu.selectionBackground": h(dark, 0.8), "menu.border": border,
+            "button.background": acc, "button.foreground": a.onAccent, "button.secondaryBackground": dark, "button.secondaryForeground": fg,
+            "badge.background": acc, "badge.foreground": a.onAccent, "progressBar.background": acc, "textLink.foreground": acc, "textLink.activeForeground": acc,
+            "scrollbarSlider.background": h(dark, 0.5), "scrollbarSlider.hoverBackground": h(dark, 0.8), "scrollbarSlider.activeBackground": dark,
+            "notifications.background": pop, "notifications.border": border, "breadcrumb.background": clear
+        }
+        if (c) {
+            const names = ["Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White"]
+            for (let i = 0; i < 16; i++) v["terminal.ansi" + (i < 8 ? "" : "Bright") + names[i % 8]] = c[i]
+        }
+        return v
+    }
+    // syntax colours as TextMate rules over whatever colour theme is chosen; the default theme has no ansi
+    // colours, so it leaves the syntax to that theme
+    function codeTokens() {
+        const a = Palettes.active, c = a.ansi
+        if (!c) return null
+        const r = (scope, fg, style) => ({ scope: scope, settings: style ? { foreground: fg, fontStyle: style } : { foreground: fg } })
+        return { textMateRules: [
+            r(["source", "variable", "meta.definition.variable"], a.foreground),
+            r(["comment", "punctuation.definition.comment"], a.grayMid, "italic"),
+            r(["keyword", "storage", "storage.type", "storage.modifier", "keyword.control"], c[5]),
+            r(["keyword.operator", "punctuation.separator", "punctuation.accessor"], c[6]),
+            r(["string", "punctuation.definition.string", "markup.inline.raw"], c[2]),
+            r(["string.regexp", "constant.character.escape", "constant.other.placeholder"], c[14]),
+            r(["constant.numeric", "constant.language", "constant.character", "constant.other", "support.constant"], c[3]),
+            r(["entity.name.function", "support.function", "meta.function-call.generic", "variable.function"], c[4]),
+            r(["entity.name.type", "entity.name.class", "entity.name.namespace", "support.type", "support.class", "entity.other.inherited-class"], c[11]),
+            r(["variable.parameter", "meta.parameter"], a.grayLight, "italic"),
+            r(["variable.other.property", "variable.other.object.property", "support.variable.property", "meta.object-literal.key"], c[14]),
+            r(["variable.language", "variable.other.constant", "variable.other.enummember"], c[9]),
+            r(["entity.name.tag", "punctuation.definition.tag"], c[4]),
+            r(["entity.other.attribute-name"], c[3], "italic"),
+            r(["support.type.property-name", "meta.property-name"], c[6]),
+            r(["markup.heading", "entity.name.section"], a.accent, "bold"),
+            r(["markup.bold"], a.foreground, "bold"), r(["markup.italic"], a.foreground, "italic"),
+            r(["markup.underline.link", "string.other.link"], a.accent),
+            r(["markup.inserted"], c[2]), r(["markup.deleted"], c[1]), r(["markup.changed"], c[3]),
+            r(["invalid", "invalid.illegal"], c[1])
+        ] }
+    }
+    function writeCode(remove) {
+        if (!Settings.loaded || (!remove && !Settings.themeVscode)) return
+        if (!remove && !codeSetup.done) { codeSetup.running = true; return }
+        // keys set to null are removed: the default theme drops the syntax rules, turning the option off drops both
+        const json = JSON.stringify(remove ? { "workbench.colorCustomizations": null, "editor.tokenColorCustomizations": null }
+                                           : { "workbench.colorCustomizations": codeColors(), "editor.tokenColorCustomizations": codeTokens() })
+        if (!remove && json === codeWritten) return
+        if (codeProc.running) { fishSoon.restart(); return }
+        codeWritten = json
+        // jq takes the keys as $c (--argjson); a file is rewritten only when the result differs
+        const script = [
+            'c=$1; shift',
+            'for f; do',
+            '  [ -f "$f" ] || continue',
+            '  new=$(jq --indent 2 --argjson c "$c" \'reduce ($c | to_entries[]) as $e (.; if $e.value == null then del(.[$e.key]) else .[$e.key] = $e.value end)\' "$f" 2>/dev/null) || continue',
+            '  [ "$new" = "$(cat "$f")" ] || printf "%s\\n" "$new" >"$f"',
+            'done'
+        ].join("\n")
+        codeProc.command = ["sh", "-c", script, "sh", json].concat(codeFiles)
+        codeProc.running = true
+    }
+    Process { id: codeProc }
+    Process {
+        id: codeSetup
+        property bool done: false
+        command: ["sh", "-c", '[ -x "$1" ] && "$1" --quiet; exit 0', "sh", Quickshell.env("HOME") + "/.local/bin/monolith-vscode"]
+        onExited: { done = true; root.codeWritten = ""; root.writeCode() }
+    }
 }

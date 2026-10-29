@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# monolith-vscode — first-run setup of VS Code / Code - OSS / VSCodium for MONOLITH
+#   * installs the Vibrancy Continued extension (translucent window, blurred by Hyprland)
+#   * creates the user settings.json (or adds the missing keys) so the shell can write the theme colours
+#     into it (services/Themes.qml, Settings > Themes > "Apply the colours to VS Code")
+# Each editor is set up once: a marker in ~/.local/state/monolith keeps a removed extension from coming
+# back. A failed install leaves no marker, so it is retried on the next run.
+#
+# Usage:  monolith-vscode [--quiet] [--force]    (--force ignores the markers)
+# Run by the installer and by the shell when it starts; exits 2 when no editor is installed.
+# Dependencies: jq (only to merge into an existing settings.json)
+set -uo pipefail
+
+EXTENSION=illixion.vscode-vibrancy-continued
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/monolith"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
+# <binary>|<config folder>
+EDITORS=("code|Code" "code-oss|Code - OSS" "codium|VSCodium")
+# keys added when absent; the colours themselves come from the shell
+SEED='{
+  "workbench.colorTheme": "Dark+",
+  "window.titleBarStyle": "custom",
+  "terminal.integrated.gpuAcceleration": "off"
+}'
+
+QUIET=0 FORCE=0
+for arg; do
+    case $arg in
+        --quiet) QUIET=1 ;;
+        --force) FORCE=1 ;;
+        -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) printf 'monolith-vscode: unknown option %s\n' "$arg" >&2; exit 1 ;;
+    esac
+done
+say() { (( QUIET )) || printf '%s\n' "$*"; }
+
+seed_settings() {
+    local file=$1 new
+    mkdir -p -- "${file%/*}" || return 1
+    if [[ ! -s $file ]]; then
+        printf '%s\n' "$SEED" >"$file" && say "  created $file"
+        return
+    fi
+    # an existing file wins over the seed; one with comments (not plain JSON) is left alone
+    command -v jq >/dev/null 2>&1 || return 0
+    new=$(jq --indent 2 --argjson s "$SEED" '$s + .' "$file" 2>/dev/null) || return 0
+    [[ $new == "$(cat -- "$file")" ]] || { printf '%s\n' "$new" >"$file" && say "  updated $file"; }
+}
+
+found=0 failed=0
+for entry in "${EDITORS[@]}"; do
+    bin=${entry%%|*} dir=${entry#*|}
+    command -v "$bin" >/dev/null 2>&1 || continue
+    found=1
+    marker="$STATE_DIR/vscode-$bin"
+    [[ -e $marker && $FORCE == 0 ]] && continue
+    say "$bin:"
+    seed_settings "$CONFIG_DIR/$dir/User/settings.json" || { failed=1; continue; }
+    if "$bin" --list-extensions 2>/dev/null | grep -qix "$EXTENSION"; then
+        say "  $EXTENSION already installed"
+    elif "$bin" --install-extension "$EXTENSION" >/dev/null 2>&1; then
+        say "  $EXTENSION installed (run \"Reload Vibrancy\" in VS Code if the window is not translucent)"
+    else
+        say "  could not install $EXTENSION (offline?): will retry on the next run"
+        failed=1
+        continue
+    fi
+    mkdir -p -- "$STATE_DIR" && : >"$marker"
+done
+
+(( found )) || { say "no VS Code / Code - OSS / VSCodium found"; exit 2; }
+exit "$failed"

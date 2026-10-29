@@ -6,15 +6,25 @@ import "../components"
 
 // Wallpaper picker (Super+D / quick menu; wallpaper-menu's rofi menu stays the fallback): static images (awww) and live videos (mpvpaper) through
 // services/Wallpapers.qml. Tabs, monitor, search and a grid of previews; arrows + Enter, typing filters.
+// The monitor starts on the focused one (the overlay opens there); the order comes from Settings > Wallpapers.
 Overlay {
     id: win
     name: "wallpaper"
     cardWidth: 1180
     cardHeight: 720
     property string kind: Wallpapers.currentKind === "video" ? "video" : "image"
-    property string output: "ALL"
+    property string output: Quickshell.screens.length > 1 && screen ? screen.name : "ALL"
     property string query: ""
-    readonly property var all: kind === "video" ? Wallpapers.videos : Wallpapers.images
+    // random order: one shuffle per opening, so the grid does not jump when the list is rescanned
+    property var ranks: ({})
+    function rank(path) { if (!(path in ranks)) ranks[path] = Math.random(); return ranks[path] }
+    readonly property var all: {
+        const list = (kind === "video" ? Wallpapers.videos : Wallpapers.images).slice()
+        const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+        if (Settings.wpOrder === "random") return list.sort((a, b) => rank(a.path) - rank(b.path))
+        if (Settings.wpOrder === "name_desc") return list.sort((a, b) => byName(b, a))
+        return list.sort(byName)
+    }
     readonly property var visibleList: query ? all.filter(w => w.name.toLowerCase().indexOf(query.toLowerCase()) >= 0) : all
     Component.onCompleted: { Wallpapers.refresh(); search.forceActiveFocus() }
     // previews created right after the list changes (tab, search, rescan) ease in one after another
@@ -25,6 +35,14 @@ Overlay {
     function choose(w) {
         if (!w) return
         Wallpapers.apply(kind === "video" ? "live" : "static", w.path, output)
+    }
+    // a random one from the visible list (tab and search apply), other than the current one when possible
+    function chooseRandom() {
+        const pool = visibleList.length > 1 ? visibleList.filter(w => w.path !== Wallpapers.current) : visibleList
+        if (!pool.length) return
+        const w = pool[Math.floor(Math.random() * pool.length)]
+        grid.currentIndex = visibleList.indexOf(w)
+        choose(w)
     }
 
     Item {
@@ -169,6 +187,10 @@ Overlay {
         Row {
             anchors { right: parent.right; bottom: parent.bottom }
             spacing: 6
+            Btn { compact: true; icon: Theme.glyph.shuffle; text: Strings.t("wpRandom"); onActivated: win.chooseRandom() }
+            // dynamic theme from the current wallpaper, for when it does not follow every change on its own
+            Btn { visible: !(Themes.dynamic && Settings.themeFollow); compact: true; icon: String.fromCodePoint(0xf03d8); text: Strings.t("wpTheme")
+                  active: Themes.status === "loading"; onActivated: Themes.applyWallpaper() }
             Btn { compact: true; icon: Theme.glyph.refresh; text: Strings.t("rescan"); active: Wallpapers.loading; onActivated: Wallpapers.refresh() }
             Btn { compact: true; icon: Theme.glyph.cog; text: Strings.t("wpSettings"); onActivated: { Popups.closeOverlay(); Popups.openApp("wallpaper") } }
         }
