@@ -512,7 +512,7 @@ configure_quickshell() {
     if (( ! OPT_DRY && ! OPT_YES && UI_INTERACTIVE )) && [[ -n ${WAYLAND_DISPLAY-} ]] && pgrep -x waybar >/dev/null 2>&1; then
         if ui_confirm "$(t shell.ask_switch)" n; then
             pkill -x waybar 2>/dev/null
-            setsid -f quickshell >/dev/null 2>&1
+            setsid -f bash "$TARGET_HOME/.config/quickshell/scripts/start.sh" >/dev/null 2>&1
             ui_ok "$(t shell.started)"
         fi
     fi

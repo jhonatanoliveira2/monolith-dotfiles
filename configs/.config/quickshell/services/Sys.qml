@@ -44,6 +44,13 @@ Singleton {
         shadowRange: { opt: "decoration:shadow:range", type: "int", min: 0, max: 50 },
         shadowPower: { opt: "decoration:shadow:render_power", type: "int", min: 1, max: 4 },
         shadowSharp: { opt: "decoration:shadow:sharp", type: "bool" },
+        // wobble (Hyprland 0.57+: spring deformation while moving / resizing windows)
+        wobble: { opt: "decoration:wobble:enabled", type: "bool" },
+        wobbleIntensity: { opt: "decoration:wobble:intensity", type: "float", min: 0, max: 2 },
+        wobbleStiffness: { opt: "decoration:wobble:stiffness", type: "float", min: 1, max: 1000 },
+        wobbleDamping: { opt: "decoration:wobble:damping", type: "float", min: 0, max: 100 },
+        wobbleMass: { opt: "decoration:wobble:mass", type: "float", min: 0.1, max: 10 },
+        wobbleMesh: { opt: "decoration:wobble:mesh", type: "int", min: 2, max: 32 },
         // animations
         animations: { opt: "animations:enabled", type: "bool" },
         wsWrap: { opt: "animations:workspace_wraparound", type: "bool" },

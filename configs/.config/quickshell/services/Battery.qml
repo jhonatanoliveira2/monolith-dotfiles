@@ -91,7 +91,7 @@ Singleton {
         else if (saverApplied) { saverApplied = false; Quickshell.execDetached(["hyprctl", "reload"]) }
     }
     function applySaver() {
-        saverProc.command = Config.hyprEval.concat(["hl.config(" + Sys.luaTable(Sys.flatOf({ blur: 0, shadow: 0, animations: 0 }), false) + ")"])
+        saverProc.command = Config.hyprEval.concat(["hl.config(" + Sys.luaTable(Sys.flatOf({ blur: 0, shadow: 0, animations: 0, wobble: 0 }), false) + ")"])
         saverProc.running = true
         saverApplied = true
     }

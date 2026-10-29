@@ -2,7 +2,7 @@ hl.on("hyprland.start", function()
     local startupCommands = {
         "hypridle",
         "awww-daemon",
-        "quickshell",
+        "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/start.sh",   -- quickshell without THP (less RAM)
         "/usr/bin/lxqt-policykit-agent",
         "wallpaper-menu --restore",
     }
