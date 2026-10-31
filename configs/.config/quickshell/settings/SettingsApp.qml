@@ -68,6 +68,7 @@ Rectangle {
         }
 
         Flickable {
+            id: navFlick
             anchors { left: parent.left; right: parent.right; top: box.bottom; topMargin: 10; bottom: parent.bottom; bottomMargin: 6 }
             contentHeight: nav.implicitHeight
             clip: true
@@ -89,6 +90,7 @@ Rectangle {
                 }
             }
         }
+        HoverScrollBar { flick: navFlick }
     }
 
     Item {
@@ -110,12 +112,6 @@ Rectangle {
             contentHeight: content.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
-            Rectangle {
-                visible: flick.contentHeight > flick.height
-                anchors.right: parent.right
-                y: flick.visibleArea.yPosition * flick.height; width: 2; height: flick.visibleArea.heightRatio * flick.height
-                color: Theme.grayMid
-            }
             Column {
                 id: content
                 width: flick.width - 8
@@ -145,5 +141,6 @@ Rectangle {
                 EntryList { visible: !app.searching && !app.pageFile(app.page); page: app.page }
             }
         }
+        HoverScrollBar { flick: flick; anchors.rightMargin: -12 }
     }
 }

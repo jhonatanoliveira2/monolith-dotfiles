@@ -14,6 +14,7 @@ PanelWindow {
     property var bar: null
     property int panelWidth: 340
     property int maxHeight: 640
+    property bool hoverScroll: false   // full scrollbar that shows on hover instead of the thin indicator
     readonly property string screenName: bar ? bar.screenName : ""
     readonly property int screenW: bar && bar.screen ? bar.screen.width : 1920
     readonly property int screenH: bar && bar.screen ? bar.screen.height : 1080
@@ -106,8 +107,14 @@ PanelWindow {
                 sourceComponent: win.contentComponent
             }
         }
+        HoverScrollBar {   // sits in the panel padding, not over the content
+            visible: win.hoverScroll
+            flick: flick
+            anchors.right: parent.right
+            anchors.rightMargin: 1
+        }
         Rectangle {   // scroll indicator, only for long menus
-            visible: flick.interactive
+            visible: !win.hoverScroll && flick.interactive
             anchors.right: parent.right
             anchors.rightMargin: 3
             y: win.pad + flick.visibleArea.yPosition * flick.height

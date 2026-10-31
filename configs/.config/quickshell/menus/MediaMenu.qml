@@ -11,6 +11,7 @@ MenuWindow {
     menu: "media"
     panelWidth: 400
     maxHeight: 700
+    hoverScroll: true
 
     Column {
         id: col

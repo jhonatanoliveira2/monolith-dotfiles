@@ -183,4 +183,5 @@ Overlay {
         }
         Txt { visible: list.count === 0; anchors.centerIn: parent; text: Strings.t("lnNone"); color: Theme.grayMid }
     }
+    HoverScrollBar { flick: list; anchors.rightMargin: -10 }
 }

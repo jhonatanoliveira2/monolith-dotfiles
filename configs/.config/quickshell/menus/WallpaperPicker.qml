@@ -176,6 +176,7 @@ Overlay {
                 color: Theme.grayMid
             }
         }
+        HoverScrollBar { flick: grid; anchors.rightMargin: -12 }
 
         // ── footer ──
         Row {
