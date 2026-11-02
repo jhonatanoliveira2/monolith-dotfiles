@@ -37,7 +37,7 @@ MenuWindow {
                 width: parent.width
                 icon: Theme.glyph.vol
                 title: Audio.label(modelData)
-                selected: Audio.sink !== null && Audio.sink !== undefined && modelData.id === Audio.sink.id
+                selected: Audio.isCurrent(modelData)
                 onClicked: Audio.setDefault(modelData)
             }
         }

@@ -11,7 +11,7 @@ import "components"
 
 // MONOLITH shell: bar + menus + notifications. Start with `quickshell` (or `qs`).
 ShellRoot {
-    Component.onCompleted: { Sys.init(); Themes.init(); MicFx.init() }
+    Component.onCompleted: { Sys.init(); Themes.init(); MicFx.init(); AudioFx.init() }
 
     SettingsWindow {}
     Welcome {}

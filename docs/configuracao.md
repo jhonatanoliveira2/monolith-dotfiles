@@ -85,11 +85,21 @@ Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`)
 - **Microfone** tem supressão de ruído RNNoise (pacote `noise-suppression-for-voice`, intensidade ajustável) e
   um equalizador de 5 faixas (100 Hz – 8 kHz, ±12 dB, com corte abaixo de 80 Hz) com predefinições, incluindo
   *Voz grave*. Arraste uma faixa, role sobre ela (±1 dB) ou dê clique duplo (0 dB); **Desfazer alterações**
-  volta aos valores de quando a página foi aberta. Os efeitos rodam como um filter-chain do PipeWire na unit de
-  usuário `monolith-micfx` (config em `~/.local/state/quickshell-monolith/micfx.conf`) e criam a entrada
-  **Monolith Mic**, que vira a padrão enquanto estão ligados. **Ouvir o microfone** toca a entrada padrão de
+  volta aos valores de quando a página foi aberta; **Zerar** volta ao plano. Os efeitos criam a entrada
+  **Monolith Mic**, que vira a padrão enquanto estão ligados; escolher outra entrada muda o microfone filtrado. **Ouvir o microfone** toca a entrada padrão de
   volta via `pw-loopback` (atraso opcional de 0,3 / 1 s, para após 2 min); use fones. Logs: `[micfx]` /
   `[mictest]` no log do Quickshell, `journalctl --user -u monolith-micfx`.
+- **Áudio** tem o mesmo equalizador para a saída (10 faixas, 31 Hz – 16 kHz) com predefinições (Bass boost,
+  Extreme bass, Funk, Trap, Rock, Vocal boost, Deep house, ASMR, Pop, Eletrônica, Jazz, Clássica, Lo-fi, Podcast,
+  Volume baixo, Agudos). A gaveta **Mais efeitos** guarda o reforço de grave, o reforço de volume (pré-ganho;
+  valores altos podem distorcer) e um virtualizador para fones (crossfeed). A saída **Monolith Audio** vira a
+  padrão enquanto os efeitos estão ligados, e escolher outra saída muda o dispositivo para onde o som vai.
+- **Persistência dos efeitos**: cada cadeia é um filter-chain do PipeWire rodado por uma unit de usuário do
+  systemd (`~/.config/systemd/user/monolith-micfx.service` / `monolith-audiofx.service`,
+  `WantedBy=pipewire.service`) que lê `~/.local/state/quickshell-monolith/micfx.conf` / `audiofx.conf`. Toda
+  mudança é salva na hora e os efeitos sobem com o PipeWire no login, mesmo com o shell parado ou reiniciando.
+  Desligar os efeitos desativa e remove a unit. Logs: `[micfx]` / `[audiofx]` / `[mictest]`,
+  `journalctl --user -u monolith-audiofx`.
 - **Armazenamento** lê a saúde dos discos pelo UDisks2, sem root. A limpeza sempre analisa antes e mostra o que
   cada item remove. Apagar exige um segundo clique de confirmação. A limpeza do pacman e do journal pede a
   senha via `pkexec`.

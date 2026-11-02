@@ -29,7 +29,8 @@ Column {
     }
     Txt { visible: Audio.source === null; x: 10; text: Labels.t("noMic"); color: Theme.grayMid }
     EntryList { page: "mic"; width: parent.width }
-    MicEq {
+    EqCard {
+        fx: MicFx
         width: parent.width
         level: peak.peak
         visible: opacity > 0
@@ -111,9 +112,8 @@ Column {
             required property var modelData
             width: parent.width
             icon: Theme.glyph.mic; title: Audio.label(modelData)
-            selected: modelData === Audio.source || (MicFx.active && modelData.name === Settings.micFxSource)
-            // with effects on, picking a real mic changes what the chain captures; "Monolith Mic" stays the default
-            onClicked: m => MicFx.active && modelData.name !== MicFx.nodeName ? MicFx.setSource(modelData.name) : Audio.setDefault(modelData)
+            selected: Audio.isCurrent(modelData)
+            onClicked: m => Audio.setDefault(modelData)   // with the effects on this retargets the chain
         }
     }
     Section { width: parent.width; text: Labels.t("recording") }

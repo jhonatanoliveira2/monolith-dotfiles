@@ -3,18 +3,20 @@ import "../core"
 import "../services"
 import "../components"
 
-// Microphone equalizer card (services/MicFx.qml): vertical band sliders over an animated response curve.
-// Drag a knob, scroll over a band (±1 dB) or double-click it (0 dB); the chain is updated on release.
-// `level` (0..1, the live mic peak) makes the curve breathe while you speak.
+// Equalizer card for an effect chain (`fx`: services/MicFx.qml or services/AudioFx.qml): vertical band sliders
+// over an animated response curve, presets in a drawer. Drag a knob, scroll over a band (±1 dB) or double-click
+// it (0 dB); the chain is updated on release. `level` (0..1, a live peak) makes the curve breathe.
 Rectangle {
     id: root
+    required property var fx
     property real level: 0
-    readonly property real maxDb: 12
-    readonly property var gains: MicFx.gains()
-    readonly property string preset: MicFx.presetOf()
+    readonly property real maxDb: fx.maxDb
+    readonly property var gains: fx.gains()
+    readonly property string preset: fx.presetOf()
+    readonly property var presetEntry: fx.presetList.find(p => p[0] === preset)
     // gains when the page was opened: "Undo changes" goes back to them
     property var initial: []
-    Component.onCompleted: initial = MicFx.gains()
+    Component.onCompleted: initial = fx.gains()
     readonly property bool changed: initial.length > 0 && initial.some((v, i) => v !== gains[i])
 
     height: col.implicitHeight + 24
@@ -27,29 +29,23 @@ Rectangle {
         x: 12; y: 12; width: parent.width - 24
         spacing: 10
 
-        // presets
-        Flow {
-            width: parent.width; spacing: 4
-            Repeater {
-                model: [["flat", "Plano", "Flat"], ["voice", "Voz", "Voice"], ["warm", "Quente", "Warm"], ["bright", "Brilhante", "Bright"], ["deep", "Voz grave", "Deep voice"], ["basscut", "Sem graves", "Bass cut"]]
-                delegate: Btn {
-                    required property var modelData
-                    compact: true
-                    text: Labels.pick([modelData[1], modelData[2]])
-                    active: root.preset === modelData[0]
-                    onActivated: MicFx.setPreset(modelData[0])
+        // presets (drawer: the current one is shown while closed)
+        Drawer {
+            width: parent.width
+            title: Labels.pick(["Predefinições", "Presets"])
+            summary: root.presetEntry ? Labels.pick([root.presetEntry[1], root.presetEntry[2]]) : Labels.pick(["Personalizado", "Custom"])
+            Flow {
+                width: parent.width; spacing: 4
+                Repeater {
+                    model: root.fx.presetList
+                    delegate: Btn {
+                        required property var modelData
+                        compact: true
+                        text: Labels.pick([modelData[1], modelData[2]])
+                        active: root.preset === modelData[0]
+                        onActivated: root.fx.setPreset(modelData[0])
+                    }
                 }
-            }
-            Txt { visible: root.preset === "custom"; height: 26; verticalAlignment: Text.AlignVCenter; leftPadding: 6
-                  text: Labels.pick(["Personalizado", "Custom"]); color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
-            Btn {
-                compact: true
-                icon: Theme.g(0xf0e2)
-                text: Labels.pick(["Desfazer alterações", "Undo changes"])
-                enabled: root.changed
-                opacity: root.changed ? 1 : 0.4
-                Behavior on opacity { NumberAnimation { duration: Theme.dur(150) } }
-                onActivated: { console.log("[micfx] eq: undo changes ->", JSON.stringify(root.initial)); MicFx.setGains(root.initial) }
             }
         }
 
@@ -121,7 +117,7 @@ Rectangle {
             // bands
             Repeater {
                 id: bands
-                model: MicFx.bands
+                model: root.fx.bands
                 delegate: Item {
                     id: band
                     required property var modelData
@@ -188,13 +184,13 @@ Rectangle {
                         cursorShape: Qt.SizeVerCursor
                         onPressed: m => { band.dragValue = plot.dbOf(m.y); band.dragging = true }
                         onPositionChanged: m => { if (band.dragging) band.dragValue = plot.dbOf(m.y) }
-                        onReleased: { band.dragging = false; if (band.dragValue !== band.gain) MicFx.setGain(band.index, band.dragValue) }
+                        onReleased: { band.dragging = false; if (band.dragValue !== band.gain) root.fx.setGain(band.index, band.dragValue) }
                         onCanceled: band.dragging = false
-                        onDoubleClicked: MicFx.setGain(band.index, 0)
+                        onDoubleClicked: root.fx.setGain(band.index, 0)
                         onWheel: w => {
                             w.accepted = true          // scroll changes the band, not the page
                             const v = Math.max(-root.maxDb, Math.min(root.maxDb, band.gain + (w.angleDelta.y > 0 ? 1 : -1)))
-                            if (v !== band.gain) MicFx.setGain(band.index, v)
+                            if (v !== band.gain) root.fx.setGain(band.index, v)
                         }
                     }
                 }
@@ -205,7 +201,7 @@ Rectangle {
         Row {
             x: plot.gutter
             Repeater {
-                model: MicFx.bands
+                model: root.fx.bands
                 delegate: Column {
                     required property var modelData
                     required property int index
@@ -215,6 +211,28 @@ Rectangle {
                     Txt { width: parent.width; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 10; font.bold: false; color: Theme.grayMid
                           text: { const g = root.gains[index] || 0; return (g > 0 ? "+" : "") + g + " dB" } }
                 }
+            }
+        }
+
+        Row {
+            anchors.right: parent.right
+            spacing: 4
+            Btn {
+                compact: true
+                icon: Theme.g(0xf0e2)
+                text: Labels.pick(["Desfazer alterações", "Undo changes"])
+                enabled: root.changed
+                opacity: root.changed ? 1 : 0.4
+                Behavior on opacity { NumberAnimation { duration: Theme.dur(150) } }
+                onActivated: { console.log("[" + root.fx.tag + "] eq: undo changes ->", JSON.stringify(root.initial)); root.fx.setGains(root.initial) }
+            }
+            Btn {
+                compact: true
+                text: Labels.pick(["Zerar", "Reset"])
+                enabled: root.preset !== "flat"
+                opacity: enabled ? 1 : 0.4
+                Behavior on opacity { NumberAnimation { duration: Theme.dur(150) } }
+                onActivated: root.fx.setPreset("flat")
             }
         }
     }

@@ -85,11 +85,21 @@ Microphone, Notifications, Network, Bluetooth, Power (laptops only), Storage, In
 - **Microphone** has RNNoise noise suppression (package `noise-suppression-for-voice`, adjustable strength)
   and a 5-band equalizer (100 Hz – 8 kHz, ±12 dB, with an 80 Hz high-pass) with presets, including *Deep voice*.
   Drag a band, scroll over it (±1 dB) or double-click it (0 dB); **Undo changes** returns to the values from
-  when the page was opened. The effects run as a PipeWire filter-chain in the user unit `monolith-micfx`
-  (config in `~/.local/state/quickshell-monolith/micfx.conf`) and expose the input **Monolith Mic**, which
-  becomes the default while they are on. **Listen to the mic** plays the default input back through
+  when the page was opened; **Reset** goes back to flat. The effects expose the input **Monolith Mic**, which
+  becomes the default while they are on; picking another input then changes the mic being filtered. **Listen to the mic** plays the default input back through
   `pw-loopback` (optional 0.3 / 1 s delay, stops after 2 min); use headphones. Logs: `[micfx]` / `[mictest]`
   in the Quickshell log, `journalctl --user -u monolith-micfx`.
+- **Audio** has the same equalizer for the output (10 bands, 31 Hz – 16 kHz) with presets (Bass boost, Extreme
+  bass, Funk, Trap, Rock, Vocal boost, Deep house, ASMR, Pop, Electronic, Jazz, Classical, Lo-fi, Podcast, Late
+  night, Treble). The **More effects** drawer holds bass boost, volume boost (pre-gain; high values can clip) and
+  a headphone virtualizer (crossfeed). The output **Monolith Audio** becomes the default while the effects are
+  on, and picking another output changes the device it plays into.
+- **Effect persistence**: each chain is a PipeWire filter-chain run by a systemd user unit
+  (`~/.config/systemd/user/monolith-micfx.service` / `monolith-audiofx.service`, `WantedBy=pipewire.service`)
+  that reads `~/.local/state/quickshell-monolith/micfx.conf` / `audiofx.conf`. Every change is saved at once and
+  the effects start with PipeWire at login, even when the shell is stopped or restarting. Turning the effects
+  off disables and removes the unit. Logs: `[micfx]` / `[audiofx]` / `[mictest]`,
+  `journalctl --user -u monolith-audiofx`.
 - **Storage** reads disk health from UDisks2, without root. Cleanup always scans first and lists what each item
   removes. Removing needs a second, confirming click. pacman and journal cleanup ask for the password through
   `pkexec`.

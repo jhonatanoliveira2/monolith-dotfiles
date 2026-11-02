@@ -16,3 +16,5 @@ singleton Themes 1.0 Themes.qml
 singleton Wallpapers 1.0 Wallpapers.qml
 singleton Binds 1.0 Binds.qml
 singleton MicFx 1.0 MicFx.qml
+singleton AudioFx 1.0 AudioFx.qml
+FxChain 1.0 FxChain.qml

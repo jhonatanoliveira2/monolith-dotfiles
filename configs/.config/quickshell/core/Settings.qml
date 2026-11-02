@@ -93,6 +93,12 @@ Singleton {
     property alias micEq: adapter.micEq
     property alias micEqGains: adapter.micEqGains
     property alias micFxSource: adapter.micFxSource
+    property alias audioFx: adapter.audioFx
+    property alias audioEqGains: adapter.audioEqGains
+    property alias audioBass: adapter.audioBass
+    property alias audioBoost: adapter.audioBoost
+    property alias audioVirt: adapter.audioVirt
+    property alias audioFxTarget: adapter.audioFxTarget
     property alias welcomeDone: adapter.welcomeDone   // first-run welcome seen (menus/Welcome.qml)
     property alias wpDefaultDone: adapter.wpDefaultDone   // first-run default wallpaper handled (services/Wallpapers.qml)
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
@@ -225,6 +231,13 @@ Singleton {
             property bool micEq: false
             property var micEqGains: [0, 0, 0, 0, 0]   // dB at 100 / 300 / 1k / 3k / 8k Hz
             property string micFxSource: ""        // physical mic node captured by the chain
+            // output effects (Settings > Audio, services/AudioFx.qml)
+            property bool audioFx: false
+            property var audioEqGains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]   // dB, 31 Hz .. 16 kHz
+            property int audioBass: 0              // bass boost, dB (low shelf at 90 Hz)
+            property int audioBoost: 0             // volume boost, dB (pre-gain; may clip when high)
+            property int audioVirt: 0              // headphone virtualizer (crossfeed), %
+            property string audioFxTarget: ""      // physical output the chain plays into
             property bool welcomeDone: false
             property bool wpDefaultDone: false
             property var overrides: ({})
