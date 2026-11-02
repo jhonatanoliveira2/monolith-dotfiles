@@ -68,6 +68,7 @@ pacman-contrib              # paccache: pacman cache cleanup in Settings > Stora
 [official:optional]
 # Standalone apps: their configuration is included, but nothing in the environment launches them
 # (no autostart, binding or script calls them), so they are not required.
+noise-suppression-for-voice # RNNoise LADSPA plugin: microphone noise suppression in Settings > Microphone
 fastfetch                   # fastfetch/config.jsonc (the call in fish/config.fish is commented out)
 btop                        # btop/btop.conf
 micro                       # micro/ settings and colour scheme

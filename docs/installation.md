@@ -34,10 +34,11 @@ The installer checks prerequisites and dependencies, plans the files to deploy, 
 | Option | Effect |
 |---|---|
 | `--lang en\|pt_BR` | Selects the interface language and skips the interactive picker. Also accepts `MONOLITH_LANG`. |
-| `-y`, `--yes` | Accepts defaults without prompting; optional packages are not included. |
+| `-y`, `--yes` | Accepts defaults without prompting; optional packages are included (use `--no-optional` to skip them). |
 | `-n`, `--dry-run` | Shows the planned actions without applying changes. |
 | `--no-deps` | Does not install packages. |
-| `--with-optional` | Includes the optional packages in `packages.txt`. |
+| `--with-optional` | Installs the optional packages in `packages.txt` without asking. |
+| `--no-optional` | Skips the optional packages. |
 | `--no-aur` | Does not call an AUR helper; prints manual commands. |
 | `--aur-helper NAME` | Selects the AUR helper (defaults to `paru`, then `yay`). |
 | `--force-symlinks` | Allows writes through symlinked directories under `$HOME`. Review their targets first. |

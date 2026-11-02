@@ -7,6 +7,7 @@ import "../components"
 MenuWindow {
     id: win
     menu: "network"
+    hoverScroll: true
     panelWidth: 380
     maxHeight: 560
 

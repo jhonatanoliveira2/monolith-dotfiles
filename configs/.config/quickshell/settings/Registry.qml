@@ -159,6 +159,14 @@ Singleton {
         btn("audio", "output", "mixer", ["Mixer de áudio", "Audio mixer"], "pavucontrol", () => root.run(["pavucontrol"])),
         sld("mic", "input", "micVolume", ["Volume do microfone", "Microphone volume"], "mic entrada input ganho gain", 0, 100, 1, "%", () => Math.round(Audio.micVolume * 100), v => Audio.setMic(v / 100), { when: () => Audio.source !== null }),
         tog("mic", "input", "micMute", ["Silenciar microfone", "Mute microphone"], "mic mudo", () => Audio.micMuted, v => Audio.toggleMic(), { when: () => Audio.source !== null }),
+        tog("mic", "micNoise", "micNoise", ["Supressão de ruído (RNNoise)", "Noise suppression (RNNoise)"], "mic ruído noise rnnoise supressão suppression filtro filter",
+            () => Settings.micNoise, v => { Settings.micNoise = v; MicFx.schedule() }, { when: () => MicFx.hasRnnoise }),
+        sld("mic", "micNoise", "micNoiseLevel", ["Intensidade da supressão", "Suppression strength"], "mic ruído noise vad limiar threshold", 0, 95, 5, "%",
+            () => Settings.micNoiseLevel, v => { Settings.micNoiseLevel = v; MicFx.schedule() }, { when: () => MicFx.hasRnnoise && Settings.micNoise }),
+        btn("mic", "micNoise", "micNoiseInstall", ["Instalar supressão de ruído (noise-suppression-for-voice)", "Install noise suppression (noise-suppression-for-voice)"], "mic ruído noise rnnoise instalar install",
+            () => root.run([Settings.launcherTerminal, "-e", "sh", "-c", "sudo pacman -S --needed noise-suppression-for-voice; echo; read -p 'Enter...' x"]), { when: () => !MicFx.hasRnnoise }),
+        tog("mic", "micEq", "micEq", ["Equalizador do microfone", "Microphone equalizer"], "mic eq equalizador equalizer graves agudos bass treble preset voz voice",
+            () => Settings.micEq, v => { Settings.micEq = v; MicFx.schedule() }),
 
         // ── notifications ──
         tog("notifications", "general", "ndnd", ["Não perturbe", "Do not disturb"], "dnd silêncio", () => Settings.dnd, v => Settings.dnd = v),

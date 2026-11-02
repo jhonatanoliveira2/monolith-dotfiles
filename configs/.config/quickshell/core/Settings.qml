@@ -88,6 +88,11 @@ Singleton {
     property alias themePalette: adapter.themePalette
     property alias themeFollow: adapter.themeFollow
     property alias themeVscode: adapter.themeVscode
+    property alias micNoise: adapter.micNoise
+    property alias micNoiseLevel: adapter.micNoiseLevel
+    property alias micEq: adapter.micEq
+    property alias micEqGains: adapter.micEqGains
+    property alias micFxSource: adapter.micFxSource
     property alias welcomeDone: adapter.welcomeDone   // first-run welcome seen (menus/Welcome.qml)
     property alias wpDefaultDone: adapter.wpDefaultDone   // first-run default wallpaper handled (services/Wallpapers.qml)
     property alias overrides: adapter.overrides     // other Hyprland options, by Sys key: { "kbLayout": "us" }
@@ -214,6 +219,12 @@ Singleton {
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
             property bool themeVscode: true        // workbench.colorCustomizations of VS Code follow the theme
             property bool themeFollow: true        // dynamic theme regenerates on every wallpaper change (off: only on request)
+            // microphone effects (Settings > Microphone, services/MicFx.qml)
+            property bool micNoise: false          // RNNoise noise suppression
+            property int micNoiseLevel: 50         // VAD threshold %: higher cuts more (and more of quiet speech)
+            property bool micEq: false
+            property var micEqGains: [0, 0, 0, 0, 0]   // dB at 100 / 300 / 1k / 3k / 8k Hz
+            property string micFxSource: ""        // physical mic node captured by the chain
             property bool welcomeDone: false
             property bool wpDefaultDone: false
             property var overrides: ({})

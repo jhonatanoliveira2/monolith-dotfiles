@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/lib/ui.sh"
 source "$SCRIPT_DIR/lib/packages.sh"
 
 TOTAL_STEPS=7
-OPT_LANG="" OPT_YES=0 OPT_DRY=0 OPT_NO_DEPS=0 OPT_OPTIONAL=0 OPT_NO_AUR=0
+OPT_LANG="" OPT_YES=0 OPT_DRY=0 OPT_NO_DEPS=0 OPT_OPTIONAL=0 OPT_NO_OPTIONAL=0 OPT_NO_AUR=0
 OPT_AUR_HELPER="" OPT_NO_COLOR=0 OPT_NO_CLEAR=0 OPT_FORCE_SYMLINKS=0
 
 # plan + journal (used for rollback)
@@ -40,10 +40,11 @@ MONOLITH Dotfiles installer v$MONOLITH_VERSION
 Usage: ./scripts/install.sh [options]
 
   --lang en|pt_BR      choose the interface language (skips the language menu)
-  -y, --yes            non-interactive: accept defaults, never prompt
+  -y, --yes            non-interactive: accept defaults (optional packages included), never prompt
   -n, --dry-run        show what would be done without changing anything
   --no-deps            do not install packages
-  --with-optional      also install optional packages (packages.txt)
+  --with-optional      install optional packages without asking (packages.txt)
+  --no-optional        skip the optional packages
   --no-aur             never use an AUR helper (print the manual commands instead)
   --aur-helper NAME    use this AUR helper (default: paru, then yay)
   --force-symlinks     allow writing through symlinked directories under \$HOME
@@ -63,6 +64,7 @@ parse_args() {
             -n | --dry-run) OPT_DRY=1; shift ;;
             --no-deps) OPT_NO_DEPS=1; shift ;;
             --with-optional) OPT_OPTIONAL=1; shift ;;
+            --no-optional) OPT_NO_OPTIONAL=1; shift ;;
             --no-aur) OPT_NO_AUR=1; shift ;;
             --aur-helper) OPT_AUR_HELPER=${2:?}; shift 2 ;;
             --aur-helper=*) OPT_AUR_HELPER=${1#*=}; shift ;;
@@ -116,12 +118,15 @@ on_error() {
 }
 
 on_exit() {
+    local rc=$?
+    log INFO "exit code $rc after ${SECONDS}s"
     [[ -n $TMP_DIR && -d $TMP_DIR ]] && rm -rf -- "$TMP_DIR"
     return 0
 }
 
 on_signal() {
     trap - INT TERM
+    log WARN "interrupted by signal"
     printf '\n'
     ui_warn "$(t common.interrupted)"
     rollback
@@ -231,7 +236,10 @@ run_cmd() {
         ui_dim "\$ $*"
         return 0
     fi
-    "$@"
+    local rc=0
+    "$@" || rc=$?
+    log INFO "exit $rc: $1"
+    return "$rc"
 }
 
 step_packages() {
@@ -246,12 +254,14 @@ step_packages() {
         return 0
     fi
 
-    local scope_arg=required
-    if (( OPT_OPTIONAL )); then
-        scope_arg=all
-    elif (( ! OPT_YES && UI_INTERACTIVE )) && [[ -n $(bash "$SCRIPT_DIR/check-dependencies.sh" --list-missing=optional) ]]; then
-        ui_confirm "$(t pkg.ask_optional)" n && scope_arg=all
+    # optional packages are included by default (also with --yes); --no-optional or a "no" at the prompt skips them
+    local scope_arg=all
+    if (( OPT_NO_OPTIONAL )); then
+        scope_arg=required
+    elif (( ! OPT_OPTIONAL && ! OPT_YES && UI_INTERACTIVE )) && [[ -n $(bash "$SCRIPT_DIR/check-dependencies.sh" --list-missing=optional) ]]; then
+        ui_confirm "$(t pkg.ask_optional)" y || scope_arg=required
     fi
+    log INFO "package scope: $scope_arg (with_optional=$OPT_OPTIONAL no_optional=$OPT_NO_OPTIONAL yes=$OPT_YES)"
 
     local -a official=() aur=()
     local source pkg
@@ -267,6 +277,8 @@ step_packages() {
             if pkg_in_repos "$pkg"; then official+=("$pkg"); else aur+=("$pkg"); fi
         fi
     done < <(bash "$SCRIPT_DIR/check-dependencies.sh" --list-missing="$scope_arg")
+    log INFO "missing official (${#official[@]}): ${official[*]-}"
+    log INFO "missing aur (${#aur[@]}): ${aur[*]-}"
 
     if (( ${#official[@]} == 0 && ${#aur[@]} == 0 )); then
         ui_ok "$(t pkg.all_present)"
@@ -284,6 +296,7 @@ step_packages() {
             local -a cmd=(sudo pacman -S --needed)
             (( OPT_YES )) && cmd+=(--noconfirm)
             if ! run_cmd "${cmd[@]}" "${official[@]}"; then
+                log ERROR "pacman failed for: ${official[*]}"
                 die "$(t pkg.pacman_failed)" 5
             fi
             ui_ok "$(t pkg.official_done)"
@@ -305,6 +318,7 @@ step_packages() {
             local -a acmd=("$helper" -S --needed)
             (( OPT_YES )) && acmd+=(--noconfirm)
             if run_cmd "${acmd[@]}" "${aur[@]}"; then
+                log INFO "aur install ok via $helper"
                 ui_ok "$(t pkg.aur_done)"
             else
                 warn_later "$(t pkg.aur_failed)"
@@ -638,6 +652,12 @@ main() {
     ui_init
     init_logging install
     log INFO "MONOLITH installer $MONOLITH_VERSION started (dry_run=$OPT_DRY)"
+    log INFO "args: $*"
+    log INFO "options: yes=$OPT_YES no_deps=$OPT_NO_DEPS with_optional=$OPT_OPTIONAL no_optional=$OPT_NO_OPTIONAL no_aur=$OPT_NO_AUR aur_helper=${OPT_AUR_HELPER:-auto} force_symlinks=$OPT_FORCE_SYMLINKS"
+    log INFO "user=$(id -un 2>/dev/null) uid=$(id -u) home=$HOME target_home=${TARGET_HOME:-$HOME} interactive=$UI_INTERACTIVE tty=$UI_TTY"
+    log INFO "system: $(uname -srm 2>/dev/null) / $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-unknown}")"
+    log INFO "session: XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP-} WAYLAND_DISPLAY=${WAYLAND_DISPLAY-} shell=${SHELL-}"
+    log INFO "repo: $(git -C "$SCRIPT_DIR/.." rev-parse --short HEAD 2>/dev/null || echo none)"
 
     if (( ! UI_INTERACTIVE && ! OPT_YES )); then
         # no terminal to ask questions on: refuse to guess
@@ -665,7 +685,9 @@ main() {
     step_deploy
     step_verify
     summary
-    log INFO "finished"
+    local w
+    for w in "${WARNINGS[@]}"; do log WARN "summary: $w"; done
+    log INFO "finished in ${SECONDS}s (warnings=${#WARNINGS[@]} new=${#PLAN_NEW[@]} changed=${#PLAN_DIFF[@]} backup=${BACKUP_DIR:-none})"
 }
 
 main "$@"

@@ -6,6 +6,7 @@ import "../components"
 
 MenuWindow {
     menu: "bluetooth"
+    hoverScroll: true
     panelWidth: 360
     maxHeight: 520
 

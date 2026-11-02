@@ -33,10 +33,11 @@ O instalador verifica os pré-requisitos e as dependências, planeja os arquivos
 | Opção | Efeito |
 |---|---|
 | `--lang en\|pt_BR` | Escolhe o idioma da interface e ignora a seleção interativa. Também aceita `MONOLITH_LANG`. |
-| `-y`, `--yes` | Aceita os padrões sem perguntar; pacotes opcionais não são incluídos. |
+| `-y`, `--yes` | Aceita os padrões sem perguntar; pacotes opcionais são incluídos (use `--no-optional` para pulá-los). |
 | `-n`, `--dry-run` | Mostra o que seria feito sem aplicar alterações. |
 | `--no-deps` | Não instala pacotes. |
-| `--with-optional` | Inclui os pacotes opcionais de `packages.txt`. |
+| `--with-optional` | Instala os pacotes opcionais de `packages.txt` sem perguntar. |
+| `--no-optional` | Pula os pacotes opcionais. |
 | `--no-aur` | Não chama auxiliar do AUR; exibe os comandos manuais. |
 | `--aur-helper NOME` | Seleciona o auxiliar do AUR (por padrão, `paru` e depois `yay`). |
 | `--force-symlinks` | Permite escrever por diretórios simbólicos dentro de `$HOME`. Use apenas após revisar os destinos. |

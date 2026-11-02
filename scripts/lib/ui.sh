@@ -126,6 +126,7 @@ ui_bar() {
 
 # ui_step <n> <total> <title>
 ui_step() {
+    declare -F log >/dev/null && log INFO "step $1/$2: $3"
     printf '\n  %s%s%s %s[%s/%s]%s %s%s%s\n' "$C_CYAN" "$G_INFO" "$C_RESET" "$C_GRAPH" "$1" "$2" "$C_RESET" "$C_BOLD$C_TEXT" "$3" "$C_RESET"
     printf '    '
     ui_bar "$1" "$2" 30
@@ -134,8 +135,8 @@ ui_step() {
 
 ui_info() { printf '    %s%s%s %s\n' "$C_GRAPH" "$G_ARROW" "$C_RESET" "$*"; }
 ui_ok()   { printf '    %s%s%s %s\n' "$C_CYAN" "$G_OK" "$C_RESET" "$*"; }
-ui_warn() { printf '    %s%s%s %s%s%s\n' "$C_WARN" "$G_WARN" "$C_RESET" "$C_WARN" "$*" "$C_RESET" >&2; }
-ui_err()  { printf '    %s%s%s %s%s%s\n' "$C_ERR" "$G_ERR" "$C_RESET" "$C_ERR" "$*" "$C_RESET" >&2; }
+ui_warn() { declare -F log >/dev/null && log WARN "ui: $*"; printf '    %s%s%s %s%s%s\n' "$C_WARN" "$G_WARN" "$C_RESET" "$C_WARN" "$*" "$C_RESET" >&2; }
+ui_err()  { declare -F log >/dev/null && log ERROR "ui: $*"; printf '    %s%s%s %s%s%s\n' "$C_ERR" "$G_ERR" "$C_RESET" "$C_ERR" "$*" "$C_RESET" >&2; }
 ui_dim()  { printf '      %s%s%s\n' "$C_GRAPH" "$*" "$C_RESET"; }
 ui_kv()   { printf '    %s%-22s%s %s\n' "$C_GRAPH" "$1" "$C_RESET" "$2"; }
 
@@ -155,6 +156,7 @@ ui_progress_end() { (( UI_TTY )) && printf '\r\e[K'; return 0; }
 ui_spin() {
     local label=$1 pid i=0 rc
     shift
+    declare -F log >/dev/null && log INFO "spin: $label -> $*"
     if (( ! UI_TTY )); then
         ui_info "$label"
         "$@" >>"$LOG_FILE" 2>&1
@@ -169,6 +171,7 @@ ui_spin() {
     done
     rc=0
     wait "$pid" || rc=$?
+    declare -F log >/dev/null && log INFO "spin: $label exited $rc"
     printf '\r\e[K'
     return "$rc"
 }
@@ -177,13 +180,15 @@ ui_spin() {
 ui_confirm() {
     local prompt=$1 def=${2:-y} ans hint
     if (( OPT_YES )); then
+        declare -F log >/dev/null && log INFO "confirm (auto, default $def): $prompt"
         [[ $def == y ]]
         return
     fi
     if [[ $def == y ]]; then hint="$(t prompt.yes_hint)"; else hint="$(t prompt.no_hint)"; fi
     while true; do
         printf '    %s?%s %s %s[%s]%s ' "$C_CYAN" "$C_RESET" "$prompt" "$C_GRAPH" "$hint" "$C_RESET"
-        IFS= read -r ans || return 1
+        IFS= read -r ans || { declare -F log >/dev/null && log WARN "confirm: no input (EOF): $prompt"; return 1; }
+        declare -F log >/dev/null && log INFO "confirm: $prompt -> '${ans:-<default $def>}'"
         case ${ans,,} in
             '') [[ $def == y ]]; return ;;
             y | yes | s | sim) return 0 ;;

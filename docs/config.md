@@ -75,13 +75,21 @@ For installation and rollback instructions, see the [installation guide](install
 
 ## Settings app
 
-`Super` menu → **Settings** (or `qs ipc call shell settings <page>`). Pages: System, Display, Configs, Bar, Audio,
+`Super` menu → **Settings** (or `qs ipc call shell settings <page>`). Pages: System, Display, Hyprland, Bar, Audio,
 Microphone, Notifications, Network, Bluetooth, Power (laptops only), Storage, Input and Update.
 
-- **Display** and **Configs** apply changes live through the Hyprland Lua API (`hyprctl eval`) and save them in
+- **Display** and **Hyprland** apply changes live through the Hyprland Lua API (`hyprctl eval`) and save them in
   `~/.config/hypr/generated/monitors.lua` and `~/.config/hypr/generated/settings.lua`. `hyprland.lua` loads both
   files last. Delete a file to go back to your own `modules/*.lua`. A monitor change reverts after 15 seconds
   unless you click **Keep**.
+- **Microphone** has RNNoise noise suppression (package `noise-suppression-for-voice`, adjustable strength)
+  and a 5-band equalizer (100 Hz – 8 kHz, ±12 dB, with an 80 Hz high-pass) with presets, including *Deep voice*.
+  Drag a band, scroll over it (±1 dB) or double-click it (0 dB); **Undo changes** returns to the values from
+  when the page was opened. The effects run as a PipeWire filter-chain in the user unit `monolith-micfx`
+  (config in `~/.local/state/quickshell-monolith/micfx.conf`) and expose the input **Monolith Mic**, which
+  becomes the default while they are on. **Listen to the mic** plays the default input back through
+  `pw-loopback` (optional 0.3 / 1 s delay, stops after 2 min); use headphones. Logs: `[micfx]` / `[mictest]`
+  in the Quickshell log, `journalctl --user -u monolith-micfx`.
 - **Storage** reads disk health from UDisks2, without root. Cleanup always scans first and lists what each item
   removes. Removing needs a second, confirming click. pacman and journal cleanup ask for the password through
   `pkexec`.

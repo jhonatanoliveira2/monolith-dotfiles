@@ -40,6 +40,7 @@ The installer does not run `pacman -Sy`. If a package cannot be found, update th
 | `neovim`, `gcc`, `tree-sitter-cli`, `ripgrep`, `fd` | You use Neovim/LazyVim and its search or parser-building features |
 | `nwg-look` | You want to adjust GTK themes through a graphical interface |
 | `pavucontrol` | You open the audio mixer from a Quickshell menu |
+| `noise-suppression-for-voice` | You turn on microphone noise suppression in Settings > Microphone |
 | `power-profiles-daemon` | You use power-profile controls on supported hardware |
 | `xorg-xwayland` | You run X11 applications |
 

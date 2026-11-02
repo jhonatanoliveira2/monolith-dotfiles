@@ -75,13 +75,21 @@ Para instalar ou desfazer a instalação, consulte o [guia de instalação](inst
 
 ## Aplicativo de configurações
 
-Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`). Abas: Sistema, Tela, Configs, Barra,
+Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`). Abas: Sistema, Tela, Hyprland, Barra,
 Áudio, Microfone, Notificações, Rede, Bluetooth, Energia (só em notebooks), Armazenamento, Entrada e Atualização.
 
-- **Tela** e **Configs** aplicam as mudanças na hora pela API Lua do Hyprland (`hyprctl eval`) e as salvam em
+- **Tela** e **Hyprland** aplicam as mudanças na hora pela API Lua do Hyprland (`hyprctl eval`) e as salvam em
   `~/.config/hypr/generated/monitors.lua` e `~/.config/hypr/generated/settings.lua`. O `hyprland.lua` carrega
   esses dois arquivos por último. Apague um arquivo para voltar aos seus `modules/*.lua`. Uma mudança de
   monitor é revertida após 15 segundos se você não clicar em **Manter**.
+- **Microfone** tem supressão de ruído RNNoise (pacote `noise-suppression-for-voice`, intensidade ajustável) e
+  um equalizador de 5 faixas (100 Hz – 8 kHz, ±12 dB, com corte abaixo de 80 Hz) com predefinições, incluindo
+  *Voz grave*. Arraste uma faixa, role sobre ela (±1 dB) ou dê clique duplo (0 dB); **Desfazer alterações**
+  volta aos valores de quando a página foi aberta. Os efeitos rodam como um filter-chain do PipeWire na unit de
+  usuário `monolith-micfx` (config em `~/.local/state/quickshell-monolith/micfx.conf`) e criam a entrada
+  **Monolith Mic**, que vira a padrão enquanto estão ligados. **Ouvir o microfone** toca a entrada padrão de
+  volta via `pw-loopback` (atraso opcional de 0,3 / 1 s, para após 2 min); use fones. Logs: `[micfx]` /
+  `[mictest]` no log do Quickshell, `journalctl --user -u monolith-micfx`.
 - **Armazenamento** lê a saúde dos discos pelo UDisks2, sem root. A limpeza sempre analisa antes e mostra o que
   cada item remove. Apagar exige um segundo clique de confirmação. A limpeza do pacman e do journal pede a
   senha via `pkexec`.

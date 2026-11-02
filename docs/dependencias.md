@@ -40,6 +40,7 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 | `neovim`, `gcc`, `tree-sitter-cli`, `ripgrep`, `fd` | Para o Neovim/LazyVim e seus recursos de busca e compilação de parsers |
 | `nwg-look` | Para ajustar temas GTK pela interface gráfica |
 | `pavucontrol` | Para abrir o mixer de áudio do menu do Quickshell |
+| `noise-suppression-for-voice` | Para ativar a supressão de ruído do microfone em Configurações > Microfone |
 | `power-profiles-daemon` | Para controles de perfil de energia em equipamentos compatíveis |
 | `xorg-xwayland` | Para executar aplicativos X11 |
 
