@@ -78,35 +78,45 @@ Singleton {
         return other ? other.name : ""
     }
 
+    // control values, shared by the config file and the live updates (FxChain.makeParams)
+    function controls() {
+        const virt = Settings.audioVirt / 100, g = gains(), c = {}
+        for (const ch of ["L", "R"]) {
+            c["pre_" + ch + ":Mult"] = Math.pow(10, Settings.audioBoost / 20)
+            c["bass_" + ch + ":Gain"] = Settings.audioBass
+            bands.forEach((b, i) => c["eq" + i + "_" + ch + ":Gain"] = g[i])
+            c["xd_" + ch + ":Delay (s)"] = 0.0003 + 0.0004 * virt
+            c["mix_" + ch + ":Gain 1"] = 1 - 0.25 * virt
+            c["mix_" + ch + ":Gain 2"] = 0.5 * virt
+        }
+        return c
+    }
+    function params() { const c = controls(); return Object.keys(c).map(k => [k, c[k]]) }
+    // the virtualizer nodes are always there (0 % = no crossfeed) so every change is a live update
     function graph() {
         const nodes = [], links = []
         const f = v => Number(v).toFixed(4)
-        const boost = Math.pow(10, Settings.audioBoost / 20)
-        const virt = Settings.audioVirt / 100
-        const g = gains()
+        const k = controls()
         for (const c of ["L", "R"]) {
             const chainNames = ["pre_" + c, "bass_" + c].concat(bands.map((b, i) => "eq" + i + "_" + c))
-            nodes.push('{ type = builtin name = pre_' + c + ' label = linear control = { "Mult" = ' + f(boost) + ' "Add" = 0.0 } }')
-            nodes.push('{ type = builtin name = bass_' + c + ' label = bq_lowshelf control = { "Freq" = 90.0 "Q" = 0.707 "Gain" = ' + f(Settings.audioBass) + ' } }')
+            nodes.push('{ type = builtin name = pre_' + c + ' label = linear control = { "Mult" = ' + f(k["pre_" + c + ":Mult"]) + ' "Add" = 0.0 } }')
+            nodes.push('{ type = builtin name = bass_' + c + ' label = bq_lowshelf control = { "Freq" = 90.0 "Q" = 0.707 "Gain" = ' + f(k["bass_" + c + ":Gain"]) + ' } }')
             bands.forEach((b, i) => nodes.push('{ type = builtin name = eq' + i + '_' + c + ' label = ' + b.label
-                + ' control = { "Freq" = ' + f(b.freq) + ' "Q" = ' + b.q + ' "Gain" = ' + f(g[i]) + ' } }'))
+                + ' control = { "Freq" = ' + f(b.freq) + ' "Q" = ' + b.q + ' "Gain" = ' + f(k["eq" + i + "_" + c + ":Gain"]) + ' } }'))
             for (let i = 1; i < chainNames.length; i++) links.push('{ output = "' + chainNames[i - 1] + ':Out" input = "' + chainNames[i] + ':In" }')
         }
         const last = c => "eq" + (bands.length - 1) + "_" + c
-        let outs = [last("L") + ":Out", last("R") + ":Out"]
-        if (virt > 0) {
-            // crossfeed: own channel + the other one low-passed at 700 Hz and delayed (0.3–0.7 ms)
-            for (const c of ["L", "R"]) {
-                const o = c === "L" ? "R" : "L"
-                nodes.push('{ type = builtin name = xlp_' + c + ' label = bq_lowpass control = { "Freq" = 700.0 "Q" = 0.707 } }')
-                nodes.push('{ type = builtin name = xd_' + c + ' label = delay config = { "max-delay" = 0.01 } control = { "Delay (s)" = ' + f(0.0003 + 0.0004 * virt) + ' } }')
-                nodes.push('{ type = builtin name = mix_' + c + ' label = mixer control = { "Gain 1" = ' + f(1 - 0.25 * virt) + ' "Gain 2" = ' + f(0.5 * virt) + ' } }')
-                links.push('{ output = "' + last(c) + ':Out" input = "mix_' + c + ':In 1" }')
-                links.push('{ output = "' + last(c) + ':Out" input = "xlp_' + c + ':In" }')
-                links.push('{ output = "xlp_' + c + ':Out" input = "xd_' + c + ':In" }')
-                links.push('{ output = "xd_' + o + ':Out" input = "mix_' + c + ':In 2" }')
-            }
-            outs = ["mix_L:Out", "mix_R:Out"]
+        const outs = ["mix_L:Out", "mix_R:Out"]
+        // crossfeed: own channel + the other one low-passed at 700 Hz and delayed (0.3–0.7 ms)
+        for (const c of ["L", "R"]) {
+            const o = c === "L" ? "R" : "L"
+            nodes.push('{ type = builtin name = xlp_' + c + ' label = bq_lowpass control = { "Freq" = 700.0 "Q" = 0.707 } }')
+            nodes.push('{ type = builtin name = xd_' + c + ' label = delay config = { "max-delay" = 0.01 } control = { "Delay (s)" = ' + f(k["xd_" + c + ":Delay (s)"]) + ' } }')
+            nodes.push('{ type = builtin name = mix_' + c + ' label = mixer control = { "Gain 1" = ' + f(k["mix_" + c + ":Gain 1"]) + ' "Gain 2" = ' + f(k["mix_" + c + ":Gain 2"]) + ' } }')
+            links.push('{ output = "' + last(c) + ':Out" input = "mix_' + c + ':In 1" }')
+            links.push('{ output = "' + last(c) + ':Out" input = "xlp_' + c + ':In" }')
+            links.push('{ output = "xlp_' + c + ':Out" input = "xd_' + c + ':In" }')
+            links.push('{ output = "xd_' + o + ':Out" input = "mix_' + c + ':In 2" }')
         }
         return "nodes = [\n" + nodes.map(n => "          " + n).join("\n") + "\n        ]\n"
             + "        links = [\n" + links.map(l => "          " + l).join("\n") + "\n        ]\n"
@@ -138,5 +148,7 @@ Singleton {
         wanted: root.wanted
         makeTarget: () => { const s = root.wanted ? root.physicalSink() : Settings.audioFxTarget; if (root.wanted && s !== "") Settings.audioFxTarget = s; return s }
         makeArgs: sink => root.args(sink)
+        makeStructure: () => "stereo-eq10-xfeed"
+        makeParams: () => root.params()
     }
 }

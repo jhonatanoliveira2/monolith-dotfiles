@@ -106,6 +106,14 @@ Singleton {
         wanted: root.wanted
         makeTarget: () => { const s = root.wanted ? root.physicalSource() : Settings.micFxSource; if (root.wanted && s !== "") Settings.micFxSource = s; return s }
         makeArgs: src => root.args(src)
+        paramNode: "monolith_mic_capture"
+        makeStructure: () => "noise=" + root.noise + " eq=" + Settings.micEq
+        makeParams: () => {
+            const p = []
+            if (root.noise) p.push(["rnnoise:VAD Threshold (%)", Settings.micNoiseLevel])
+            if (Settings.micEq) root.gains().forEach((g, i) => p.push(["eq" + i + ":Gain", g]))
+            return p
+        }
     }
     Process {
         id: checkProc

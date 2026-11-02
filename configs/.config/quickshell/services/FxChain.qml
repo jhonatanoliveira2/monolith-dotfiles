@@ -8,6 +8,9 @@ import Quickshell.Io
 // config on a running unit is left alone; otherwise the config is rewritten and the unit restarted, and the
 // chain's virtual node becomes the default `kind` (source | sink). Turning it off disables the unit and gives
 // the default back to the physical device. Used by MicFx and AudioFx.
+// While the chain runs with the same node layout (`makeStructure`), value changes are sent live to the filter
+// (pw-cli set-param Props on `paramNode`) and only the config file is rewritten: no restart, so playback and
+// recording are not interrupted. A failed live update falls back to a restart.
 QtObject {
     id: root
     property string tag: "fx"                // log prefix
@@ -19,6 +22,11 @@ QtObject {
     property bool wanted: false
     property var makeTarget: () => ""        // physical device to filter
     property var makeArgs: target => ""      // filter-chain module args (SPA JSON)
+    property var makeStructure: () => ""     // node layout; a change needs a restart
+    property var makeParams: () => []        // [["node:Control", value], ...] for live updates
+    property string paramNode: nodeName      // node.name holding the filter controls (the capture side)
+    property string liveStructure: ""        // layout of the running chain ("" = unknown / not running)
+    property string pendingStructure: ""
     property bool active: false
     property string error: ""
 
@@ -34,20 +42,33 @@ QtObject {
             + "  { name = libpipewire-module-filter-chain\n    args = {\n" + makeArgs(target) + "    }\n  }\n]\n"
     }
 
-    // slider drags and quick toggles are coalesced
-    function schedule() { timer.restart() }
+    readonly property bool canLive: wanted && active && liveStructure !== "" && makeStructure() === liveStructure
+    // changes are coalesced: short for live updates (heard almost at once), longer when a restart is needed
+    function schedule() { timer.interval = canLive ? 120 : 700; timer.restart() }
     function apply() {
         if (proc.running) { timer.restart(); return }
         const target = makeTarget()
+        const live = canLive
         error = ""
-        console.log("[" + tag + "] apply: wanted=" + wanted + " target=" + (target || "<default>"))
+        pendingStructure = wanted ? makeStructure() : ""
+        const params = live ? "{ params = [ " + makeParams().map(p => JSON.stringify(p[0]) + " " + Number(p[1]).toFixed(6)).join(" ") + " ] }" : ""
+        console.log("[" + tag + "] apply: wanted=" + wanted + " mode=" + (live ? "live" : "full") + " target=" + (target || "<default>"))
         if (wanted && target === "") console.warn("[" + tag + "] no physical " + kind + " found; the chain follows the default")
-        proc.command = ["sh", "-c", script, "sh", conf, wanted ? config(target) : "", wanted ? "1" : "0", nodeName, unit, kind, target, tag, description]
+        proc.command = ["sh", "-c", script, "sh", conf, wanted ? config(target) : "", wanted ? "1" : "0", nodeName, unit, kind, target, tag, description,
+                        live ? "live" : "full", paramNode, params]
         proc.running = true
     }
 
     readonly property string script: '
-        conf=$1 text=$2 on=$3 node=$4 unit=$5 kind=$6 target=$7 tag=$8 desc=$9
+        conf=$1 text=$2 on=$3 node=$4 unit=$5 kind=$6 target=$7 tag=$8 desc=$9 mode=${10} pnode=${11} params=${12}
+        if [ "$mode" = live ]; then
+            id=$(pw-cli ls Node 2>/dev/null | awk -v n="$pnode" \'/^[[:space:]]*id [0-9]+,/ { id = $2; sub(",", "", id) } index($0, "node.name = \\"" n "\\"") { print id; exit }\')
+            if [ -n "$id" ] && out=$(pw-cli set-param "$id" Props "$params" 2>&1) && ! printf "%s" "$out" | grep -qi error; then
+                printf "%s" "$text" > "$conf"
+                echo "[$tag] live update on node $id ($pnode)"; exit 0
+            fi
+            echo "[$tag] live update failed (node ${id:-not found}): $out; restarting the chain"
+        fi
         udir=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
         ufile=$udir/$unit.service
         was=$(pactl get-default-$kind 2>/dev/null)
@@ -96,6 +117,7 @@ QtObject {
         stderr: SplitParser { onRead: l => { console.warn(l); root.error = l } }
         onExited: code => {
             root.active = code === 0 && root.wanted
+            root.liveStructure = root.active ? root.pendingStructure : ""
             if (code !== 0) console.warn("[" + root.tag + "] apply failed with exit code", code)
         }
     }
