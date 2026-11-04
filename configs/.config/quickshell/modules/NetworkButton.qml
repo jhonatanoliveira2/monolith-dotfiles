@@ -13,10 +13,10 @@ MenuButton {
         : Net.status === "online" ? Theme.glyph.wired : Theme.glyph.wiredOff
     readonly property string label: Net.status === "online" ? Strings.t("online")
         : Net.status === "nointernet" ? Strings.t("nointernet") : Strings.t("disconnected")
-    readonly property color tone: Net.status === "online" ? Theme.grayLight : Theme.grayMid
+    readonly property color tone: Net.status === "online" ? BarTheme.grayLight : BarTheme.grayMid
     onAlt: m => { if (m.button === Qt.MiddleButton) Net.setWifi(!Net.wifiEnabled) }
 
-    WifiIcon { visible: root.wifi; size: root.vertical ? 18 : 15; level: Net.signalLevel; color: root.tone; dimColor: Theme.tint(0.16) }
-    Txt { visible: !root.wifi; text: root.icon; color: root.tone; font.pixelSize: Theme.barIcon }
-    Txt { visible: !root.vertical; text: root.label; color: root.tone }
+    WifiIcon { visible: root.wifi; size: root.vertical ? 18 : 15; level: Net.signalLevel; color: root.tone; dimColor: BarTheme.tint(0.16) }
+    BarTxt { visible: !root.wifi; text: root.icon; color: root.tone; font.pixelSize: Theme.barIcon }
+    BarTxt { visible: !root.vertical; text: root.label; color: root.tone }
 }

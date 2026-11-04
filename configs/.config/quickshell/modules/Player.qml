@@ -66,14 +66,14 @@ Item {
                 height: 12
                 running: Media.playing
                 level: Media.level
-                color: Theme.grayLight
+                color: BarTheme.grayLight
             }
-            Txt {
+            BarTxt {
                 id: glyph
                 visible: !Settings.showEqualizer
                 anchors.centerIn: parent
                 text: Media.playing ? Theme.glyph.note : Theme.glyph.pause
-                color: Media.playing ? Theme.grayLight : Theme.grayMid
+                color: Media.playing ? BarTheme.grayLight : BarTheme.grayMid
             }
         }
 
@@ -82,23 +82,23 @@ Item {
             width: label.width
             height: Theme.barSize
             TextMetrics { id: cw; font: label.font; text: "0" }
-            Txt {
+            BarTxt {
                 id: label
                 anchors.verticalCenter: parent.verticalCenter
                 // follows the text, clamped to the min / max characters set in Settings › Bar
                 width: Math.max(Config.titleMin * cw.advanceWidth, Math.min(implicitWidth, Config.titleMax * cw.advanceWidth))
                 text: Media.title
-                color: Media.playing || root.expanded ? Theme.grayLight : Theme.grayMid
+                color: Media.playing || root.expanded ? BarTheme.grayLight : BarTheme.grayMid
                 Behavior on color { ColorAnimation { duration: Theme.dur(200) } }
             }
             Rectangle {   // progress line
                 visible: Media.length > 0
                 anchors { left: parent.left; bottom: parent.bottom; bottomMargin: 6 }
                 width: parent.width; height: 1
-                color: Theme.grayDark
+                color: BarTheme.grayDark
                 Rectangle {
                     width: parent.width * Media.progress; height: 1
-                    color: Theme.grayLight
+                    color: BarTheme.grayLight
                     Behavior on width { NumberAnimation { duration: Theme.dur(900); easing.type: Easing.Linear } }
                 }
             }
@@ -125,7 +125,7 @@ Item {
             // light glass over the bar (follows its opacity setting); the bright controls keep it readable
             color: Palettes.alpha(Theme.p.panel, Math.min(0.5, Config.barOpacity * 0.6))
             border.width: 1
-            border.color: Theme.line
+            border.color: BarTheme.line
             opacity: root.expanded && !root.menuOpen ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: Theme.dur(180) } }
             transform: Translate {
@@ -145,18 +145,18 @@ Item {
                     signal hit()
                     visible: usable
                     width: 22; height: 22
-                    Rectangle { anchors.fill: parent; radius: 4; color: m.pressed ? Theme.pressed : m.containsMouse ? Theme.hover : "transparent"
-                                border.width: c.on ? 1 : 0; border.color: Theme.accent }
-                    Txt { anchors.centerIn: parent; text: c.g; color: m.containsMouse || c.on ? Theme.white : Theme.grayLight; font.pixelSize: 13
+                    Rectangle { anchors.fill: parent; radius: 4; color: m.pressed ? BarTheme.pressed : m.containsMouse ? BarTheme.hover : "transparent"
+                                border.width: c.on ? 1 : 0; border.color: BarTheme.accent }
+                    BarTxt { anchors.centerIn: parent; text: c.g; color: m.containsMouse || c.on ? BarTheme.white : BarTheme.grayLight; font.pixelSize: 13
                           scale: m.pressed ? 0.88 : 1; Behavior on scale { NumberAnimation { duration: Theme.dur(90) } } }
                     MouseArea { id: m; anchors.fill: parent; hoverEnabled: true; onClicked: c.hit() }
                 }
-                Txt {
+                BarTxt {
                     visible: Media.length > 0
                     anchors.verticalCenter: parent.verticalCenter
                     rightPadding: 6
                     text: Media.fmt(Media.position) + " / " + Media.fmt(Media.length)
-                    color: Theme.foreground; font.pixelSize: Theme.small
+                    color: BarTheme.foreground; font.pixelSize: Theme.small
                 }
                 Ctl { g: Theme.glyph.shuffle; usable: Media.canShuffle; on: Media.shuffle; onHit: Media.setShuffle(!Media.shuffle) }
                 Ctl { g: Theme.glyph.prev; onHit: Media.previous() }

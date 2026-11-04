@@ -23,6 +23,11 @@ ShellRoot {
             required property var modelData
 
             Bar { id: barWin; modelData: scope.modelData }
+            LazyLoader { active: Theme.barStyle === "frame"; BarFrame { screen: scope.modelData } }
+            // desktop widgets (services/Widgets.qml): the desktop layer only when this monitor has some, the editor
+            // only in edit mode
+            LazyLoader { active: Settings.widgetsEnabled && !Widgets.editing && Widgets.onScreen(scope.modelData.name).length > 0; WidgetLayer { modelData: scope.modelData } }
+            LazyLoader { active: Widgets.editing; WidgetLayer { modelData: scope.modelData; editing: true } }
             MenuSlot { name: "audio"; screen: scope.modelData; AudioMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "media"; screen: scope.modelData; MediaMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "network"; screen: scope.modelData; NetworkMenu { screen: scope.modelData; bar: barWin } }
@@ -31,6 +36,7 @@ ShellRoot {
             MenuSlot { name: "brightness"; screen: scope.modelData; BrightnessMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "notifications"; screen: scope.modelData; NotificationCenter { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "calendar"; screen: scope.modelData; CalendarMenu { screen: scope.modelData; bar: barWin } }
+            MenuSlot { name: "center"; screen: scope.modelData; CenterMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "stats"; screen: scope.modelData; StatsMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "settings"; screen: scope.modelData; SettingsMenu { screen: scope.modelData; bar: barWin } }
             LazyLoader { active: Notifs.popups.length + Notifs.internal.length > 0; Toasts { screen: scope.modelData } }
@@ -76,6 +82,13 @@ ShellRoot {
         function welcome(): void { Popups.openWelcome() }
         function dnd(): void { Settings.dnd = !Settings.dnd }
         function reload(): void { Quickshell.reload(true) }
+    }
+
+    // Desktop widgets:  qs ipc call widgets edit   |   qs ipc call widgets add clock
+    IpcHandler {
+        target: "widgets"
+        function edit(): void { Widgets.edit(!Widgets.editing) }
+        function add(type: string): void { Widgets.add(type, Popups.focusedScreen()) }
     }
 
     // Colour theme:  qs ipc call theme set dynamic   |   qs ipc call theme preset nord   |   qs ipc call theme regenerate

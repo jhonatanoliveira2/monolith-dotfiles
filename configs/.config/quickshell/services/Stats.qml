@@ -17,12 +17,13 @@ Singleton {
     property var cpuHistory: []         // last samples (one per interval), drawn by the stats menu
     property var ramHistory: []
     readonly property int historyLength: 40
+    property int demand: 0              // open views that need samples while the bar readout is off (center menu, widgets)
     function push(list, v) { const l = list.concat([v]); return l.length > historyLength ? l.slice(l.length - historyLength) : l }
     readonly property int hottest: Math.max(cpuTemp, gpuTemp)
     readonly property string level: hottest >= 90 ? "critical" : hottest >= 80 ? "warning" : "normal"
 
     Process {
-        running: Config.showSysmon
+        running: Config.showSysmon || root.demand > 0
         command: ["bash", Quickshell.shellPath("scripts/sysmon-stream.sh"), "3"]
         stdout: SplitParser {
             onRead: line => {

@@ -9,7 +9,11 @@ Item {
     property bool active: false
     property bool alert: false           // highlighted background (low battery, hot CPU, …)
     property int pad: 3
-    property alias hovered: mouse.containsMouse
+    // A menu opened by a click grabs the pointer (HyprlandFocusGrab): while it is open the bar gets no leave
+    // event, so containsMouse can stay true after the pointer left and the menu closed. Any menu change marks the
+    // hover as stale until the pointer really moves over the item again.
+    property bool stale: false
+    readonly property bool hovered: mouse.containsMouse && !stale
     property alias spacing: row.columnSpacing
     readonly property bool vertical: Settings.barVertical
     signal clicked(var mouse)
@@ -25,10 +29,10 @@ Item {
         anchors.leftMargin: root.vertical ? 5 : 0
         anchors.rightMargin: root.vertical ? 5 : 0
         radius: 4
-        color: mouse.pressed ? Theme.pressed
-             : root.active ? Theme.selected
-             : mouse.containsMouse ? Theme.hover
-             : root.alert ? Theme.critical
+        color: mouse.pressed ? BarTheme.pressed
+             : root.active ? BarTheme.selected
+             : root.hovered ? BarTheme.hover
+             : root.alert ? BarTheme.critical
              : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
     }
@@ -44,12 +48,18 @@ Item {
         scale: mouse.pressed ? 0.96 : 1
         Behavior on scale { NumberAnimation { duration: Theme.dur(90); easing.type: Easing.OutCubic } }
     }
+    Connections {
+        target: Popups
+        function onCurrentChanged() { if (mouse.containsMouse) root.stale = true }
+    }
     MouseArea {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: m => root.clicked(m)
+        onPositionChanged: root.stale = false
+        onEntered: root.stale = false
         onWheel: w => root.scrolled(w)
     }
 }

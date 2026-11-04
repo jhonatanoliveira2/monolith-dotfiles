@@ -34,6 +34,21 @@ Singleton {
     readonly property int small: 11
     readonly property int barHeight: 32
     readonly property int barSize: Settings.barVertical ? 42 : barHeight   // thickness of the bar on any edge
+    // bar background (Settings > Bar > style): flat = full-width strip; capsule = flush with the screen edge, a
+    // margin at both ends and rounded corners on the inner side; frame = an opaque bar plus a border around the
+    // whole screen with rounded inner corners (BarFrame.qml)
+    readonly property string barStyle: Settings.barStyle
+    readonly property int barEdgeGap: 0                                     // screen edge -> bar (all styles flush)
+    readonly property int barSideGap: barStyle === "capsule" ? 18 : 0       // capsule: screen sides -> bar ends
+    // frame style: opaque, from black (0 %) to the theme's tint colour (100 %; white on a black-and-white theme),
+    // Settings > Bar > frame tone. (The palettes' `panel` is almost black: it is meant to be seen through.)
+    readonly property string barSolidHex: Palettes.mix("#000000", p.tint, Math.max(0, Math.min(100, Settings.frameTone)) / 100)
+    readonly property color barSolid: Palettes.alpha(barSolidHex, 1)
+    readonly property int barFillet: 14                                     // capsule: concave curve into the screen edge
+    readonly property int barThickness: barSize + barEdgeGap                // space the bar takes from the screen
+    readonly property int frameWidth: 8                                     // frame: the other three edges
+    readonly property int frameRadius: 16                                   // frame: inner corners
+    readonly property int frameEdge: barStyle === "frame" ? frameWidth : 0
     readonly property int barIcon: Settings.barVertical ? 17 : fontSize     // module glyphs (larger on a side bar, which has no text)
     readonly property int menuRadius: 12
     readonly property int radius: 6        // buttons, rows, cards inside menus

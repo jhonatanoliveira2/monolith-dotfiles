@@ -20,7 +20,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; right: true }
     // top-right corner, clear of the bar wherever it is
-    margins { top: Settings.barPosition === "top" ? Theme.barSize + Theme.gap : 6; right: Settings.barPosition === "right" ? Theme.barSize + 6 : 6 }
+    margins { top: Settings.barPosition === "top" ? Theme.barThickness + Theme.gap : 6 + Theme.frameEdge; right: Settings.barPosition === "right" ? Theme.barThickness + 6 : 6 + Theme.frameEdge }
     implicitWidth: 370
     implicitHeight: Math.max(1, stack.implicitHeight)
     WlrLayershell.layer: WlrLayer.Overlay

@@ -76,7 +76,7 @@ For installation and rollback instructions, see the [installation guide](install
 ## Settings app
 
 `Super` menu → **Settings** (or `qs ipc call shell settings <page>`). Pages: System, Display, Hyprland, Bar, Audio,
-Microphone, Notifications, Network, Bluetooth, Power (laptops only), Storage, Input and Update.
+Microphone, Widgets, Notifications, Network, Bluetooth, Power (laptops only), Storage, Input and Update.
 
 - **Display** and **Hyprland** apply changes live through the Hyprland Lua API (`hyprctl eval`) and save them in
   `~/.config/hypr/generated/monitors.lua` and `~/.config/hypr/generated/settings.lua`. `hyprland.lua` loads both
@@ -100,6 +100,21 @@ Microphone, Notifications, Network, Bluetooth, Power (laptops only), Storage, In
   the effects start with PipeWire at login, even when the shell is stopped or restarting. Turning the effects
   off disables and removes the unit. Logs: `[micfx]` / `[audiofx]` / `[mictest]`,
   `journalctl --user -u monolith-audiofx`.
+- **Bar style** (Settings → Bar): *Flat* (full-width strip), *Capsule* (a rounded pill with a margin from the
+  screen edges; on a side bar it is a vertical pill) or *Frame* (the bar continues as a thin border around the
+  whole screen with rounded inner corners, Caelestia style). Only the background changes, not the modules.
+  Capsule and Frame can cast a shadow (*Bar shadow*, *Shadow strength*). The frame is opaque; *Frame tone* goes
+  from black (0 %) to the theme colour (100 %), and the modules switch to light or dark shades of the theme's
+  own colours to stay legible on it.
+- **Center menu** (Settings → Bar → *Center menu*): resting the pointer on the middle of the bar opens a panel
+  with the clock and date, weather (wttr.in; set a city or leave it empty for automatic), CPU / RAM / GPU gauges
+  and history, the player and the uptime. It closes when the pointer leaves it. It is created only while open,
+  so it costs nothing when closed. `qs ipc call shell toggle center` opens it pinned.
+- **Desktop widgets** (Settings → Widgets): clock, system, weather and media widgets on the desktop, under the
+  windows. **Arrange widgets** (or `qs ipc call widgets edit`) opens the editor: drag to move (snaps to an 8 px
+  grid), × to remove, the toolbar adds more; Esc or **Done** leaves it. Positions are saved per monitor in
+  `settings.json`. A new widget type is one QML file in `quickshell/widgets/` plus one line in
+  `services/Widgets.qml`.
 - **Storage** reads disk health from UDisks2, without root. Cleanup always scans first and lists what each item
   removes. Removing needs a second, confirming click. pacman and journal cleanup ask for the password through
   `pkexec`.

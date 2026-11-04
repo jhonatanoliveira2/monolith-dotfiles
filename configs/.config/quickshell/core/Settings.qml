@@ -66,6 +66,14 @@ Singleton {
     property alias barGapCenter: adapter.barGapCenter
     property alias barGapEnd: adapter.barGapEnd
     property alias menuStyle: adapter.menuStyle
+    property alias barStyle: adapter.barStyle
+    property alias frameTone: adapter.frameTone
+    property alias barShadow: adapter.barShadow
+    property alias barShadowStrength: adapter.barShadowStrength
+    property alias centerMenu: adapter.centerMenu
+    property alias widgets: adapter.widgets
+    property alias widgetsEnabled: adapter.widgetsEnabled
+    property alias weatherLocation: adapter.weatherLocation
     property alias shellBlur: adapter.shellBlur
     property alias launcherIcons: adapter.launcherIcons
     property alias launcherComments: adapter.launcherComments
@@ -199,6 +207,14 @@ Singleton {
             property int barGapStart: 6            // px between the modules of each zone
             property int barGapCenter: 6
             property int barGapEnd: 6
+            property var widgets: []               // desktop widgets: [{ uid, type, screen, x, y }] (services/Widgets.qml)
+            property bool widgetsEnabled: true
+            property bool centerMenu: true         // menus/CenterMenu.qml, opened by hovering the middle of the bar
+            property string weatherLocation: ""    // wttr.in place ("" = by IP)
+            property string barStyle: "flat"       // flat | capsule | frame (core/Theme.qml)
+            property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
+            property bool barShadow: false         // capsule / frame styles
+            property int barShadowStrength: 60     // %
             property string menuStyle: "auto"      // auto (attached on the sides / bottom) | attached | floating
             property bool shellBlur: true          // compositor blur behind the bar, menus, toasts and OSD
             // app launcher (menus/Launcher.qml)

@@ -17,7 +17,7 @@ Scope {
         PanelWindow {
             screen: scope.screen
             anchors.bottom: true
-            margins.bottom: 70 + (Settings.barPosition === "bottom" ? Theme.barSize : 0)
+            margins.bottom: 70 + (Settings.barPosition === "bottom" ? Theme.barThickness : Theme.frameEdge)
             exclusionMode: ExclusionMode.Ignore
             implicitWidth: 300
             implicitHeight: 54

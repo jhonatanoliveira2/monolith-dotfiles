@@ -21,7 +21,7 @@ Singleton {
         { id: "launcher", glyph: 0xf135 }, { id: "wallpaper", glyph: 0xf03e },
         { id: "display", glyph: 0xf26c }, { id: "configs", glyph: 0xf013 },
         { id: "bar", glyph: 0xf0c9 }, { id: "audio", glyph: 0xf028 }, { id: "mic", glyph: 0xf130 },
-        { id: "notifications", glyph: 0xf0f3 }, { id: "network", glyph: 0xf1eb }, { id: "bluetooth", glyph: 0xf293 },
+        { id: "widgets", glyph: 0xf009 }, { id: "notifications", glyph: 0xf0f3 }, { id: "network", glyph: 0xf1eb }, { id: "bluetooth", glyph: 0xf293 },
         { id: "power", glyph: 0xf240, when: () => root.laptop }, { id: "storage", glyph: 0xf0a0 },
         { id: "input", glyph: 0xf11c }, { id: "update", glyph: 0xf019 }
     ]
@@ -129,6 +129,15 @@ Singleton {
         cho("bar", "position", "barPosition", ["Posição da barra", "Bar position"], "barra bar posição position topo top baixo bottom esquerda left direita right lateral vertical",
             [{ v: "top", l: lbl("Topo", "Top") }, { v: "bottom", l: lbl("Embaixo", "Bottom") }, { v: "left", l: lbl("Esquerda", "Left") }, { v: "right", l: lbl("Direita", "Right") }],
             () => Settings.barPosition, v => { Popups.close(); Settings.barPosition = v }),
+        cho("bar", "position", "barStyle", ["Estilo da barra", "Bar style"], "barra bar estilo style fundo background cápsula capsule pílula pill moldura frame borda border arredondado rounded caelestia",
+            [{ v: "flat", l: lbl("Plana", "Flat") }, { v: "capsule", l: lbl("Cápsula", "Capsule") }, { v: "frame", l: lbl("Moldura", "Frame") }],
+            () => Settings.barStyle, v => { Popups.close(); Settings.barStyle = v }),
+        sld("bar", "position", "frameTone", ["Tom da moldura", "Frame tone"], "moldura frame cor color tom tone claro light escuro dark opaco opaque",
+            0, 100, 2, "%", () => Settings.frameTone, v => Settings.frameTone = v, { when: () => Settings.barStyle === "frame" }),
+        tog("bar", "position", "barShadow", ["Sombra da barra", "Bar shadow"], "sombra shadow barra bar cápsula capsule moldura frame profundidade depth",
+            () => Settings.barShadow, v => Settings.barShadow = v, { when: () => Settings.barStyle !== "flat" }),
+        sld("bar", "position", "barShadowStrength", ["Intensidade da sombra", "Shadow strength"], "sombra shadow intensidade strength opacidade opacity",
+            10, 100, 5, "%", () => Settings.barShadowStrength, v => Settings.barShadowStrength = v, { when: () => Settings.barStyle !== "flat" && Settings.barShadow }),
         cho("bar", "position", "menuStyle", ["Estilo dos menus", "Menu style"], "menus colado attached flutuante floating gaveta drawer",
             [{ v: "auto", l: lbl("Automático", "Auto") }, { v: "attached", l: lbl("Colado à barra", "Attached") }, { v: "floating", l: lbl("Flutuante", "Floating") }],
             () => Settings.menuStyle, v => Settings.menuStyle = v),
@@ -140,6 +149,10 @@ Singleton {
             0, 30, 1, "px", () => Settings.barGapCenter, v => Settings.barGapCenter = v),
         sld("bar", "spacing", "barGapEnd", ["Fim (direita / embaixo)", "End (right / bottom)"], "espaçamento spacing gap módulos modules direita right",
             0, 30, 1, "px", () => Settings.barGapEnd, v => Settings.barGapEnd = v),
+        tog("bar", "centerMenu", "centerMenu", ["Menu central (passar o mouse no centro da barra)", "Center menu (hover the middle of the bar)"],
+            "menu central center dashboard painel clima weather tempo desempenho performance relógio clock hover", () => Settings.centerMenu, v => { if (!v && Popups.current === "center") Popups.close(); Settings.centerMenu = v }),
+        { page: "bar", cat: "centerMenu", id: "weatherLocation", type: "text", label: ["Cidade do clima (vazio = automático)", "Weather city (empty = automatic)"],
+          kw: "clima weather cidade city local location wttr", get: () => Settings.weatherLocation, set: v => Settings.weatherLocation = String(v).trim(), when: () => Settings.centerMenu },
         tog("bar", "behavior", "hoverMenus", ["Trocar menus ao passar o mouse", "Switch menus on hover"], "hover menus popups mouse", () => Settings.hoverMenus, v => Settings.hoverMenus = v),
         tog("bar", "behavior", "osd", ["Indicador na tela (volume/brilho)", "On-screen display (volume/brightness)"], "osd volume brilho brightness popup", () => Settings.osd, v => Settings.osd = v),
         cho("bar", "behavior", "settingsMode", ["Modo da janela de configurações", "Settings window mode"], "window janela overlay floating flutuante",
@@ -176,6 +189,12 @@ Singleton {
             () => root.run([Settings.launcherTerminal, "-e", "sh", "-c", "sudo pacman -S --needed noise-suppression-for-voice; echo; read -p 'Enter...' x"]), { when: () => !MicFx.hasRnnoise }),
         tog("mic", "micEq", "micEq", ["Equalizador do microfone", "Microphone equalizer"], "mic eq equalizador equalizer graves agudos bass treble preset voz voice",
             () => Settings.micEq, v => { Settings.micEq = v; MicFx.schedule() }),
+
+        // ── desktop widgets (the list and catalogue are drawn by PageWidgets) ──
+        tog("widgets", "general", "widgetsEnabled", ["Mostrar widgets na área de trabalho", "Show desktop widgets"], "widgets área de trabalho desktop relógio clock clima weather",
+            () => Settings.widgetsEnabled, v => Settings.widgetsEnabled = v),
+        btn("widgets", "general", "widgetsEdit", ["Organizar widgets (arrastar, adicionar, remover)", "Arrange widgets (drag, add, remove)"], "widgets editar edit organizar arrange mover move",
+            () => Widgets.edit(true)),
 
         // ── notifications ──
         tog("notifications", "general", "ndnd", ["Não perturbe", "Do not disturb"], "dnd silêncio", () => Settings.dnd, v => Settings.dnd = v),

@@ -71,6 +71,16 @@ Singleton {
         if (screenName === screen) show(name, screen, item)
     }
 
+    // Hover-opened menus (the center menu): open only when no other menu is up, close a moment after the
+    // pointer leaves both the hot area and the menu (unless it was pinned by a click / shortcut).
+    function hoverOpen(name, screen, item) {
+        if (current === name) { cancelClose(); return }
+        if (current !== "") return
+        show(name, screen, item)
+        pinned = false
+    }
+    function leaveHover(name) { if (current === name) scheduleClose() }
+
     function toggle(name, screen, item) {
         if (current === name && screenName === screen) { close(); return }
         show(name, screen, item)

@@ -53,7 +53,7 @@ local blur = shellBlur()
 
 hl.layer_rule({
     name = "qs-bar",
-    match = { namespace = "^qs-bar$" },
+    match = { namespace = "^qs-(bar|frame|widgets)$" },
     blur = blur,
     ignore_alpha = 0.2,
 })

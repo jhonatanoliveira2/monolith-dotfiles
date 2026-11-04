@@ -15,19 +15,20 @@ PanelWindow {
     property int panelWidth: 340
     property int maxHeight: 640
     property bool hoverScroll: false   // full scrollbar that shows on hover instead of the thin indicator
+    property bool hoverKeep: false     // opened by hovering (center menu): stays while hovered, closes on leave
     readonly property string screenName: bar ? bar.screenName : ""
     readonly property int screenW: bar && bar.screen ? bar.screen.width : 1920
     readonly property int screenH: bar && bar.screen ? bar.screen.height : 1080
     readonly property string edge: Settings.barPosition
     readonly property bool vertical: Settings.barVertical
     readonly property bool attached: Settings.menuStyle === "attached" || (Settings.menuStyle === "auto" && edge !== "top")
-    readonly property int off: Theme.barSize + (attached ? 0 : Theme.gap)
-    readonly property int limit: Math.min(maxHeight, screenH - (vertical ? 16 : Theme.barSize + 30))
+    readonly property int off: Theme.barThickness + (attached ? 0 : Theme.gap)
+    readonly property int limit: Math.min(maxHeight, screenH - (vertical ? 16 : Theme.barThickness + 30))
     default property Component contentComponent
 
     // `entered` flips right after creation so the open animation runs (menus are created on demand)
     property bool entered: false
-    Component.onCompleted: { entered = true; grab.active = shown }
+    Component.onCompleted: { entered = true; grab.active = shown && (!hoverKeep || Popups.pinned) }
     readonly property bool shown: entered && Popups.current === menu && screenName !== "" && Popups.screenName === screenName
     readonly property int pad: 8
 
@@ -55,7 +56,8 @@ PanelWindow {
         windows: win.bar ? [win, win.bar] : [win]
         onCleared: if (win.shown) Popups.close()
     }
-    onShownChanged: grab.active = shown
+    // a menu opened by hovering does not grab focus (it closes when the pointer leaves); clicked ones do
+    onShownChanged: grab.active = shown && (!hoverKeep || Popups.pinned)
     Shortcut { sequence: "Escape"; enabled: win.shown; onActivated: Popups.close() }
 
     Rectangle {
@@ -106,6 +108,10 @@ PanelWindow {
                 width: parent.width
                 sourceComponent: win.contentComponent
             }
+        }
+        HoverHandler {
+            enabled: win.hoverKeep
+            onHoveredChanged: hovered ? Popups.cancelClose() : Popups.leaveHover(win.menu)
         }
         HoverScrollBar {   // sits in the panel padding, not over the content
             visible: win.hoverScroll

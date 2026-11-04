@@ -74,11 +74,11 @@ Item {
         width: root.vertical ? root.thick : root.b - root.a
         height: root.vertical ? root.b - root.a : root.thick
         radius: root.thick / 2
-        color: Theme.foreground
+        color: BarTheme.foreground
         Text {
             anchors.centerIn: parent
             text: root.activeId
-            color: Theme.onForeground
+            color: BarTheme.onForeground
             opacity: root.showNumber ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: Theme.dur(180) } }
             font.family: Theme.font; font.bold: true; font.pixelSize: 10
@@ -106,9 +106,9 @@ Item {
                     visible: !slot.active
                     width: ma.containsMouse ? 14 : slot.occupied || slot.urgent ? 7 : 6
                     height: width; radius: width / 2
-                    color: ma.containsMouse ? Theme.hover : slot.urgent ? Theme.white : slot.occupied ? Theme.grayLight : "transparent"
+                    color: ma.containsMouse ? BarTheme.hover : slot.urgent ? BarTheme.white : slot.occupied ? BarTheme.grayLight : "transparent"
                     border.width: slot.occupied || slot.urgent || ma.containsMouse ? 0 : 1.5
-                    border.color: Theme.grayMid
+                    border.color: BarTheme.grayMid
                     Behavior on width { NumberAnimation { duration: Theme.dur(140); easing.type: Easing.OutCubic } }
                     Behavior on color { ColorAnimation { duration: Theme.dur(140) } }
                     property real pulse: 1
@@ -123,7 +123,7 @@ Item {
                         anchors.centerIn: parent
                         visible: ma.containsMouse
                         text: slot.modelData
-                        color: Theme.white
+                        color: BarTheme.white
                         font.family: Theme.font; font.bold: true; font.pixelSize: 10
                     }
                 }
@@ -139,11 +139,11 @@ Item {
     }
 
     // special workspace ("magic") indicator
-    Txt {
+    BarTxt {
         visible: root.specialOpen
         x: root.vertical ? (parent.width - width) / 2 : root.extent + 4
         y: root.vertical ? root.extent + 2 : (parent.height - height) / 2
-        text: "✦"; color: Theme.white; font.pixelSize: 11
+        text: "✦"; color: BarTheme.white; font.pixelSize: 11
     }
 
     // the monitor's special workspace only arrives with a monitors refresh

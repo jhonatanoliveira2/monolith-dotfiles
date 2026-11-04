@@ -76,7 +76,7 @@ Para instalar ou desfazer a instalação, consulte o [guia de instalação](inst
 ## Aplicativo de configurações
 
 Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`). Abas: Sistema, Tela, Hyprland, Barra,
-Áudio, Microfone, Notificações, Rede, Bluetooth, Energia (só em notebooks), Armazenamento, Entrada e Atualização.
+Áudio, Microfone, Widgets, Notificações, Rede, Bluetooth, Energia (só em notebooks), Armazenamento, Entrada e Atualização.
 
 - **Tela** e **Hyprland** aplicam as mudanças na hora pela API Lua do Hyprland (`hyprctl eval`) e as salvam em
   `~/.config/hypr/generated/monitors.lua` e `~/.config/hypr/generated/settings.lua`. O `hyprland.lua` carrega
@@ -100,6 +100,21 @@ Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`)
   mudança é salva na hora e os efeitos sobem com o PipeWire no login, mesmo com o shell parado ou reiniciando.
   Desligar os efeitos desativa e remove a unit. Logs: `[micfx]` / `[audiofx]` / `[mictest]`,
   `journalctl --user -u monolith-audiofx`.
+- **Estilo da barra** (Configurações → Barra): *Plana* (faixa de ponta a ponta), *Cápsula* (pílula arredondada
+  com margem das bordas da tela; numa barra lateral vira uma pílula vertical) ou *Moldura* (a barra continua como
+  uma borda fina em volta da tela toda, com cantos internos arredondados, no estilo Caelestia). Só o fundo muda,
+  não os módulos. Cápsula e Moldura podem ter sombra (*Sombra da barra*, *Intensidade da sombra*). A moldura é
+  opaca; o *Tom da moldura* vai do preto (0%) à cor do tema (100%), e os módulos passam a usar tons claros ou
+  escuros das próprias cores do tema para continuarem legíveis.
+- **Menu central** (Configurações → Barra → *Menu central*): parar o mouse no meio da barra abre um painel com
+  relógio e data, clima (wttr.in; defina uma cidade ou deixe vazio para automático), medidores e histórico de
+  CPU / RAM / GPU, o player e o tempo ligado. Fecha quando o mouse sai. Só existe enquanto está aberto, então
+  não pesa quando fechado. `qs ipc call shell toggle center` abre fixo.
+- **Widgets da área de trabalho** (Configurações → Widgets): relógio, sistema, clima e mídia na área de
+  trabalho, por baixo das janelas. **Organizar widgets** (ou `qs ipc call widgets edit`) abre o editor: arraste
+  para mover (encaixa numa grade de 8 px), × remove, a barra de cima adiciona; Esc ou **Concluir** sai. As
+  posições ficam salvas por monitor no `settings.json`. Um novo tipo de widget é um arquivo QML em
+  `quickshell/widgets/` mais uma linha em `services/Widgets.qml`.
 - **Armazenamento** lê a saúde dos discos pelo UDisks2, sem root. A limpeza sempre analisa antes e mostra o que
   cada item remove. Apagar exige um segundo clique de confirmação. A limpeza do pacman e do journal pede a
   senha via `pkexec`.

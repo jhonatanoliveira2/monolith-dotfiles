@@ -11,6 +11,8 @@ singleton Osd 1.0 Osd.qml
 singleton Profile 1.0 Profile.qml
 singleton QuickMenu 1.0 QuickMenu.qml
 singleton Stats 1.0 Stats.qml
+singleton Weather 1.0 Weather.qml
+singleton Widgets 1.0 Widgets.qml
 singleton Sys 1.0 Sys.qml
 singleton Themes 1.0 Themes.qml
 singleton Wallpapers 1.0 Wallpapers.qml

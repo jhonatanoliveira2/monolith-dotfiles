@@ -12,12 +12,12 @@ BarItem {
     visible: !vertical && here && label.text !== ""     // no room on a vertical bar
     onClicked: m => { if (m.button === Qt.MiddleButton) Hyprland.dispatch("hl.dsp.window.close()") }
 
-    Txt { text: Theme.glyph.window; color: Theme.grayMid; font.pixelSize: 12 }
-    Txt {
+    BarTxt { text: Theme.glyph.window; color: BarTheme.grayMid; font.pixelSize: 12 }
+    BarTxt {
         id: label
         width: Math.min(implicitWidth, 260)
         text: root.win ? String(root.win.title || "") : ""
-        color: Theme.grayMid
+        color: BarTheme.grayMid
         font.bold: false
     }
 }

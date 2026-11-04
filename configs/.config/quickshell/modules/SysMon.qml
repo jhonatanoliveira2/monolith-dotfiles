@@ -10,17 +10,17 @@ MenuButton {
     menu: "stats"
     spacing: 10
     alert: Stats.level === "critical"
-    readonly property color tone: Stats.level === "normal" ? Theme.grayLight : Theme.foreground
+    readonly property color tone: Stats.level === "normal" ? BarTheme.grayLight : BarTheme.foreground
 
     component Stat: Grid {
         property string glyph: ""
         property string value: ""
-        property color tone: Theme.grayLight     // passed in: inline components do not see this file's ids
+        property color tone: BarTheme.grayLight     // passed in: inline components do not see this file's ids
         columns: Settings.barVertical ? 1 : 2
         columnSpacing: 4
         horizontalItemAlignment: Grid.AlignHCenter
-        Txt { text: parent.glyph; color: parent.tone; font.pixelSize: Theme.barIcon }
-        Txt { visible: !Settings.barVertical; text: parent.value; color: parent.tone }
+        BarTxt { text: parent.glyph; color: parent.tone; font.pixelSize: Theme.barIcon }
+        BarTxt { visible: !Settings.barVertical; text: parent.value; color: parent.tone }
     }
     Stat { visible: Stats.cpuTemp >= 0; glyph: Theme.glyph.cpu; value: Stats.cpuTemp + "°"; tone: root.tone }
     Stat { visible: Stats.gpuTemp >= 0; glyph: Theme.glyph.gpu; value: Stats.gpuTemp + "°"; tone: root.tone }

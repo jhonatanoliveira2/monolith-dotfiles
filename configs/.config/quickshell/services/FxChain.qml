@@ -46,6 +46,8 @@ QtObject {
     // changes are coalesced: short for live updates (heard almost at once), longer when a restart is needed
     function schedule() { timer.interval = canLive ? 120 : 700; timer.restart() }
     function apply() {
+        // test instances (another XDG_STATE_HOME) must not rewrite the real units
+        if (Quickshell.env("MONOLITH_NO_FX") === "1") { console.log("[" + tag + "] MONOLITH_NO_FX=1: skipped"); return }
         if (proc.running) { timer.restart(); return }
         const target = makeTarget()
         const live = canLive
