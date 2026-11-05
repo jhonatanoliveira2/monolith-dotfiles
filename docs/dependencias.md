@@ -8,7 +8,8 @@ A relação de pacotes em [`../packages.txt`](../packages.txt) é a fonte usada 
 
 - **Obrigatório**: usado por um atalho, serviço iniciado pela configuração, componente ativo do Quickshell ou script incluído.
 - **Opcional**: necessário apenas para aplicativos ou recursos que não são iniciados automaticamente, ou para hardware específico.
-- **AUR**: alguns pacotes podem existir nos repositórios oficiais. O instalador os procura com `pacman` antes de recorrer ao auxiliar do AUR.
+- **AUR**: alguns pacotes podem existir nos repositórios oficiais. O instalador os procura com `pacman` antes de recorrer ao auxiliar do AUR. "Oficiais" são os repositórios do seu `pacman.conf`: no CachyOS, isso inclui os repositórios dele, que trazem muitos pacotes que no Arch só existem no AUR.
+- **Conflitos**: um pacote que conflita com outro já instalado é ignorado e informado; o instalado é mantido (veja [Arch Linux e CachyOS](instalacao.md#arch-linux-e-cachyos)).
 - **Manual**: itens que não são instalados pelo `pacman` ou pelo AUR. No manifesto atual, não há itens nesta categoria.
 
 O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atualize o sistema com `sudo pacman -Syu` e tente novamente.

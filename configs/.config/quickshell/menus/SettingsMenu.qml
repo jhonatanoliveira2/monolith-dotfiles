@@ -48,7 +48,7 @@ MenuWindow {
                     visible: !Settings.profileInMenu
                     x: 10; anchors.verticalCenter: parent.verticalCenter; spacing: 10
                     Avatar { visible: Settings.profileAsLogo; width: 20; height: 20; anchors.verticalCenter: parent.verticalCenter; source: Profile.avatar; initial: Profile.initial }
-                    Txt { text: (Settings.profileAsLogo ? "" : Theme.glyph.arch + "   ") + "MONOLITH"; color: Theme.white; font.pixelSize: 15 }
+                    Txt { text: (Settings.profileAsLogo ? "" : Theme.glyph.distro + "   ") + "MONOLITH"; color: Theme.white; font.pixelSize: 15 }
                 }
             }
         }

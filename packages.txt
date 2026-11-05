@@ -11,13 +11,15 @@
 #                           that must be copied by hand
 #
 # Notes
-#   * "official" = Arch repositories (core/extra/multilib). The installer never runs
+#   * "official" = the repositories in pacman.conf: Arch (core/extra/multilib), plus CachyOS' own
+#     repositories on CachyOS (which also ship many AUR-only packages and paru / yay). The installer never runs
 #     'pacman -Sy' (partial upgrades are unsupported on Arch): run 'sudo pacman -Syu' first
 #     if a package is reported as not found.
 #   * "aur" entries are only built when an AUR helper (paru / yay) is available. Some of
 #     them may already exist in the official repositories; the installer checks
 #     'pacman -Si' first and uses pacman when the package is there.
-#   * Parsed by scripts/lib/packages.sh - keep one package per line.
+#   * A package that conflicts with an installed one is skipped and reported (the installed one is kept).
+#   * Parsed by scripts/lib/packages.sh - keep one package per line. Same names on Arch and CachyOS.
 
 [official:required]
 # --- compositor, session, lock screen ---

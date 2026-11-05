@@ -6,7 +6,7 @@
 # Strings are printf formats: keep the %s placeholders in the same order in both languages.
 
 # ---- common -----------------------------------------------------------------------------
-_m banner.tagline "Arch Linux + Hyprland · dotfiles installer" "Arch Linux + Hyprland · instalador de dotfiles"
+_m banner.tagline "Arch Linux / CachyOS + Hyprland · dotfiles installer" "Arch Linux / CachyOS + Hyprland · instalador de dotfiles"
 _m common.aborted "Aborted. Nothing was changed." "Cancelado. Nada foi alterado."
 _m common.interrupted "Interrupted by the user." "Interrompido pelo usuário."
 _m common.locked "Another MONOLITH script is already running." "Outro script do MONOLITH já está em execução."
@@ -37,7 +37,9 @@ _m preflight.no_root "Do not run this installer as root. Use your regular user (
 _m preflight.bash_old "Bash 4.4 or newer is required (found %s)." "É necessário Bash 4.4 ou superior (encontrado %s)."
 _m preflight.user "Running as user: %s" "Executando como usuário: %s"
 _m preflight.arch "Arch Linux detected." "Arch Linux detectado."
-_m preflight.not_arch "This does not look like Arch Linux: package installation will be skipped." "Isto não parece ser o Arch Linux: a instalação de pacotes será ignorada."
+_m preflight.cachyos "CachyOS detected: packages come from its repositories (also those that are AUR-only on Arch)." "CachyOS detectado: os pacotes vêm dos repositórios dele (também os que no Arch só existem no AUR)."
+_m preflight.arch_based "Arch-based distribution detected: %s." "Distribuição baseada no Arch detectada: %s."
+_m preflight.not_arch "This is not a pacman-based distribution (Arch Linux, CachyOS...): package installation will be skipped." "Esta não é uma distribuição com pacman (Arch Linux, CachyOS...): a instalação de pacotes será ignorada."
 _m preflight.home_not_writable "Target directory is not writable: %s" "O diretório de destino não é gravável: %s"
 _m preflight.no_configs "No configuration files found in: %s" "Nenhum arquivo de configuração encontrado em: %s"
 _m preflight.no_configs_hint "Copy your folders from ~/.config into configs/.config first (see docs/Installation.md)." "Copie suas pastas de ~/.config para configs/.config antes (veja docs/Instalacao.md)."
@@ -79,6 +81,8 @@ _m pkg.no_aur_helper "No AUR helper (paru/yay) available: install the AUR packag
 _m pkg.confirm_aur "Build and install them with %s?" "Compilar e instalar com %s?"
 _m pkg.aur_done "AUR packages installed." "Pacotes do AUR instalados."
 _m pkg.aur_failed "Some AUR packages failed to install; continuing with the configuration." "Alguns pacotes do AUR falharam; continuando com a configuração."
+_m pkg.conflict "%s skipped: it conflicts with the installed %s, which is kept." "%s ignorado: conflita com %s, já instalado, que é mantido."
+_m pkg.confirm_helper "No AUR helper is installed, but %s is in your repositories. Install it with pacman?" "Nenhum auxiliar do AUR instalado, mas o %s está nos seus repositórios. Instalar com o pacman?"
 
 # ---- plan -------------------------------------------------------------------------------
 _m plan.new "New files" "Arquivos novos"

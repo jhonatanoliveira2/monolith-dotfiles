@@ -91,7 +91,7 @@ Scope {
                             spacing: 14
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: Theme.glyph.arch
+                                text: Theme.glyph.distro
                                 color: Theme.accent
                                 font.family: Theme.font; font.pixelSize: 38
                             }

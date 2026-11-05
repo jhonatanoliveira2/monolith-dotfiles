@@ -16,7 +16,8 @@ ls -t ~/.local/state/monolith-dotfiles/*.log | head -1
 | Recusa em executar como root | Execute como seu usuário comum; o instalador só chama `sudo` quando uma operação de pacote precisa dele. |
 | Aviso sobre diretório simbólico | Confira o destino do link. Só use `--force-symlinks` se realmente quiser gravar através dele. |
 | `No interactive terminal detected` | Em execução por pipe ou automação, use `--yes` para aceitar os padrões. |
-| Falha no `pacman` ou pacote não encontrado | Verifique conexão e conflito; em Arch, sincronize o sistema com `sudo pacman -Syu` e tente novamente. Consulte `packages.txt`. |
+| Falha no `pacman` ou pacote não encontrado | Verifique conexão e conflito; no Arch e no CachyOS, sincronize o sistema com `sudo pacman -Syu` e tente novamente. Consulte `packages.txt`. |
+| Um pacote foi "ignorado: conflita com..." | A distribuição já tinha instalado uma alternativa (comum no CachyOS), que foi mantida. Remova-a e instale o pacote do MONOLITH manualmente só se preferir esse. |
 | Aviso sobre pacotes do AUR | Instale `paru`/`yay` ou use o comando impresso. `--no-aur` impede a chamada do auxiliar. |
 | Falha ao criar backup | Confira espaço livre e permissões de `~/.local/share/monolith-dotfiles/`. A instalação não deve prosseguir sem o snapshot necessário. |
 | Falha durante a cópia | Consulte o log. O instalador tenta reverter as alterações feitas durante aquela operação; confira o estado antes de executá-lo novamente. |

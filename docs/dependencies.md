@@ -8,7 +8,8 @@ The package list in [`../packages.txt`](../packages.txt) is the source used by t
 
 - **Required**: used by a shortcut, service started by the configuration, active Quickshell component or included script.
 - **Optional**: needed only for applications or features that are not started automatically, or for specific hardware.
-- **AUR**: some packages may be available in the official repositories. The installer checks with `pacman` before calling an AUR helper.
+- **AUR**: some packages may be available in the official repositories. The installer checks with `pacman` before calling an AUR helper. "Official" means the repositories in your `pacman.conf`: on CachyOS that includes its own repositories, which ship many packages that are AUR-only on Arch.
+- **Conflicts**: a package that conflicts with one already installed is skipped and reported; the installed one is kept (see [Arch Linux and CachyOS](installation.md#arch-linux-and-cachyos)).
 - **Manual**: items not installed through `pacman` or the AUR. The current manifest has no entries in this category.
 
 The installer does not run `pacman -Sy`. If a package cannot be found, update the system with `sudo pacman -Syu` and try again.

@@ -22,6 +22,8 @@ source "$SCRIPT_DIR/lib/messages.sh"
 source "$SCRIPT_DIR/lib/ui.sh"
 # shellcheck source=lib/packages.sh
 source "$SCRIPT_DIR/lib/packages.sh"
+# shellcheck source=lib/distro.sh
+source "$SCRIPT_DIR/lib/distro.sh"
 
 TOTAL_STEPS=7
 OPT_LANG="" OPT_YES=0 OPT_DRY=0 OPT_NO_DEPS=0 OPT_OPTIONAL=0 OPT_NO_OPTIONAL=0 OPT_NO_AUR=0
@@ -179,14 +181,18 @@ step_preflight() {
     fi
     ui_ok "$(t preflight.user "$(id -un)")"
 
-    if [[ -r /etc/os-release ]] && grep -qiE '^(ID|ID_LIKE)=.*(arch)' /etc/os-release; then
-        ui_ok "$(t preflight.arch)"
-    elif (( PACMAN_AVAILABLE )); then
-        ui_ok "$(t preflight.arch)"
-    else
-        warn_later "$(t preflight.not_arch)"
-        ui_warn "$(t preflight.not_arch)"
-    fi
+    # Arch Linux, CachyOS and other pacman distributions share every step (see lib/distro.sh)
+    distro_detect
+    log INFO "distro: id=$DISTRO_ID name=$DISTRO_NAME"
+    case $DISTRO_ID in
+        arch) ui_ok "$(t preflight.arch)" ;;
+        cachyos) ui_ok "$(t preflight.cachyos)" ;;
+        arch-based) ui_ok "$(t preflight.arch_based "$DISTRO_NAME")" ;;
+        *)
+            warn_later "$(t preflight.not_arch)"
+            ui_warn "$(t preflight.not_arch)"
+            ;;
+    esac
 
     [[ -d $TARGET_HOME && -w $TARGET_HOME ]] || die "$(t preflight.home_not_writable "$TARGET_HOME")" 4
     [[ $TARGET_HOME != / ]] || die "$(t preflight.home_not_writable "$TARGET_HOME")" 4
@@ -277,6 +283,17 @@ step_packages() {
             if pkg_in_repos "$pkg"; then official+=("$pkg"); else aur+=("$pkg"); fi
         fi
     done < <(bash "$SCRIPT_DIR/check-dependencies.sh" --list-missing="$scope_arg")
+    # packages that conflict with something installed are left out (the installed alternative stays)
+    if (( ${#official[@]} > 0 )); then
+        pkg_split_conflicts "${official[@]}"
+        local entry
+        for entry in "${PKG_CONFLICT[@]}"; do
+            log WARN "conflict, skipped: $entry"
+            warn_later "$(t pkg.conflict "${entry%%:*}" "${entry#*: }")"
+            ui_warn "$(t pkg.conflict "${entry%%:*}" "${entry#*: }")"
+        done
+        official=("${PKG_OK[@]}")
+    fi
     log INFO "missing official (${#official[@]}): ${official[*]-}"
     log INFO "missing aur (${#aur[@]}): ${aur[*]-}"
 
@@ -310,6 +327,17 @@ step_packages() {
         ui_dim "${aur[*]}"
         local helper=""
         (( OPT_NO_AUR )) || helper=$(aur_helper "$OPT_AUR_HELPER") || helper=""
+        # no helper installed, but the repositories ship one (CachyOS): install it with pacman first
+        local repo_helper=""
+        if [[ -z $helper ]] && (( ! OPT_NO_AUR )) && command -v sudo >/dev/null 2>&1 &&
+            repo_helper=$(aur_helper_in_repos "$OPT_AUR_HELPER") && ui_confirm "$(t pkg.confirm_helper "$repo_helper")" y; then
+            local -a hcmd=(sudo pacman -S --needed)
+            (( OPT_YES )) && hcmd+=(--noconfirm)
+            if run_cmd "${hcmd[@]}" "$repo_helper"; then
+                helper=$repo_helper
+                log INFO "aur helper installed from the repositories: $helper"
+            fi
+        fi
         if [[ -z $helper ]]; then
             warn_later "$(t pkg.no_aur_helper)"
             ui_warn "$(t pkg.no_aur_helper)"

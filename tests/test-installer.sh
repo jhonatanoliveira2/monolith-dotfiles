@@ -207,6 +207,51 @@ check "folders outside the list are not imported" test ! -e "$dst/untracked-app"
 check "import never modifies the source" test -f "$src/micro/backups/%2Fhome%2Fuser%2Fnotes"
 check "exclusions are reported to the user" grep -q "Left out on purpose" "$TMP/import.out"
 
+echo "== distributions (Arch Linux, CachyOS, other pacman distributions)"
+D="$TMP/distro"
+mkdir -p "$D/bin"
+printf 'NAME="CachyOS Linux"\nPRETTY_NAME="CachyOS"\nID=cachyos\nID_LIKE=arch\n' >"$D/cachyos"
+printf 'NAME="Arch Linux"\nPRETTY_NAME="Arch Linux"\nID=arch\n' >"$D/arch"
+printf 'NAME="EndeavourOS"\nPRETTY_NAME="EndeavourOS"\nID="endeavouros"\nID_LIKE="arch"\n' >"$D/endeavouros"
+printf 'NAME="Ubuntu"\nPRETTY_NAME="Ubuntu 24.04"\nID=ubuntu\nID_LIKE=debian\n' >"$D/ubuntu"
+detect() { # detect <os-release fixture> [pacman 0|1] -> "<id>|<name>"
+    MONOLITH_OS_RELEASE="$D/$1" bash -c 'source "$0/scripts/lib/common.sh"; source "$0/scripts/lib/packages.sh"
+        PACMAN_AVAILABLE=$1; source "$0/scripts/lib/distro.sh"; distro_detect; echo "$DISTRO_ID|$DISTRO_NAME"' "$ROOT" "${2:-0}"
+}
+check "CachyOS is detected as cachyos" test "$(detect cachyos)" = "cachyos|CachyOS"
+check "Arch Linux is detected as arch" test "$(detect arch)" = "arch|Arch Linux"
+check "other Arch derivatives (ID_LIKE=arch) are arch-based" test "$(detect endeavouros)" = "arch-based|EndeavourOS"
+check "a non-pacman distribution is unknown" test "$(detect ubuntu)" = "unknown|Ubuntu 24.04"
+check "any distribution with pacman is arch-based" test "$(detect ubuntu 1)" = "arch-based|Ubuntu 24.04"
+# a stub pacman shaped like a CachyOS install: tuned-ppd (instead of power-profiles-daemon) and
+# pipewire-pulse installed, paru available in the repositories
+cat >"$D/bin/pacman" <<'STUB'
+#!/bin/bash
+case $1 in
+    -Qi) printf 'Name            : tuned-ppd\nConflicts With  : power-profiles-daemon\nName            : pipewire-pulse\nConflicts With  : pulseaudio\n                  pulseaudio-bluetooth\n' ;;
+    -Si) case $2 in
+            pulseaudio) printf 'Name            : pulseaudio\nConflicts With  : pipewire-pulse>=1.0\n' ;;
+            power-profiles-daemon | btop) printf 'Name            : %s\nConflicts With  : None\n' "$2" ;;
+            paru) [[ -n ${STUB_PARU-} ]] && printf 'Name            : paru\n' || exit 1 ;;
+            *) exit 1 ;;
+         esac ;;
+    -T) case $2 in pipewire-pulse | tuned-ppd) exit 0 ;; *) exit 127 ;; esac ;;
+esac
+STUB
+chmod +x "$D/bin/pacman"
+pk() { PATH="$D/bin:$PATH" bash -c 'source "$0/scripts/lib/common.sh"; source "$0/scripts/lib/packages.sh"; '"$1" "$ROOT"; }
+out=$(pk 'pkg_split_conflicts btop pulseaudio power-profiles-daemon; echo "ok=${PKG_OK[*]}"; printf "c=%s\n" "${PKG_CONFLICT[@]}"')
+check "a package without conflicts is installed" grep -qx "ok=btop" <<<"$out"
+check "its own declared conflict is detected (pulseaudio vs pipewire-pulse)" grep -qx "c=pulseaudio: pipewire-pulse" <<<"$out"
+check "a conflict declared by the installed package is detected (tuned-ppd)" grep -qx "c=power-profiles-daemon: tuned-ppd" <<<"$out"
+check "an AUR helper shipped in the repositories is found (CachyOS)" test "$(STUB_PARU=1 pk 'aur_helper_in_repos')" = paru
+check "no repository AUR helper on Arch" test -z "$(pk 'aur_helper_in_repos')"
+new_env distro
+MONOLITH_OS_RELEASE="$D/cachyos" inst --dry-run >"$TMP/cachy.out" 2>&1
+check "the installer reports CachyOS" grep -q "CachyOS detected" "$TMP/cachy.out"
+MONOLITH_OS_RELEASE="$D/cachyos" bash "$ROOT/scripts/install.sh" --lang pt_BR --yes --no-deps --no-color --no-clear --dry-run </dev/null >"$TMP/cachy-pt.out" 2>&1
+check "the installer reports CachyOS (pt_BR)" grep -q "CachyOS detectado" "$TMP/cachy-pt.out"
+
 echo "== languages"
 new_env lang
 inst --dry-run >"$TMP/en.out" 2>&1

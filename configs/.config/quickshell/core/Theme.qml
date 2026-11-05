@@ -60,7 +60,7 @@ Singleton {
     // Nerd Font glyphs (code points, so no private-use characters live in the sources).
     function g(cp) { return String.fromCodePoint(cp) }
     readonly property var glyph: ({
-        arch: g(0xf303), note: g(0xf0ea2), pause: g(0xf04c), play: g(0xf04b), prev: g(0xf048), next: g(0xf051),
+        arch: g(0xf08c7), distro: g(Distro.glyph), note: g(0xf0ea2), pause: g(0xf04c), play: g(0xf04b), prev: g(0xf048), next: g(0xf051),
         shuffle: g(0xf074), repeat: g(0xf01e), repeatOne: g(0xf0458), search: g(0xf002), history: g(0xf1da),
         cpu: g(0xf4bc), gpu: g(0xf0fb2), ram: g(0xefc5),
         wifi: g(0xf05a9), wifiOff: g(0xf05aa), wired: g(0xf0318), wiredOff: g(0xf0319), offline: g(0xf092d),

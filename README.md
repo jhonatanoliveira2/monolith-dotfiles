@@ -4,6 +4,7 @@
 
 <p align="center">
   <img alt="Arch Linux" src="https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white">
+  <img alt="CachyOS" src="https://img.shields.io/badge/CachyOS-00aa88?style=for-the-badge&logo=archlinux&logoColor=white">
   <img alt="Hyprland" src="https://img.shields.io/badge/Hyprland_0.55+-00d9f5?style=for-the-badge&logo=hyprland&logoColor=black">
   <img alt="Quickshell" src="https://img.shields.io/badge/Quickshell-QML-41cd52?style=for-the-badge&logo=qt&logoColor=white">
   <img alt="Lua" src="https://img.shields.io/badge/Config-Lua-2c2d72?style=for-the-badge&logo=lua&logoColor=white">
@@ -69,7 +70,7 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 > [!CAUTION]
 > Some options are hardware-specific (monitors, input, language). Review [`docs/config.md`](docs/config.md) before installing.
 
-**Requirements:** Arch Linux · Bash 4.4+ · Git · a regular user account · Hyprland 0.55 or newer. An AUR helper (**paru** or **yay**) is only needed if you want the installer to build AUR packages.
+**Requirements:** Arch Linux or CachyOS ([details](docs/installation.md#arch-linux-and-cachyos)) · Bash 4.4+ · Git · a regular user account · Hyprland 0.55 or newer. An AUR helper (**paru** or **yay**) is only needed if you want the installer to build AUR packages.
 
 ```bash
 git clone https://github.com/jhonatanoliveira2/monolith-dotfiles.git

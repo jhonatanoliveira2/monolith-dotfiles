@@ -5,3 +5,4 @@ singleton Settings 1.0 Settings.qml
 singleton Strings 1.0 Strings.qml
 singleton Theme 1.0 Theme.qml
 singleton BarTheme 1.0 BarTheme.qml
+singleton Distro 1.0 Distro.qml

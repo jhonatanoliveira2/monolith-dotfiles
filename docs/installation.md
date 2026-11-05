@@ -6,10 +6,10 @@ This guide installs the configuration already included in the repository. You do
 
 ## Requirements
 
-- Arch Linux or a derivative using `pacman`.
+- Arch Linux, CachyOS or another distribution based on Arch that uses `pacman` (see [Arch Linux and CachyOS](#arch-linux-and-cachyos)).
 - Bash 4.4+, Git and a regular user account. The installer refuses to run as root.
 - Hyprland 0.55 or newer for the included Lua configuration.
-- `paru` or `yay` only if you want AUR packages built automatically. Without a helper, the installer prints the commands for manual installation.
+- `paru` or `yay` only if you want AUR packages built automatically. Without a helper, the installer prints the commands for manual installation (on CachyOS it offers to install one from the repositories).
 
 ## Install
 
@@ -28,6 +28,18 @@ Preview the plan, then run the installer if it looks right:
 ```
 
 The installer checks prerequisites and dependencies, plans the files to deploy, snapshots files that will be replaced, and then copies the configuration. It also makes the project wallpapers available in `~/Pictures/Wallpapers` and `~/Videos/wallpaper-live`.
+
+## Arch Linux and CachyOS
+
+The installer reads `/etc/os-release` and reports what it found: Arch Linux (`ID=arch`), CachyOS (`ID=cachyos`) or another `pacman` distribution (`ID_LIKE=arch`). All of them go through the same steps; the differences between them are handled by checks that also run on Arch, not by separate code paths:
+
+- **Repositories.** Every package is looked up first in the repositories configured in `pacman.conf`. On CachyOS these include its own repositories (optimised builds, plus packages that on Arch only exist in the AUR), so those are installed with `pacman` instead of being built.
+- **AUR helper.** When neither `paru` nor `yay` is installed but the repositories ship one (CachyOS does), the installer offers to install it with `pacman` and then uses it. On Arch nothing changes: without a helper, the manual commands are printed.
+- **Conflicts.** A package that conflicts with something already installed (an audio server or power daemon the distribution chose, for example) is left out and listed in the summary; the installed one is kept. Otherwise `pacman` would abort the whole installation. Replace it by hand if you prefer the MONOLITH choice.
+- **Kernel and system tools.** Nothing depends on the kernel package (`linux`, `linux-cachyos`, ...): the shell reads `/proc` and `/sys`. Partitions with several btrfs subvolumes (the CachyOS default) are shown once in the Performance tab, with the number of extra mount points.
+- **fish.** On CachyOS, `~/.config/fish/config.fish` normally just loads `cachyos-fish-config`. The installer replaces it with the MONOLITH version (the original goes into the backup snapshot). To keep the CachyOS aliases, add `source /usr/share/cachyos-fish-config/cachyos-config.fish` inside the `status is-interactive` block.
+- **Hyprland edition.** An existing `~/.config/hypr/hyprland.conf` does not get in the way: when both files exist, Hyprland loads `hyprland.lua`.
+- **Logo.** The shell shows the logo of the distribution it runs on (bar, quick menu, welcome screen, dashboard). The CachyOS logo comes from the `linux-cachyos` glyph of the Nerd Font (present in `ttf-jetbrains-mono-nerd` 3.5).
 
 ## Installer options
 

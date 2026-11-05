@@ -16,7 +16,8 @@ ls -t ~/.local/state/monolith-dotfiles/*.log | head -1
 | Refuses to run as root | Run as your regular user; the installer calls `sudo` only when a package operation needs it. |
 | Symlinked directory warning | Check where the link points. Use `--force-symlinks` only if you intend to write through it. |
 | `No interactive terminal detected` | For pipes or automation, use `--yes` to accept defaults. |
-| `pacman` failure or package not found | Check connectivity and conflicts; on Arch, update with `sudo pacman -Syu` and try again. See `packages.txt`. |
+| `pacman` failure or package not found | Check connectivity and conflicts; on Arch and CachyOS, update with `sudo pacman -Syu` and try again. See `packages.txt`. |
+| A package was "skipped: it conflicts with..." | The distribution already installed an alternative (common on CachyOS), which was kept. Remove it and install the MONOLITH package by hand only if you prefer that one. |
 | AUR package notice | Install `paru`/`yay` or use the printed command. `--no-aur` prevents the helper from being called. |
 | Backup creation fails | Check free space and permissions under `~/.local/share/monolith-dotfiles/`. Installation should not continue without a required snapshot. |
 | Copy fails | Read the log. The installer attempts to roll back changes made during that operation; inspect the state before trying again. |

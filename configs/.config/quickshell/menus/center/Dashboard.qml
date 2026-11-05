@@ -154,7 +154,7 @@ Column {
                     Txt { width: parent.width; text: Profile.subtitle; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
                     Row {
                         spacing: 10
-                        Txt { text: Theme.glyph.arch; color: Theme.accent; font.pixelSize: 15 }
+                        Txt { text: Theme.glyph.distro; color: Theme.accent; font.pixelSize: 15 }
                         Txt { text: Theme.g(0xf359); color: Theme.accent; font.pixelSize: 15 }
                         Txt { text: Theme.g(0xf017) + " " + dash.sessionText(); color: Theme.foreground; font.pixelSize: Theme.small; font.bold: false }
                     }

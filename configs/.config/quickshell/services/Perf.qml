@@ -61,15 +61,20 @@ Singleton {
     function refreshStorage() { if (!lsblk.running) lsblk.running = true }
     Process {
         id: lsblk
-        command: ["lsblk", "-J", "-b", "-o", "NAME,TYPE,SIZE,MODEL,FSTYPE,FSSIZE,FSUSED,FSAVAIL,MOUNTPOINT,LABEL"]
+        command: ["lsblk", "-J", "-b", "-o", "NAME,TYPE,SIZE,MODEL,FSTYPE,FSSIZE,FSUSED,FSAVAIL,MOUNTPOINTS,LABEL"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
                     const flat = (n, out) => { out.push(n); for (const c of n.children || []) flat(c, out); return out }
+                    // btrfs (CachyOS' default) mounts several subvolumes from one partition: name it after the most
+                    // meaningful one ("/", then "/home", then the shortest) and count the others
+                    const mounts = p => (p.mountpoints || []).filter(m => m && m !== "[SWAP]")
+                    const mainMount = l => l.indexOf("/") >= 0 ? "/" : l.indexOf("/home") >= 0 ? "/home" : l.slice().sort((a, b) => a.length - b.length)[0]
                     root.disks = JSON.parse(text).blockdevices.filter(d => d.type === "disk" && Number(d.size) > 0).map(d => ({
                         name: d.name, model: String(d.model || "").trim(), size: Number(d.size),
-                        parts: flat(d, []).filter(p => p.mountpoint && p.fssize && p.mountpoint !== "[SWAP]").map(p => ({
-                            name: p.label || p.name, mount: p.mountpoint, fs: p.fstype || "",
+                        parts: flat(d, []).filter(p => mounts(p).length && p.fssize).map(p => ({
+                            name: p.label || p.name, fs: p.fstype || "",
+                            mount: mainMount(mounts(p)) + (mounts(p).length > 1 ? " +" + (mounts(p).length - 1) : ""),
                             size: Number(p.fssize), used: Number(p.fsused), avail: Number(p.fsavail) }))
                     })).filter(d => d.parts.length > 0)
                 } catch (e) { console.warn("[perf] lsblk:", String(e)) }
