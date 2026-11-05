@@ -58,6 +58,8 @@ PanelWindow {
     }
     // a menu opened by hovering does not grab focus (it closes when the pointer leaves); clicked ones do
     onShownChanged: grab.active = shown && (!hoverKeep || Popups.pinned)
+    // ...and grabs once something pins it (typing in the center menu's command line)
+    Connections { target: Popups; function onPinnedChanged() { grab.active = win.shown && (!win.hoverKeep || Popups.pinned) } }
     Shortcut { sequence: "Escape"; enabled: win.shown; onActivated: Popups.close() }
 
     Rectangle {

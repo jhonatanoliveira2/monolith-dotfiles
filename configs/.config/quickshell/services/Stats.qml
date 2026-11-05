@@ -16,6 +16,7 @@ Singleton {
     property string ramTotal: "0.0"
     property var cpuHistory: []         // last samples (one per interval), drawn by the stats menu
     property var ramHistory: []
+    property var gpuHistory: []
     readonly property int historyLength: 40
     property int demand: 0              // open views that need samples while the bar readout is off (center menu, widgets)
     function push(list, v) { const l = list.concat([v]); return l.length > historyLength ? l.slice(l.length - historyLength) : l }
@@ -41,6 +42,7 @@ Singleton {
                 }
                 if (root.cpu >= 0) root.cpuHistory = root.push(root.cpuHistory, root.cpu)
                 root.ramHistory = root.push(root.ramHistory, root.ramPct)
+                if (root.gpu >= 0) root.gpuHistory = root.push(root.gpuHistory, root.gpu)
             }
         }
     }

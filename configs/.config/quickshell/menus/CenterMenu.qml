@@ -5,203 +5,201 @@ import "../core"
 import "../services"
 import "../components"
 import "../settings"
+import "center"
 
 // Center menu: opens while the pointer rests on the middle of the bar (Bar.qml, Settings > Bar > center menu)
-// and closes when it leaves both. Clock and date, weather, CPU / RAM / GPU and the player, with small entry
-// animations. Created only while open (MenuSlot): nothing here runs or polls while it is closed, and it asks
-// the Stats sampler and the media position to run only for as long as it exists.
+// and closes when it leaves both. A shell command line on top, then tabs: Dashboard, Performance, Weather and
+// Player (menus/center/). Created only while open (MenuSlot), and only the open tab exists: each tab asks the
+// services it needs (Stats, Perf, Media, Lyrics, Weather) to run while it is shown, so nothing else polls.
 MenuWindow {
     id: win
     menu: "center"
-    panelWidth: 560
+    panelWidth: 760
+    maxHeight: 900
     hoverKeep: true
+    hoverScroll: true
 
     Column {
         id: col
         width: parent.width
         spacing: 8
-        readonly property var loc: Qt.locale(Settings.language === "en" ? "en_US" : "pt_BR")
-        property date now: new Date()
-        Timer { interval: 1000; repeat: true; running: true; triggeredOnStart: true; onTriggered: col.now = new Date() }
-        Component.onCompleted: { Stats.demand++; Media.consumers++; Media.sync(); Weather.refresh(false); uptime.reload() }
-        Component.onDestruction: { Stats.demand--; Media.consumers-- }
 
-        FileView { id: uptime; path: "/proc/uptime" }
-        Timer { interval: 60000; repeat: true; running: true; onTriggered: uptime.reload() }
-        function uptimeText() {
-            const s = Number(String(uptime.text()).split(" ")[0]) || 0
-            const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60)
-            return (d > 0 ? d + "d " : "") + (h > 0 ? h + "h " : "") + m + "min"
+        // ── command line: Enter runs it here (output below), Shift+Enter in the terminal, Up / Down = history ──
+        property string out: ""
+        property int hIdx: -1
+        function push(line) {
+            const t = out + line + "\n"
+            out = t.length > 12000 ? t.slice(t.length - 12000) : t
+        }
+        function remember(cmd) {
+            const h = Array.from(Settings.centerHistory || []).filter(x => x !== cmd)
+            h.push(cmd)
+            Settings.centerHistory = h.slice(-50)
+            hIdx = -1
+        }
+        function run(cmd, inTerminal) {
+            cmd = cmd.trim()
+            if (!cmd) return
+            remember(cmd)
+            input.text = ""
+            if (inTerminal) {
+                Popups.close()
+                Quickshell.execDetached([Settings.launcherTerminal || "ghostty", "-e", "sh", "-c", cmd + "; printf '\\n[enter] '; read _"])
+                return
+            }
+            if (proc.running) proc.running = false
+            out = ""
+            push("$ " + cmd)
+            proc.code = -1
+            proc.command = ["sh", "-c", "exec 2>&1; " + cmd]
+            proc.running = true
+        }
+        Process {
+            id: proc
+            property int code: -1
+            stdout: SplitParser { onRead: d => col.push(d) }
+            onExited: c => proc.code = c
         }
 
-        // a card that slides and fades in, `order` steps after the menu opens
-        component Card: Rectangle {
-            id: card
-            property int order: 0
-            radius: Theme.radius
-            color: Theme.tint(0.04)
-            border.width: 1; border.color: Theme.line
-            opacity: 0
-            property real lift: 10
-            transform: Translate { y: card.lift }
-            Component.onCompleted: intro.start()
-            SequentialAnimation {
-                id: intro
-                PauseAnimation { duration: Theme.dur(40 + card.order * 55) }
-                ParallelAnimation {
-                    NumberAnimation { target: card; property: "opacity"; to: 1; duration: Theme.dur(260); easing.type: Easing.OutCubic }
-                    NumberAnimation { target: card; property: "lift"; to: 0; duration: Theme.dur(320); easing.type: Easing.OutCubic }
-                }
-            }
-        }
-
-        // ── clock + weather ──
-        Row {
-            width: parent.width; spacing: 8
-            Card {
-                order: 0
-                width: (parent.width - 8) * 0.56; height: 132
-                Column {
-                    anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
-                    spacing: 2
-                    Txt { text: (Settings.language === "en" ? ["Good night", "Good morning", "Good afternoon", "Good evening"] : ["Boa madrugada", "Bom dia", "Boa tarde", "Boa noite"])[Math.floor(col.now.getHours() / 6)]; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
-                    Row {
-                        spacing: 2
-                        Txt { id: big; text: Qt.formatTime(col.now, Settings.clock24 ? "HH:mm" : "h:mm"); font.pixelSize: 44; color: Theme.white }
-                        Txt { y: big.baselineOffset - baselineOffset; text: Qt.formatTime(col.now, ":ss"); font.pixelSize: 18; color: Theme.grayMid }
-                    }
-                    Txt { text: col.loc.toString(col.now, "dddd, d MMMM yyyy"); color: Theme.foreground; font.bold: false }
-                }
-                // seconds: a bar that sweeps the bottom of the card once a minute
-                Rectangle {
-                    anchors { left: parent.left; bottom: parent.bottom; margins: 1 }
-                    height: 2; radius: 1; color: Theme.accent
-                    width: (parent.width - 2) * (col.now.getSeconds() + 1) / 60
-                    Behavior on width { enabled: col.now.getSeconds() !== 0; NumberAnimation { duration: Theme.dur(950) } }
-                }
-            }
-            Card {
-                order: 1
-                width: (parent.width - 8) * 0.44; height: 132
-                Txt {
-                    id: wIcon
-                    x: 14; y: 16 + bob
-                    property real bob: 0
-                    text: Weather.ok ? Weather.glyph : Theme.g(0xf0590); font.pixelSize: 40; color: Theme.white
-                    SequentialAnimation on bob {
-                        running: Weather.ok; loops: Animation.Infinite
-                        NumberAnimation { to: -4; duration: Theme.dur(1600); easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 0; duration: Theme.dur(1600); easing.type: Easing.InOutSine }
-                    }
-                }
-                Column {
-                    anchors { left: wIcon.right; leftMargin: 14; right: parent.right; rightMargin: 12; top: parent.top; topMargin: 14 }
-                    spacing: 1
-                    Txt { visible: Weather.ok; text: Weather.temp + "°C"; font.pixelSize: 28; color: Theme.white }
-                    Txt { width: parent.width; text: Weather.ok ? Weather.desc : Weather.loading ? Labels.pick(["Carregando…", "Loading…"]) : Labels.pick(["Clima indisponível", "Weather unavailable"]); color: Theme.foreground; font.bold: false; elide: Text.ElideRight }
-                    Txt { visible: Weather.ok; text: Labels.pick(["Sensação ", "Feels "]) + Weather.feels + "°  ·  " + Weather.tmin + "° / " + Weather.tmax + "°"; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
-                }
-                Txt {
-                    anchors { left: parent.left; leftMargin: 14; right: parent.right; rightMargin: 12; bottom: parent.bottom; bottomMargin: 10 }
-                    visible: Weather.ok
-                    text: Theme.g(0xf041) + " " + Weather.place + "   " + Theme.g(0xf043) + " " + Weather.humidity + "%   " + Theme.g(0xf072e) + " " + Weather.wind + " km/h"
-                    color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false; elide: Text.ElideRight
-                }
-                MouseArea { anchors.fill: parent; onClicked: Weather.refresh(true) }
-            }
-        }
-
-        // ── performance ──
         Card {
-            order: 2
-            width: parent.width; height: 118
-            Row {
-                id: rings
-                anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
-                spacing: 14
-                component Gauge: Column {
-                    property string label: ""
-                    property real value: 0
-                    property string detail: ""
-                    spacing: 4
-                    Ring {
-                        width: 66; height: 66; value: parent.value
-                        color: parent.value >= 0.85 ? Theme.white : Theme.accent
-                        Txt { anchors.centerIn: parent; text: Math.round(parent.parent.value * 100) + "%"; font.pixelSize: 13; color: Theme.white }
-                    }
-                    Txt { anchors.horizontalCenter: parent.horizontalCenter; text: parent.label + (parent.detail ? "  " + parent.detail : ""); color: Theme.grayMid; font.pixelSize: 10; font.bold: false }
-                }
-                Gauge { label: "CPU"; value: Math.max(0, Stats.cpu) / 100; detail: Stats.cpuTemp >= 0 ? Stats.cpuTemp + "°" : "" }
-                Gauge { label: "RAM"; value: Stats.ramPct / 100; detail: Stats.ramUsed + "G" }
-                Gauge { visible: Stats.gpu >= 0; label: "GPU"; value: Math.max(0, Stats.gpu) / 100; detail: Stats.gpuTemp >= 0 ? Stats.gpuTemp + "°" : "" }
-            }
-            // CPU history
-            Item {
-                anchors { left: rings.right; leftMargin: 18; right: parent.right; rightMargin: 14; top: parent.top; topMargin: 14; bottom: parent.bottom; bottomMargin: 14 }
-                Txt { text: Labels.pick(["Histórico da CPU", "CPU history"]); color: Theme.grayMid; font.pixelSize: 10; font.bold: false }
-                Row {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                    height: parent.height - 18
-                    spacing: 1
-                    Repeater {
-                        model: Stats.cpuHistory
-                        delegate: Rectangle {
-                            required property var modelData
-                            anchors.bottom: parent.bottom
-                            width: Math.max(1, (parent.width - (Stats.historyLength - 1)) / Stats.historyLength)
-                            height: Math.max(1, parent.height * modelData / 100)
-                            radius: 1
-                            color: modelData >= 85 ? Theme.white : Theme.accent
-                            opacity: 0.35 + 0.65 * modelData / 100
-                            Behavior on height { NumberAnimation { duration: Theme.dur(300) } }
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── player ──
-        Card {
-            order: 3
-            visible: Media.player !== null
-            width: parent.width; height: 72
-            CoverArt { id: cover; x: 10; anchors.verticalCenter: parent.verticalCenter; width: 52; height: 52; size: 104; source: Media.art }
-            Column {
-                anchors { left: cover.right; leftMargin: 12; right: ctl.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                spacing: 2
-                Txt { width: parent.width; text: Media.title; color: Theme.white; elide: Text.ElideRight }
-                Txt { width: parent.width; text: Media.artist; color: Theme.grayMid; font.bold: false; elide: Text.ElideRight }
-                Rectangle {
-                    width: parent.width; height: 3; radius: 1.5; color: Theme.grayDark
-                    Rectangle { width: parent.width * Media.progress; height: parent.height; radius: 1.5; color: Theme.accent
-                                Behavior on width { NumberAnimation { duration: Theme.dur(400) } } }
-                }
-            }
-            Row {
-                id: ctl
-                anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
-                spacing: 4
-                Btn { compact: true; icon: Theme.glyph.prev; onActivated: Media.previous() }
-                Btn { compact: true; icon: Media.playing ? Theme.glyph.pause : Theme.glyph.play; active: Media.playing; onActivated: Media.toggle() }
-                Btn { compact: true; icon: Theme.glyph.next; onActivated: Media.next() }
-            }
-        }
-
-        // ── footer ──
-        Card {
-            order: 4
-            width: parent.width; height: 34
+            width: parent.width; height: 40
+            border.color: input.activeFocus ? Theme.accent : Theme.line
+            Behavior on border.color { ColorAnimation { duration: Theme.dur(120) } }
             Txt {
+                id: prompt
                 anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-                text: Theme.g(0xf017) + "  " + Labels.pick(["Ligado há ", "Up "]) + col.uptimeText()
-                color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false
+                text: Theme.g(0xf120); color: input.activeFocus ? Theme.accent : Theme.grayMid
             }
-            Txt {
-                visible: Battery.present
-                anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                text: (Battery.charging ? Theme.glyph.bolt + " " : "") + Math.round(Battery.pct) + "%"
-                color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false
+            TextInput {
+                id: input
+                anchors { left: prompt.right; leftMargin: 10; right: tools.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                color: Theme.white
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.onAccent
+                font.family: Theme.font; font.pixelSize: Theme.fontSize
+                clip: true
+                // typing pins the menu: it no longer closes when the pointer leaves, only on Esc / outside click
+                onActiveFocusChanged: if (activeFocus) Popups.pinned = true
+                Keys.onReturnPressed: e => col.run(text, e.modifiers & Qt.ShiftModifier)
+                Keys.onEnterPressed: e => col.run(text, e.modifiers & Qt.ShiftModifier)
+                Keys.onUpPressed: {
+                    const h = Settings.centerHistory || []
+                    if (!h.length) return
+                    col.hIdx = col.hIdx < 0 ? h.length - 1 : Math.max(0, col.hIdx - 1)
+                    text = h[col.hIdx]
+                }
+                Keys.onDownPressed: {
+                    const h = Settings.centerHistory || []
+                    if (col.hIdx < 0) return
+                    col.hIdx = col.hIdx + 1 < h.length ? col.hIdx + 1 : -1
+                    text = col.hIdx < 0 ? "" : h[col.hIdx]
+                }
+                Txt {
+                    visible: !input.text && !input.activeFocus
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Labels.pick(["Executar comando…   Enter: aqui  ·  Shift+Enter: terminal", "Run a command…   Enter: here  ·  Shift+Enter: terminal"])
+                    color: Theme.grayMid; font.bold: false
+                }
+            }
+            Row {
+                id: tools
+                anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                spacing: 4
+                Btn { compact: true; visible: proc.running; icon: Theme.g(0xf04d); text: Labels.pick(["Parar", "Stop"]); onActivated: proc.running = false }
+                Btn { compact: true; visible: input.text !== ""; icon: Theme.g(0xf04b); onActivated: col.run(input.text, false) }
+                Btn { compact: true; visible: input.text !== ""; icon: Theme.g(0xf120); onActivated: col.run(input.text, true) }
             }
         }
+
+        // output of the last command
+        Card {
+            visible: col.out !== ""
+            width: parent.width; height: Math.min(outText.implicitHeight + 40, 220)
+            Flickable {
+                id: outFlick
+                anchors { fill: parent; margins: 10; bottomMargin: 30 }
+                contentWidth: width; contentHeight: outText.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
+                // follow the output while it streams in
+                onContentHeightChanged: contentY = Math.max(0, contentHeight - height)
+                TextEdit {
+                    id: outText
+                    width: parent.width
+                    readOnly: true; selectByMouse: true
+                    wrapMode: TextEdit.WrapAnywhere
+                    textFormat: TextEdit.PlainText
+                    text: col.out.replace(/\n$/, "")
+                    color: Theme.foreground; selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
+                    font.family: Theme.font; font.pixelSize: Theme.small
+                }
+            }
+            HoverScrollBar { flick: outFlick }
+            Txt {
+                anchors { left: parent.left; leftMargin: 10; bottom: parent.bottom; bottomMargin: 7 }
+                text: proc.running ? Labels.pick(["Executando…", "Running…"]) : proc.code === 0 ? Theme.glyph.check + "  " + Labels.pick(["Concluído", "Done"])
+                      : Theme.glyph.close + "  " + Labels.pick(["Código ", "Exit code "]) + proc.code
+                color: proc.running || proc.code === 0 ? Theme.grayMid : Theme.white
+                font.pixelSize: Theme.small; font.bold: false
+            }
+            Row {
+                anchors { right: parent.right; rightMargin: 6; bottom: parent.bottom; bottomMargin: 3 }
+                spacing: 4
+                Btn { compact: true; icon: Theme.g(0xf0c5); onActivated: Quickshell.execDetached(["wl-copy", col.out]) }
+                Btn { compact: true; icon: Theme.g(0xf1f8); onActivated: { if (proc.running) proc.running = false; col.out = "" } }
+            }
+        }
+
+        // ── tabs ──
+        readonly property var tabs: [
+            { icon: Theme.g(0xf0e4), label: "Dashboard" },
+            { icon: Theme.g(0xf080), label: "Performance" },
+            { icon: Theme.g(0xf0595), label: Labels.pick(["Clima", "Weather"]) },
+            { icon: Theme.glyph.note, label: "Player" }
+        ]
+        readonly property int tab: Math.max(0, Math.min(tabs.length - 1, Settings.centerTab))
+        Item {
+            width: parent.width; height: 34
+            Row {
+                id: tabRow
+                anchors.fill: parent
+                Repeater {
+                    model: col.tabs
+                    delegate: Item {
+                        required property var modelData
+                        required property int index
+                        width: tabRow.width / col.tabs.length; height: tabRow.height
+                        readonly property bool current: col.tab === index
+                        Rectangle { anchors { fill: parent; margins: 2 } radius: Theme.radius; color: tabHov.hovered && !parent.current ? Theme.hover : "transparent" }
+                        Txt {
+                            anchors.centerIn: parent
+                            text: modelData.icon + "  " + modelData.label
+                            color: parent.current ? Theme.white : Theme.grayMid
+                            Behavior on color { ColorAnimation { duration: Theme.dur(150) } }
+                        }
+                        HoverHandler { id: tabHov }
+                        TapHandler { onTapped: Settings.centerTab = index }
+                    }
+                }
+            }
+            Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: Theme.line }
+            // the underline slides to the open tab
+            Rectangle {
+                anchors.bottom: parent.bottom
+                height: 2; radius: 1; color: Theme.accent
+                width: tabRow.width / col.tabs.length * 0.5
+                x: tabRow.width / col.tabs.length * (col.tab + 0.25)
+                Behavior on x { NumberAnimation { duration: Theme.dur(260); easing.type: Easing.OutCubic } }
+            }
+        }
+        // only the open tab exists; it is rebuilt on every switch, so its cards play their entry animation again
+        Loader {
+            width: parent.width
+            sourceComponent: [dashboard, performance, weather, player][col.tab]
+        }
+        Component { id: dashboard; Dashboard {} }
+        Component { id: performance; Performance {} }
+        Component { id: weather; WeatherTab {} }
+        Component { id: player; PlayerTab {} }
     }
 }

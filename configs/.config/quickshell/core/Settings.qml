@@ -71,6 +71,8 @@ Singleton {
     property alias barShadow: adapter.barShadow
     property alias barShadowStrength: adapter.barShadowStrength
     property alias centerMenu: adapter.centerMenu
+    property alias centerTab: adapter.centerTab
+    property alias centerHistory: adapter.centerHistory
     property alias widgets: adapter.widgets
     property alias widgetsEnabled: adapter.widgetsEnabled
     property alias weatherLocation: adapter.weatherLocation
@@ -210,6 +212,8 @@ Singleton {
             property var widgets: []               // desktop widgets: [{ uid, type, screen, x, y }] (services/Widgets.qml)
             property bool widgetsEnabled: true
             property bool centerMenu: true         // menus/CenterMenu.qml, opened by hovering the middle of the bar
+            property int centerTab: 0              // its last open tab
+            property var centerHistory: []         // its command line history (latest last)
             property string weatherLocation: ""    // wttr.in place ("" = by IP)
             property string barStyle: "flat"       // flat | capsule | frame (core/Theme.qml)
             property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
