@@ -112,7 +112,8 @@ FloatingWindow {
         }
         Item {
             id: wordmark
-            height: Math.round(win.markH * 0.11)
+            // Plymouth's size at first (continuity), larger in the login layout
+            height: Math.round(win.markH * win.mix(0.11, 0.19))
             width: Math.round(height * 10)          // the wordmark SVG is 640 x 64
             x: Math.round((win.width - width) / 2)
             y: Math.round(mark.y + mark.height + win.markH * win.mix(0.16, 0.10))

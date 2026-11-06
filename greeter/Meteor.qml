@@ -1,7 +1,7 @@
 import QtQuick
 
 // One falling star: a glowing head with a fading tail, crossing the sky diagonally (top right -> bottom left),
-// then waiting a random 2-7 s before the next one from another place.
+// then waiting a random 1-4.5 s before the next one from another place.
 Item {
     id: m
     required property Item area
@@ -15,6 +15,8 @@ Item {
     property real startY: 0
     property real dist: 600
     property real progress: 0
+    // bloom: strongest when the star appears, fading as it crosses the sky
+    readonly property real bloom: 1 - progress
     x: startX + dx * dist * progress
     y: startY + dy * dist * progress
     opacity: 0
@@ -34,17 +36,27 @@ Item {
                 GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0) }
             }
         }
-        // soft glow along the start of the tail
+        // soft glow along the start of the tail, fading with the bloom
         Rectangle {
-            x: 0; y: -4
-            width: m.len * 0.45; height: 8
-            radius: 4
+            x: 0; y: -5
+            width: m.len * (0.35 + 0.3 * m.bloom); height: 10
+            radius: 5
+            opacity: 0.35 + 0.65 * m.bloom
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.22) }
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.3) }
                 GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0) }
             }
         }
+    }
+    // wide bloom around the head: large and bright at first, shrinking and dimming along the way
+    Image {
+        readonly property real size: 110 * (0.45 + 0.55 * m.bloom)
+        x: -size / 2; y: -size / 2
+        width: size; height: size
+        source: m.head
+        smooth: true
+        opacity: 0.8 * m.bloom
     }
     Image {
         x: -14; y: -14
@@ -74,7 +86,7 @@ Item {
                 NumberAnimation { target: m; property: "opacity"; to: 0; duration: Math.round(fly.duration * 0.4) }
             }
         }
-        ScriptAction { script: { wait.interval = 2000 + Math.random() * 5000; wait.restart() } }
+        ScriptAction { script: { wait.interval = 1000 + Math.random() * 3500; wait.restart() } }
     }
     Timer {
         id: wait

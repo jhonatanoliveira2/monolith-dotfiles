@@ -72,12 +72,12 @@ Item {
     }
 
     Repeater {
-        model: 3
+        model: 7
         delegate: Meteor {
             required property int index
             area: sky
             head: sky.branding ? "file://" + sky.branding + "/star.png" : ""
-            firstDelay: 1200 + index * 2300
+            firstDelay: 600 + index * 850
         }
     }
 }
