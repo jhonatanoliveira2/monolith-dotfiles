@@ -1,0 +1,30 @@
+# MONOLITH · fetch (NixOS): the NixOS snowflake spinning in 3D, in the shell's greys, next to one boxed
+# summary. Written by the Home Manager module (programs.monolith.fetch); add lines with fetch.extraConfig.
+# Fields, separators and settings: https://github.com/areofyl/fetch/blob/main/docs/configuration.md
+os
+host
+kernel
+uptime
+packages
+---
+wm
+shell
+terminal
+font
+---
+cpu
+gpu
+memory
+disk
+---
+colors
+
+label_color=38;5;250
+separator=─
+box=1
+logo_outer=38;5;240
+logo_inner=38;5;255
+light=top-left
+spin=y
+speed=0.8
+height=22

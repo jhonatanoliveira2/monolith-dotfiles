@@ -194,6 +194,9 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `browserPackage` | `pkgs.firefox` | pacote de `apps.browser` (`null` se instalado de outro jeito, ex.: Zen pelo flake dele) |
 | `updateCommand` | `null` | o que Configurações > Atualização > Atualizar agora executa num terminal |
 | `mutableFiles` | btop, micro, nvim, nwg-look, GTK, wpg, HyprMod | copiados em vez de ligados |
+| `fetch.enable` | `true` | [fetch](https://github.com/areofyl/fetch): o logo do NixOS girando em 3D ao lado das informações do sistema, nos cinzas do MONOLITH (`~/.config/fetch/`). Rode `fetch`; qualquer tecla para, o mouse gira o logo |
+| `fetch.atShellStart` | `false` | roda o `fetch` ao abrir o fish (não no console Linux; `MONOLITH_NO_FETCH=1` pula) |
+| `fetch.shadingMode`, `extraConfig` | `"ascii"`, `""` | `ascii` (o relevo de `#`), `blocks` ou `sextants` (mais nítido, Ghostty / Kitty); linhas extras para `~/.config/fetch/config` (ex.: `"speed=1.2"`) |
 | `wallpapers` | `true` | copia `wallpapers/` para `~/Pictures/Wallpapers` e `~/Videos/wallpaper-live` |
 | `gtk` | `true` | `Materia-dark` e o esquema de cores escuro (dconf) |
 
