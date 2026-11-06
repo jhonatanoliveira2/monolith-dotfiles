@@ -188,6 +188,8 @@ step_preflight() {
         arch) ui_ok "$(t preflight.arch)" ;;
         cachyos) ui_ok "$(t preflight.cachyos)" ;;
         arch-based) ui_ok "$(t preflight.arch_based "$DISTRO_NAME")" ;;
+        # files copied into $HOME would fight Home Manager (and /etc, packages and boot are declarative there)
+        nixos) ui_err "$(t preflight.nixos)"; exit 2 ;;
         *)
             warn_later "$(t preflight.not_arch)"
             ui_warn "$(t preflight.not_arch)"

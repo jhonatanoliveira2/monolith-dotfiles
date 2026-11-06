@@ -1,0 +1,208 @@
+// MONOLITH boot splash (Plymouth "script" module), built by branding/build.sh.
+//
+// Boot: the slab fades in, a light sweep crosses it every few seconds and a 2 px line under the wordmark
+// follows the boot progress (eased, never jumps back). Disk passwords (LUKS) and questions replace the line
+// with a prompt and bullets; systemd messages show at the bottom. Shutdown / reboot: the mark only.
+// The last frame (mark + full line) is kept on screen until the greeter starts (plymouth quit --retain-splash),
+// and the greeter's first frame is drawn at the same place (greeter/Splash.qml), so the hand-over is seamless.
+// Esc still switches to the text log, as with every Plymouth theme.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+W = Window.GetWidth();
+H = Window.GetHeight();
+X0 = Window.GetX();
+Y0 = Window.GetY();
+mode = Plymouth.GetMode();
+
+// ── layout (same proportions as the greeter) ──
+logoH = Math.Int(H * 0.20);
+logoW = Math.Int(logoH * 160 / 200);
+logoX = X0 + Math.Int((W - logoW) / 2);
+logoY = Y0 + Math.Int(H / 2 - logoH * 0.62);
+fontSize = Math.Int(Math.Max(10, H / 90));
+FONT = "JetBrains Mono " + fontSize;
+SMALL = "JetBrains Mono " + Math.Int(Math.Max(9, H / 110));
+
+FRAMES = @FRAMES@;
+logo_image = Image("logo.png").Scale(logoW, logoH);
+for (i = 0; i < FRAMES; i++)
+    sweep[i] = Image("sweep-" + i + ".png").Scale(logoW, logoH);
+
+logo = Sprite(logo_image);
+logo.SetPosition(logoX, logoY, 10);
+logo.SetOpacity(0);
+
+wm_src = Image("wordmark.png");
+wmH = Math.Int(logoH * 0.11);
+wmW = Math.Int(wm_src.GetWidth() * wmH / wm_src.GetHeight());
+wmY = logoY + logoH + Math.Int(logoH * 0.16);
+wordmark = Sprite(wm_src.Scale(wmW, wmH));
+wordmark.SetPosition(X0 + Math.Int((W - wmW) / 2), wmY, 10);
+wordmark.SetOpacity(0);
+
+// ── progress line ──
+pixel = Image("pixel.png");
+barW = Math.Int(logoW * 2.2);
+barX = X0 + Math.Int((W - barW) / 2);
+barY = wmY + wmH + Math.Int(logoH * 0.16);
+track = Sprite(pixel.Scale(barW, 2));
+track.SetPosition(barX, barY, 10);
+track.SetOpacity(0);
+fill = Sprite(pixel.Scale(1, 2));
+fill.SetPosition(barX, barY, 11);
+fill.SetOpacity(0);
+showBar = 1;
+if (mode == "shutdown" || mode == "reboot") showBar = 0;
+
+// ── state ──
+tick = 0;
+shown = 0;          // fade-in 0 -> 1
+target = 0;         // boot progress reported by Plymouth
+progress = 0;       // eased value drawn
+drawnW = -1;
+frame = -1;         // current sweep frame (-1 = idle)
+nextSweep = 40;     // first sweep shortly after the fade-in
+prompting = 0;
+
+fun draw_bar() {
+    if (showBar == 0 || prompting == 1) {
+        track.SetOpacity(0);
+        fill.SetOpacity(0);
+        return;
+    }
+    track.SetOpacity(0.14 * shown);
+    fill.SetOpacity(0.9 * shown);
+    w = Math.Int(barW * progress);
+    if (w < 1) w = 1;
+    if (w != drawnW) {
+        fill.SetImage(pixel.Scale(w, 2));
+        global.drawnW = w;
+    }
+}
+
+fun refresh() {
+    global.tick = tick + 1;
+    if (shown < 1) {
+        global.shown = Math.Min(1, shown + 0.035);
+        logo.SetOpacity(shown);
+        wordmark.SetOpacity(Math.Max(0, shown * 1.6 - 0.6));
+    }
+    if (frame >= 0) {
+        logo.SetImage(sweep[frame]);
+        global.frame = frame + 1;
+        if (frame >= FRAMES) {
+            global.frame = -1;
+            logo.SetImage(logo_image);
+            global.nextSweep = tick + 140;
+        }
+    } else if (tick >= nextSweep && prompting == 0) {
+        global.frame = 0;
+    }
+    if (target > progress) global.progress = progress + (target - progress) * 0.06;
+    draw_bar();
+}
+Plymouth.SetRefreshFunction(refresh);
+
+fun boot_progress(duration, value) {
+    if (value > target) global.target = Math.Min(1, value);
+}
+Plymouth.SetBootProgressFunction(boot_progress);
+
+// ── prompts (disk passwords, questions) ──
+prompt_sprite = Sprite();
+entry_sprite = Sprite();
+underline = Sprite(pixel.Scale(barW, 1));
+underline.SetPosition(barX, barY + Math.Int(fontSize * 2.6), 10);
+underline.SetOpacity(0);
+bullet_src = Image("bullet.png");
+bulletS = Math.Int(Math.Max(6, fontSize * 0.6));
+bullet_image = bullet_src.Scale(bulletS, bulletS);
+bullets_max = 32;
+for (i = 0; i < bullets_max; i++) {
+    bullet[i] = Sprite(bullet_image);
+    bullet[i].SetOpacity(0);
+}
+
+fun hide_bullets() {
+    for (i = 0; i < bullets_max; i++) bullet[i].SetOpacity(0);
+}
+
+fun show_prompt(text) {
+    global.prompting = 1;
+    img = Image.Text(text, 0.8, 0.8, 0.8, 1, FONT);
+    prompt_sprite.SetImage(img);
+    prompt_sprite.SetPosition(X0 + Math.Int((W - img.GetWidth()) / 2), barY - Math.Int(fontSize * 0.5), 10);
+    prompt_sprite.SetOpacity(1);
+    underline.SetOpacity(0.35);
+    draw_bar();
+}
+
+fun display_password(text, count) {
+    if (text == "") text = "Password";
+    show_prompt(text);
+    entry_sprite.SetOpacity(0);
+    n = Math.Min(count, bullets_max);
+    gap = Math.Int(bulletS * 0.8);
+    total = n * bulletS + (n - 1) * gap;
+    x = X0 + Math.Int((W - total) / 2);
+    y = barY + Math.Int(fontSize * 1.6);
+    for (i = 0; i < bullets_max; i++) {
+        if (i < n) {
+            bullet[i].SetPosition(x + i * (bulletS + gap), y, 11);
+            bullet[i].SetOpacity(0.9);
+        } else {
+            bullet[i].SetOpacity(0);
+        }
+    }
+}
+Plymouth.SetDisplayPasswordFunction(display_password);
+
+fun display_question(text, entry) {
+    show_prompt(text);
+    hide_bullets();
+    img = Image.Text(entry, 1, 1, 1, 1, FONT);
+    entry_sprite.SetImage(img);
+    entry_sprite.SetPosition(X0 + Math.Int((W - img.GetWidth()) / 2), barY + Math.Int(fontSize * 1.3), 11);
+    entry_sprite.SetOpacity(1);
+}
+Plymouth.SetDisplayQuestionFunction(display_question);
+
+fun display_normal() {
+    global.prompting = 0;
+    prompt_sprite.SetOpacity(0);
+    entry_sprite.SetOpacity(0);
+    underline.SetOpacity(0);
+    hide_bullets();
+    draw_bar();
+}
+Plymouth.SetDisplayNormalFunction(display_normal);
+
+// ── messages from systemd / plymouth (fsck, updates...) ──
+message_sprite = Sprite();
+fun show_message(text) {
+    img = Image.Text(text, 0.53, 0.53, 0.53, 1, SMALL);
+    message_sprite.SetImage(img);
+    message_sprite.SetPosition(X0 + Math.Int((W - img.GetWidth()) / 2), Y0 + Math.Int(H * 0.9), 10);
+    message_sprite.SetOpacity(1);
+}
+Plymouth.SetMessageFunction(show_message);
+
+// ── quit: leave the frame the greeter starts from (full mark, full line, no prompt) ──
+fun quit() {
+    global.prompting = 0;
+    global.shown = 1;
+    global.frame = -1;
+    logo.SetImage(logo_image);
+    logo.SetOpacity(1);
+    wordmark.SetOpacity(1);
+    message_sprite.SetOpacity(0);
+    prompt_sprite.SetOpacity(0);
+    entry_sprite.SetOpacity(0);
+    underline.SetOpacity(0);
+    hide_bullets();
+    global.progress = 1;
+    draw_bar();
+}
+Plymouth.SetQuitFunction(quit);

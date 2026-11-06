@@ -2,6 +2,7 @@
 # Settings > Storage cleanup.
 #   cleanup.sh scan          -> one line per target that exists: id|bytes|count|what will be removed
 #   cleanup.sh run <id>      -> removes that target (root-owned ones ask for the password through pkexec)
+# Distribution-specific targets appear only where their tool exists (pacman / paccache, nix-collect-garbage).
 # Nothing is removed by "scan"; the page shows its output and asks for confirmation before "run".
 export LC_ALL=C
 cache=${XDG_CACHE_HOME:-$HOME/.cache}
@@ -20,6 +21,16 @@ scan() {
         n=$(( ${a%% *} + 0 + ${b%% *} + 0 ))
         bytes=$(( $( [ -n "$a" ] && echo "${a#* }" | tobytes || echo 0) + $( [ -n "$b" ] && echo "${b#* }" | tobytes || echo 0) ))
         echo "pacman|$bytes|$n|/var/cache/pacman/pkg (paccache -rk2, paccache -ruk0)"
+    fi
+    if command -v nix-collect-garbage >/dev/null && [ -d /nix/store ]; then
+        # NixOS / Nix: store paths nothing references any more (bytes from du). Running it also drops the
+        # profile generations older than 14 days (user, Home Manager and system), never the current ones, so
+        # recent generations stay in the boot menu for rollbacks.
+        dead=$(timeout 90 nix-store --gc --print-dead 2>/dev/null)
+        n=$(printf '%s' "$dead" | grep -c .)
+        b=0; [ "$n" -gt 0 ] && b=$(printf '%s\n' "$dead" | xargs -r du -sbc 2>/dev/null | awk 'END{print $1+0}')
+        g=$(nix-env --list-generations -p /nix/var/nix/profiles/system 2>/dev/null | grep -c .)
+        echo "nix|$b|$n|/nix/store: unreferenced paths + generations older than 14 days (${g:-0} system generations now; nix-collect-garbage --delete-older-than 14d)"
     fi
     [ -d "$cache/yay" ] && echo "yay|$(size "$cache/yay")|$(count "$cache/yay")|$cache/yay"
     [ -d "$cache/paru" ] && echo "paru|$(size "$cache/paru/clone" "$cache/paru/diff")|$(count "$cache/paru/clone")|$cache/paru/{clone,diff}"
@@ -44,6 +55,7 @@ run() {
         trash) gio trash --empty ;;
         thumbs) rm -rf -- "$cache/thumbnails"/* ;;
         pacman) pkexec sh -c 'paccache -rk2 && paccache -ruk0' ;;
+        nix) nix-collect-garbage --delete-older-than 14d && pkexec nix-collect-garbage --delete-older-than 14d ;;
         yay) rm -rf -- "$cache/yay"/* ;;
         paru) rm -rf -- "$cache/paru/clone"/* "$cache/paru/diff"/* ;;
         pip) rm -rf -- "$cache/pip" ;;

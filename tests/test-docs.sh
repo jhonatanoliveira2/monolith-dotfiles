@@ -66,7 +66,7 @@ echo "== bilingual pairs"
 [[ -f README.md && -f README.pt-br.md ]] && ok || ko "missing README pair"
 [[ -f CONTRIBUTING.md && -f CONTRIBUTING.en.md ]] && ok || ko "missing CONTRIBUTING pair"
 for pair in instalacao.md:installation.md configuracao.md:config.md dependencias.md:dependencies.md \
-    problemas-conhecidos.md:troubleshooting.md; do
+    problemas-conhecidos.md:troubleshooting.md nixos.pt-br.md:nixos.md; do
     [[ -f docs/${pair%%:*} && -f docs/${pair#*:} ]] && ok || ko "missing docs pair: $pair"
 done
 

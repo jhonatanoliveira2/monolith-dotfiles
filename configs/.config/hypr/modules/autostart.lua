@@ -3,7 +3,7 @@ hl.on("hyprland.start", function()
         "hypridle",
         "awww-daemon",
         "bash " .. os.getenv("HOME") .. "/.config/quickshell/scripts/start.sh",   -- quickshell without THP (less RAM)
-        "/usr/bin/lxqt-policykit-agent",
+        "lxqt-policykit-agent",   -- from PATH: /usr/bin on Arch, the Nix profile on NixOS
         "wallpaper-menu --restore",
     }
 

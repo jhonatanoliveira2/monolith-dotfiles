@@ -45,3 +45,7 @@ Thumbs.db
 # --- local state created by the scripts ------------------------------------------
 .local/state/
 .local/share/monolith-dotfiles/
+
+# --- Nix build results ------------------------------------------------------------
+result
+result-*

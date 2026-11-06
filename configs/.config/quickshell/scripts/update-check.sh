@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Settings > Update. key=value lines; never hides a failure (error=… with the real message).
-#   update-check.sh <clone> [fallback-url]
+#   update-check.sh <clone> [fallback-url] [fallback-branch]
+# Without a clone (e.g. NixOS, where the flake pins a revision), only the API part runs, for fallback-url / branch.
 # Uses the clone's own remote URL and branch (upstream if configured, otherwise origin/<current branch>),
 # and asks the GitHub API about the same repository / branch to report connectivity and rate limits.
 export LC_ALL=C GIT_TERMINAL_PROMPT=0
-dir=$1 fallback=$2
+dir=$1 fallback=$2 fallbackBranch=${3:-main}
 if [ -d "$dir/.git" ]; then
     url=$(git -C "$dir" remote get-url origin 2>&1) || { echo "error=git remote: $url"; url=""; }
     branch=$(git -C "$dir" symbolic-ref --short -q HEAD || echo "")
@@ -25,7 +26,7 @@ if [ -d "$dir/.git" ]; then
         fi
     fi
 else
-    echo "clone=0"; url=$fallback; branch=main
+    echo "clone=0"; url=$fallback; branch=$fallbackBranch
     echo "url=$url"; echo "branch=$branch"
 fi
 # GitHub API (works without a clone; 60 unauthenticated requests per hour per IP)

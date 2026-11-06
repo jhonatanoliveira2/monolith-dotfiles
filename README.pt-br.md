@@ -70,6 +70,9 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 > [!CAUTION]
 > Algumas opções dependem do hardware (monitores, entrada, idioma). Revise [`docs/configuracao.md`](docs/configuracao.md) antes de instalar.
 
+> [!NOTE]
+> **NixOS:** esta branch traz um flake (módulos NixOS + Home Manager, tema do GRUB, splash do Plymouth e greeter). Veja [`docs/nixos.pt-br.md`](docs/nixos.pt-br.md); os passos abaixo são para Arch Linux / CachyOS.
+
 **Requisitos:** Arch Linux ou CachyOS ([detalhes](docs/instalacao.md#arch-linux-e-cachyos)) · Bash 4.4+ · Git · uma conta de usuário comum · Hyprland 0.55 ou superior. Um auxiliar do AUR (**paru** ou **yay**) só é necessário se você quiser que o instalador compile pacotes do AUR.
 
 ```bash

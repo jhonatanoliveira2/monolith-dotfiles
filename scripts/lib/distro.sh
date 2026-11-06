@@ -9,7 +9,8 @@
 # conflicts with packages the distribution installs by default), so the steps never branch on the
 # distribution. This file only identifies it, for the messages and the log.
 #
-#   DISTRO_ID     arch | cachyos | arch-based (another pacman distribution) | unknown
+#   DISTRO_ID     arch | cachyos | arch-based (another pacman distribution) | nixos | unknown
+#                 (NixOS is not installed by this script: the flake in the repository root does it, see docs/nixos.md)
 #   DISTRO_NAME   PRETTY_NAME from os-release (e.g. "CachyOS Linux")
 
 DISTRO_ID=unknown
@@ -31,6 +32,7 @@ distro_detect() {
     case $id in
         cachyos) DISTRO_ID=cachyos ;;
         arch) DISTRO_ID=arch ;;
+        nixos) DISTRO_ID=nixos ;;
         *)
             if [[ " $like " == *" arch "* ]] || (( PACMAN_AVAILABLE )); then
                 DISTRO_ID=arch-based

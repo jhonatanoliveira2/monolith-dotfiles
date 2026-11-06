@@ -143,10 +143,11 @@ QtObject {
         clRemoves: "Remove:",
         clean: "Limpar",
         clBiggest: "Maiores pastas em ~/.cache",
-        cleanupHint: "Nada é apagado sem dois cliques (o segundo confirma). Itens do sistema (pacman, journal) pedem a senha via pkexec.",
+        cleanupHint: "Nada é apagado sem dois cliques (o segundo confirma). Itens do sistema (pacman, Nix, journal) pedem a senha via pkexec.",
         cl_trash: "Lixeira",
         cl_thumbs: "Miniaturas",
         cl_pacman: "Cache do pacman (mantém 2 versões)",
+        cl_nix: "Nix store (coleta de lixo, mantém gerações recentes)",
         cl_yay: "Cache do yay",
         cl_paru: "Cache do paru",
         cl_pip: "Cache do pip",
@@ -164,7 +165,10 @@ QtObject {
         upDirty: "arquivos alterados localmente",
         upRate: "requisições restantes",
         upReset: "renova às",
-        upOffline: "sem conexão com api.github.com"
+        upOffline: "sem conexão com api.github.com",
+        upNix: "Instalado pelo Nix (flake)", upNixRev: "Revisão fixada", upNixNew: "nova revisão no GitHub",
+        upNixHint: "A configuração vem da Nix store: atualizar = atualizar a entrada do flake e reconstruir.",
+        upNixNoCmd: "Defina programs.monolith.updateCommand no Home Manager para atualizar daqui. Manualmente:"
     })
     readonly property var en: ({
         settingsTitle: "Settings", searchPh: "Search settings and animations…", results: "Results", noResults: "Nothing found",
@@ -305,10 +309,11 @@ QtObject {
         clRemoves: "Removes:",
         clean: "Clean",
         clBiggest: "Largest folders in ~/.cache",
-        cleanupHint: "Nothing is deleted without two clicks (the second confirms). System items (pacman, journal) ask for the password through pkexec.",
+        cleanupHint: "Nothing is deleted without two clicks (the second confirms). System items (pacman, Nix, journal) ask for the password through pkexec.",
         cl_trash: "Trash",
         cl_thumbs: "Thumbnails",
         cl_pacman: "pacman cache (keeps 2 versions)",
+        cl_nix: "Nix store (garbage collection, keeps recent generations)",
         cl_yay: "yay cache",
         cl_paru: "paru cache",
         cl_pip: "pip cache",
@@ -326,7 +331,10 @@ QtObject {
         upDirty: "locally modified files",
         upRate: "requests left",
         upReset: "resets at",
-        upOffline: "no connection to api.github.com"
+        upOffline: "no connection to api.github.com",
+        upNix: "Installed by Nix (flake)", upNixRev: "Pinned revision", upNixNew: "newer revision on GitHub",
+        upNixHint: "The configuration lives in the Nix store: updating = updating the flake input and rebuilding.",
+        upNixNoCmd: "Set programs.monolith.updateCommand in Home Manager to update from here. By hand:"
     })
     function t(key) {
         const m = Config.language === "en" ? en : pt

@@ -70,6 +70,9 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 > [!CAUTION]
 > Some options are hardware-specific (monitors, input, language). Review [`docs/config.md`](docs/config.md) before installing.
 
+> [!NOTE]
+> **NixOS:** this branch ships a flake (NixOS + Home Manager modules, GRUB theme, Plymouth splash and greeter). See [`docs/nixos.md`](docs/nixos.md); the steps below are for Arch Linux / CachyOS.
+
 **Requirements:** Arch Linux or CachyOS ([details](docs/installation.md#arch-linux-and-cachyos)) · Bash 4.4+ · Git · a regular user account · Hyprland 0.55 or newer. An AUR helper (**paru** or **yay**) is only needed if you want the installer to build AUR packages.
 
 ```bash

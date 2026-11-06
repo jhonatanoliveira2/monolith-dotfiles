@@ -27,6 +27,13 @@ root=$(df -B1 --output=size,used / 2>/dev/null | awk -v o="$w_of" 'NR==2{printf 
 echo "disk=${disks:--} · ${root}"
 echo "desktop=Hyprland $(hyprctl version -j 2>/dev/null | sed -n 's/.*"tag": *"\([^"]*\)".*/\1/p' | head -1) · Quickshell $(qs --version 2>/dev/null | awk '{print $2}')"
 ver=""
+nixinfo=${XDG_CONFIG_HOME:-$HOME/.config}/monolith/nix.json
+if [ -f "$nixinfo" ]; then
+    # installed by the Nix flake: version and pinned revision come from the Home Manager module
+    v=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$nixinfo"); r=$(sed -n 's/.*"shortRev": *"\([^"]*\)".*/\1/p' "$nixinfo")
+    d=$(sed -n 's/.*"lastModified": *"\([^"]*\)".*/\1/p' "$nixinfo")
+    echo "monolith=${v:-?} (nix ${r:-dirty}${d:+, $d})"; exit 0
+fi
 [ -f "$repo/scripts/lib/common.sh" ] && ver=$(sed -n 's/^MONOLITH_VERSION="\(.*\)"/\1/p' "$repo/scripts/lib/common.sh")
 [ -d "$repo/.git" ] && ver="$ver ($(git -C "$repo" describe --always --dirty 2>/dev/null), $(git -C "$repo" log -1 --format=%cs 2>/dev/null))"
 echo "monolith=${ver:-?}"
