@@ -22,3 +22,5 @@ singleton Binds 1.0 Binds.qml
 singleton MicFx 1.0 MicFx.qml
 singleton AudioFx 1.0 AudioFx.qml
 FxChain 1.0 FxChain.qml
+singleton Jobs 1.0 Jobs.qml
+EventStream 1.0 EventStream.qml

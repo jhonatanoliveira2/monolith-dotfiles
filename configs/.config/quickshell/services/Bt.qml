@@ -14,6 +14,11 @@ import "../core"
 // works because blueman-applet registers its own). A persistent bluetoothctl is registered as the
 // default agent (under a pty from script(1): its agent prompts only run in an interactive shell). Its
 // prompts become `request`, answered with reply(); it also retries a failed pairing by itself.
+//
+// Errors: BlueZ method errors are not exposed to QML, so results are read from the state: a connect that
+// falls back to Disconnected (or a disconnect back to Connected) fails at once; anything left hanging is
+// reported by the `watch` timeout. Commands (rfkill) go through Jobs; the agent restarts with a growing
+// pause and logs why it stopped. Without an adapter, diagnose() tells a stopped bluetoothd from no hardware.
 Singleton {
     id: root
     readonly property var adapter: Bluetooth.defaultAdapter
@@ -32,6 +37,8 @@ Singleton {
         .sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired) || String(a.name).localeCompare(String(b.name)))
     property string message: ""
     property var target: null                 // device of the operation being watched
+    property string op: ""                    // what was asked of it: pair | connect | disconnect
+    property bool sawBusy: false              // BlueZ started the operation (Connecting / Disconnecting seen)
     property bool retried: false              // the target's pairing was already retried through bluetoothctl
 
     // ── agent state ──
@@ -39,15 +46,46 @@ Singleton {
     // {kind: "confirm" | "passkey" | "pin" | "display" | "authorize" | "service", code, device}
     property var request: null
     property string agentBuf: ""
+    property string agentLast: ""             // last line from the agent, for the log when it stops
+    property int agentFails: 0
 
     function setEnabled(on) {
-        if (!present) return
-        if (blocked && on) { Quickshell.execDetached(["rfkill", "unblock", "bluetooth"]); return }
+        message = ""
+        if (!present) { diagnose(); return }
+        if (blocked && on) {
+            Jobs.run("bt", ["rfkill", "unblock", "bluetooth"], { timeout: 5000 }, (ok, out, err) => {
+                if (!ok) root.message = Strings.t("btPowerFail") + ": " + (Jobs.firstLine(err) || "rfkill")
+            })
+            return
+        }
         adapter.enabled = on
+        powerCheck.want = on
+        powerCheck.restart()
+    }
+    // the adapter did not follow (hard block, firmware, bluetoothd refusing): say so instead of a dead switch
+    Timer {
+        id: powerCheck
+        property bool want: false
+        interval: 4000
+        onTriggered: {
+            if (!root.present || root.adapter.enabled === want) return
+            console.warn("[bt] adapter", root.adapter.name, "did not switch", want ? "on" : "off", "- state:", BluetoothAdapterState.toString(root.adapter.state))
+            if (want) root.message = Strings.t("btPowerFail") + " (" + BluetoothAdapterState.toString(root.adapter.state) + ")"
+        }
+    }
+    // no adapter: is bluetoothd running at all? (logged, and shown when the user acts)
+    function diagnose() {
+        Jobs.run("bt", ["gdbus", "call", "--system", "--dest", "org.freedesktop.DBus", "--object-path", "/org/freedesktop/DBus",
+                        "--method", "org.freedesktop.DBus.NameHasOwner", "org.bluez"], { timeout: 5000 }, (ok, out) => {
+            if (!ok || root.present) return
+            const running = out.indexOf("true") >= 0
+            root.message = Strings.t(running ? "btNoAdapter" : "btNoService")
+            console.warn("[bt]", running ? "bluetoothd is running but reports no adapter" : "bluetoothd (org.bluez) is not running")
+        })
     }
     // Discovery costs power and radio time: it stops 60 s after the last request.
     function scan(on) {
-        if (!enabled) return
+        if (!enabled) { if (on) message = Strings.t(present ? "btTurnOn" : "btNoAdapter"); return }
         wantScan = on
         scanRetries = 0
         retryScan.stop()
@@ -71,6 +109,8 @@ Singleton {
         message = ""
         target = d
         retried = false
+        sawBusy = false
+        op = !d.paired ? "pair" : d.connected ? "disconnect" : "connect"
         if (!d.paired) {
             if (!adapter.pairable) adapter.pairable = true
             d.pair()
@@ -126,7 +166,7 @@ Singleton {
     function line(l) {
         let m
         if (/Agent registered/.test(l)) agent.write("default-agent\n")
-        else if (/Default agent request successful/.test(l)) agentReady = true
+        else if (/Default agent request successful/.test(l)) { agentReady = true; agentFails = 0 }
         else if (/Agent unregistered|Agent released|Waiting to connect to bluetoothd/.test(l)) agentReady = false
         else if (/Request canceled/.test(l)) { request = null; reqTimeout.stop() }
         else if ((m = l.match(/(?:^|\] )(?:Passkey|PIN code): (\w+)/))) ask("display", m[1])
@@ -135,20 +175,28 @@ Singleton {
     function feed(data) {
         const parts = (agentBuf + data.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "")).split(/[\r\n]+/)
         agentBuf = parts.pop()
-        for (const l of parts) line(l)
+        for (const l of parts) { line(l); if (l.trim()) agentLast = l.trim() }
         if (prompt(agentBuf) || agentBuf.length > 4096) agentBuf = ""
     }
 
     Process {
         id: agent
         stdinEnabled: true
-        command: ["script", "-qfec", "bluetoothctl --agent KeyboardDisplay", "/dev/null"]
+        // through sh: a missing script(1) / bluetoothctl still exits (127) with a readable reason
+        command: ["sh", "-c", "exec script -qfec 'bluetoothctl --agent KeyboardDisplay' /dev/null"]
         stdout: SplitParser { splitMarker: ""; onRead: d => root.feed(d) }
-        onExited: { root.agentReady = false; root.request = null; root.agentBuf = ""; agentRestart.restart() }
+        stderr: SplitParser { onRead: l => { if (l.trim()) root.agentLast = l.trim() } }
+        onExited: code => {
+            root.agentReady = false; root.request = null; root.agentBuf = ""
+            // bluetoothctl exits when bluetoothd goes away: start it again, waiting longer each time it fails
+            root.agentFails++
+            agentRestart.interval = Math.min(300000, 5000 * Math.pow(2, root.agentFails - 1))
+            console.warn("[bt] pairing agent (bluetoothctl) exited", code, root.agentLast ? "- " + root.agentLast : "", "- restart in", agentRestart.interval / 1000, "s")
+            agentRestart.restart()
+        }
     }
-    // bluetoothctl exits when bluetoothd goes away for good: start it again
     Timer { id: agentRestart; interval: 5000; onTriggered: if (root.present) agent.running = true }
-    Component.onCompleted: if (present) agent.running = true
+    Component.onCompleted: if (present) agent.running = true; else Qt.callLater(diagnose)
     onPresentChanged: if (present && !agent.running) agent.running = true
     // BlueZ gives up on an unanswered agent request after ~30 s: reject before that
     Timer { id: reqTimeout; interval: 28000; onTriggered: root.reply(false) }
@@ -179,7 +227,9 @@ Singleton {
             const d = root.target
             if (!d) return
             if (!d.connected && !d.paired) { root.fail(d); return }
-            if (!d.connected && d.state !== BluetoothDeviceState.Disconnected) root.message = Strings.t("btConnFail") + ": " + root.label(d)
+            if (root.op === "disconnect" && d.connected) root.message = Strings.t("btDiscFail") + ": " + root.label(d)
+            else if (root.op !== "disconnect" && !d.connected) root.message = Strings.t("btConnFail") + ": " + root.label(d)
+            if (root.message) console.warn("[bt] timed out:", root.op, root.label(d), "state", BluetoothDeviceState.toString(d.state))
             root.target = null
         }
     }
@@ -204,8 +254,29 @@ Singleton {
         function onPairingChanged() { if (root.target && !root.target.pairing && !root.target.paired) pairCheck.restart() }
         function onPairedChanged() {
             const d = root.target
-            if (d && d.paired) { pairCheck.stop(); root.request = null; if (!d.connected) { d.trusted = true; d.connect(); watch.restart() } }
+            if (d && d.paired) { pairCheck.stop(); root.request = null; if (!d.connected) { root.op = "connect"; root.sawBusy = false; d.trusted = true; d.connect(); watch.restart() } }
         }
-        function onConnectedChanged() { if (root.target && root.target.connected) { watch.stop(); root.target = null } }
+        function onConnectedChanged() {
+            const d = root.target
+            if (d && d.connected && root.op !== "disconnect") { watch.stop(); root.target = null }
+            else if (d && !d.connected && root.op === "disconnect") { watch.stop(); root.target = null }
+        }
+        // BlueZ finished the call: back where it started means it failed (no need to wait for `watch`)
+        function onStateChanged() {
+            const d = root.target
+            if (!d) return
+            const st = d.state
+            if (st === BluetoothDeviceState.Connecting || st === BluetoothDeviceState.Disconnecting) { root.sawBusy = true; return }
+            if (!root.sawBusy) return
+            if (root.op === "connect" && st === BluetoothDeviceState.Disconnected && !d.connected) {
+                root.message = Strings.t("btConnFail") + ": " + root.label(d)
+                console.warn("[bt] connect failed:", root.label(d), d.address)
+                watch.stop(); root.target = null
+            } else if (root.op === "disconnect" && st === BluetoothDeviceState.Connected && d.connected) {
+                root.message = Strings.t("btDiscFail") + ": " + root.label(d)
+                console.warn("[bt] disconnect failed:", root.label(d), d.address)
+                watch.stop(); root.target = null
+            }
+        }
     }
 }
