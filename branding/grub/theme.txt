@@ -33,6 +33,7 @@ terminal-border: "0"
     scrollbar_thumb = "scrollbar_thumb_*.png"
 }
 
+# timeout bar: pixmap styles keep it at 2 px (with plain colours GRUB sizes it like a line of text)
 + progress_bar {
     id = "__timeout__"
     left = 42%
@@ -40,15 +41,14 @@ terminal-border: "0"
     width = 16%
     height = 2
     show_text = false
-    fg_color = "#eeeeee"
-    bg_color = "#222222"
-    border_color = "#000000"
+    bar_style = "progress_bar_*.png"
+    highlight_style = "progress_highlight_*.png"
 }
 
 + label {
     id = "__timeout__"
     left = 0
-    top = 86%
+    top = 87%
     width = 100%
     align = "center"
     font = "@SMALL_FONT@"

@@ -231,6 +231,9 @@ sessão ficam em `/var/lib/monolith-greeter`. As fotos de perfil vêm do Account
 Com LUKS nada mais é necessário: o initrd é sempre baseado em systemd (o stage 1 em script e as opções
 `boot.initrd.verbose` / `boot.initrd.systemd.enable` foram removidos do nixpkgs) e pede a senha pelo splash.
 
+Para ver o menu de boot sem reiniciar, `branding/preview-grub.sh` inicia o GRUB real com o tema no QEMU (uma
+janela, ou `--shot arquivo.png`; `--res` e `--lang` como nas opções).
+
 Os scripts e imagens do splash são gerados de `branding/` por `branding/build.sh`, que pode ser executado à mão
 para pré-visualizar (precisa de `rsvg-convert`, `magick`, `grub-mkfont` e do SVG do floco do `nixos-icons`).
 

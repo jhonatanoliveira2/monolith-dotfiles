@@ -228,6 +228,9 @@ With LUKS nothing else is needed: the initrd is always systemd-based (the script
 `boot.initrd.verbose` / `boot.initrd.systemd.enable` options were removed from nixpkgs), and it asks for the
 password through the splash.
 
+To see the boot menu without rebooting, `branding/preview-grub.sh` boots the real GRUB with the theme in QEMU
+(a window, or `--shot file.png`; `--res` and `--lang` as in the options).
+
 The splash scripts and images are built from `branding/` by `branding/build.sh`, which can be run by hand to
 preview them (needs `rsvg-convert`, `magick`, `grub-mkfont` and the snowflake SVG from `nixos-icons`).
 

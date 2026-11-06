@@ -139,7 +139,7 @@ grub() {
 
     # background: soft radial light behind the mark, logo + wordmark in the upper third
     local logoH=$((H * 16 / 100)) wmH logoTop wmTop menuTop
-    wmH=$((logoH * 13 / 100)); logoTop=$((H * 9 / 100)); wmTop=$((logoTop + logoH + logoH * 14 / 100))
+    wmH=$((logoH * 20 / 100)); logoTop=$((H * 9 / 100)); wmTop=$((logoTop + logoH + logoH * 14 / 100))
     compose_logo "$b/snowflake.svg" "$logoH" "$out/.logo.png"
     png -h "$wmH" "$b/wordmark.svg" -o "$out/.wordmark.png"
     magick -size "${W}x${H}" xc:black \
@@ -157,6 +157,11 @@ grub() {
     for p in nw n ne w e sw s se; do rgba 1x1 'rgba(255,255,255,0.18)' "$out/terminal_box_$p.png"; done
     rgba 1x1 'rgba(8,8,8,0.92)' "$out/terminal_box_c.png"
     rgba 1x1 'rgba(255,255,255,0.35)' "$out/scrollbar_thumb_c.png"
+    # timeout bar: GRUB gives the component the font's height whatever the theme says, so the pixmaps are a
+    # 2 px line in the middle of a transparent strip; stretched to any height, only the thin line shows
+    for p in progress_bar:0.16 progress_highlight:0.95; do
+        magick -size 1x32 xc:none -fill "rgba(255,255,255,${p#*:})" -draw "rectangle 0,15 0,16" "PNG32:$out/${p%%:*}_c.png"
+    done
 
     local timeout hint
     if [[ $lang == en ]]; then
