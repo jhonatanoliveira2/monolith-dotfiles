@@ -83,8 +83,8 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     (mkIf cfg.silent {
+      # (boot.initrd.verbose is gone with the scripted stage 1: the systemd initrd follows the kernel params)
       boot.consoleLogLevel = mkDefault 3;
-      boot.initrd.verbose = mkDefault false;
       boot.kernelParams = [
         "quiet"
         "loglevel=3"

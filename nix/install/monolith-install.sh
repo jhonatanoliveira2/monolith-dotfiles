@@ -86,7 +86,6 @@ customize() {
     fi
     local extra=""
     ((SWAP_GIB > 0)) && extra+="  swapDevices = [ { device = \"/var/lib/swapfile\"; size = $((SWAP_GIB * 1024)); } ];\\n"
-    ((LUKS)) && extra+="  boot.initrd.systemd.enable = true; # LUKS password asked inside the boot splash\\n"
     [[ -n $extra ]] && sed -i "/system.stateVersion = /a\\
 ${extra%\\n}" "$c"
     sed -i "s|monolith-pc|$HOST|g" "$f"
@@ -100,7 +99,6 @@ ${extra%\\n}" "$c"
     grep -qF "nixosConfigurations.$HOST " "$f" || die "template: could not rename the configuration to $HOST"
     if [[ $BOOTMODE == bios ]]; then grep -qF "device = \"$DISK\";" "$c" || die "template: GRUB device not set"; fi
     ((SWAP_GIB == 0)) || grep -qF 'swapDevices' "$c" || die "template: swap not set"
-    ((LUKS == 0)) || grep -qF 'boot.initrd.systemd.enable' "$c" || die "template: systemd initrd not set"
 }
 
 if [[ -n $CUSTOMIZE_ONLY ]]; then

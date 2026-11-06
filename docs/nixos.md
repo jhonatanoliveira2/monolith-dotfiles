@@ -218,8 +218,9 @@ are remembered in `/var/lib/monolith-greeter`. Profile pictures come from Accoun
 - The "Console" session gives a login shell; Ctrl+Alt+F2… reach the other consoles.
 - Each stage can be turned off alone (`boot.plymouth.enable`, `boot.grub.enable`, `greeter.enable`).
 
-For LUKS, `boot.initrd.systemd.enable = true` gives the cleanest password prompt in the splash; it is not forced
-because it changes how the initrd runs custom scripts.
+With LUKS nothing else is needed: the initrd is always systemd-based (the scripted stage 1 and its
+`boot.initrd.verbose` / `boot.initrd.systemd.enable` options were removed from nixpkgs), and it asks for the
+password through the splash.
 
 The splash scripts and images are built from `branding/` by `branding/build.sh`, which can be run by hand to
 preview them (needs `rsvg-convert`, `magick`, `grub-mkfont` and the snowflake SVG from `nixos-icons`).
@@ -254,5 +255,6 @@ nixos-rebuild build-vm --flake .#host   # try the whole boot in a VM
 - **The shell did not pick up a new version**: Home Manager swaps `~/.config/quickshell` atomically; restart the
   shell (log out, or `pkill quickshell` and start it from the launcher).
 - **Greeter fell back to the text one**: `journalctl -u greetd -b` shows why (the wrapper logs the status).
-- **No splash with LUKS**: try `boot.initrd.systemd.enable = true`; check `boot.plymouth.enable`.
+- **No splash with LUKS**: check `monolith.boot.plymouth.enable` and that the GPU driver loads in the initrd
+  (`boot.initrd.kernelModules`, e.g. `amdgpu`, `i915`).
 - **GRUB text too small or large**: set `monolith.boot.grub.resolution` to the screen's resolution.

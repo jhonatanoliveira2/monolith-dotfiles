@@ -39,7 +39,7 @@ check "BIOS: GRUB on the disk" has bios 'device = "/dev/sda";'
 check "BIOS: efiSupport off" has bios 'efiSupport = false;'
 check "BIOS: no canTouchEfiVariables" bash -c "! grep -qF 'boot.loader.efi.canTouchEfiVariables = true;' '$TMP/bios/configuration.nix'"
 check "swap file of 8 GiB" has bios '  swapDevices = [ { device = "/var/lib/swapfile"; size = 8192; } ];'
-check "LUKS: systemd initrd" has bios '  boot.initrd.systemd.enable = true;'
+check "LUKS: no initrd option (systemd stage 1 is the only one, the option was removed)" bash -c "! grep -q 'boot.initrd.systemd' '$TMP/bios/configuration.nix'"
 check "language en" has bios 'language = "en";'
 check "extra lines right after stateVersion" bash -c "grep -A2 'system.stateVersion' '$TMP/bios/configuration.nix' | grep -q swapDevices"
 
