@@ -16,6 +16,7 @@ return {
     ["shell.media"] = "SUPER + M",
     ["shell.settings"] = "SUPER + comma",
     ["shell.session"] = "SUPER + Escape",
+    ["shell.widgets"] = "SUPER + B",
 
     -- capture
     ["capture.screen"] = "SUPER + Delete",

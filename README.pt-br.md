@@ -120,6 +120,7 @@ cd monolith-dotfiles
 | `SUPER + M` | Mídia | Abre o player (capa, seek, volume, busca) |
 | `SUPER + ,` | Configurações | Abre o app Monolith Settings |
 | `SUPER + Escape` | Sessão | Abre o menu de sistema / sessão |
+| `SUPER + B` | Widgets | Organiza os widgets da área de trabalho (adicionar, mover, redimensionar, remover) |
 | Teclas de mídia | Volume / Brilho / Player | Tratadas nativamente pelo shell com indicador na tela (fallback para CLI sem o shell) |
 </details>
 

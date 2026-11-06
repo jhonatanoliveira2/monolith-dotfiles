@@ -24,9 +24,11 @@ ShellRoot {
 
             Bar { id: barWin; modelData: scope.modelData }
             LazyLoader { active: Theme.barStyle === "frame"; BarFrame { screen: scope.modelData } }
-            // desktop widgets (services/Widgets.qml): the desktop layer only when this monitor has some, the editor
+            // desktop widgets (services/Widgets.qml): the desktop layer only when this monitor has some, the temporary
+            // widgets' layer (above the windows) only while there are any, the editor
             // only in edit mode
             LazyLoader { active: Settings.widgetsEnabled && !Widgets.editing && Widgets.onScreen(scope.modelData.name).length > 0; WidgetLayer { modelData: scope.modelData } }
+            LazyLoader { active: !Widgets.editing && Widgets.temps.length > 0; WidgetLayer { modelData: scope.modelData; tempOnly: true } }
             LazyLoader { active: Widgets.editing; WidgetLayer { modelData: scope.modelData; editing: true } }
             MenuSlot { name: "audio"; screen: scope.modelData; AudioMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "media"; screen: scope.modelData; MediaMenu { screen: scope.modelData; bar: barWin } }
@@ -68,6 +70,7 @@ ShellRoot {
     Key { name: "wallpaper"; onPressed: Popups.toggleOverlay("wallpaper") }
     Key { name: "media"; onPressed: Popups.toggleFocused("media") }
     Key { name: "session"; onPressed: Popups.toggleFocused("settings") }
+    Key { name: "widgets"; onPressed: Widgets.edit(!Widgets.editing) }
     Key { name: "settingsApp"; onPressed: Popups.appOpen ? Popups.closeApp() : Popups.openApp("system") }
 
     // Key bindings:  qs ipc call shell toggle settings   |   qs ipc call shell close   |   qs ipc call shell welcome
@@ -84,11 +87,12 @@ ShellRoot {
         function reload(): void { Quickshell.reload(true) }
     }
 
-    // Desktop widgets:  qs ipc call widgets edit   |   qs ipc call widgets add clock
+    // Desktop widgets:  qs ipc call widgets edit   |   qs ipc call widgets add clock   |   qs ipc call widgets temp lyrics
     IpcHandler {
         target: "widgets"
         function edit(): void { Widgets.edit(!Widgets.editing) }
         function add(type: string): void { Widgets.add(type, Popups.focusedScreen()) }
+        function temp(type: string): void { Widgets.addTemp(type) }
     }
 
     // Colour theme:  qs ipc call theme set dynamic   |   qs ipc call theme preset nord   |   qs ipc call theme regenerate

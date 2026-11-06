@@ -190,6 +190,7 @@ for _, item in ipairs({
     { id = "shell.media", name = "media" },
     { id = "shell.settings", name = "settingsApp" },
     { id = "shell.session", name = "session" },
+    { id = "shell.widgets", name = "widgets" },
 }) do
     bind(item.id, hl.dsp.global("quickshell:" .. item.name))
 end

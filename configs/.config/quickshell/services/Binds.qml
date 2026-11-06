@@ -118,6 +118,7 @@ Singleton {
             "shell.launcher": pair("Lançador de apps", "App launcher"), "shell.wallpaper": pair("Seletor de wallpapers", "Wallpaper picker"),
             "shell.notifications": pair("Central de notificações", "Notification center"), "shell.media": pair("Menu de mídia", "Media menu"),
             "shell.settings": pair("Configurações", "Settings"), "shell.session": pair("Menu rápido / sessão", "Quick menu / session"),
+            "shell.widgets": pair("Widgets (organizar)", "Widgets (arrange)"),
             "capture.screen": pair("Capturar o monitor", "Capture the monitor"), "capture.area": pair("Capturar uma área", "Capture an area"),
             "capture.record": pair("Gravar a tela (liga / desliga)", "Record the screen (on / off)"),
             "session.lock": pair("Bloquear a tela", "Lock the screen"), "session.exit": pair("Encerrar a sessão", "End the session"),

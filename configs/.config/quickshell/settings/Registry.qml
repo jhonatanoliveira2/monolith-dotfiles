@@ -195,6 +195,10 @@ Singleton {
             () => Settings.widgetsEnabled, v => Settings.widgetsEnabled = v),
         btn("widgets", "general", "widgetsEdit", ["Organizar widgets (arrastar, adicionar, remover)", "Arrange widgets (drag, add, remove)"], "widgets editar edit organizar arrange mover move",
             () => Widgets.edit(true)),
+        tog("widgets", "general", "widgetsAutoHide", ["Ocultar ao abrir um programa", "Hide when a program is open"], "widgets ocultar hide auto janela window programa",
+            () => Settings.widgetsAutoHide, v => Settings.widgetsAutoHide = v),
+        sld("widgets", "general", "widgetOpacity", ["Opacidade do fundo", "Background opacity"], "widgets opacidade opacity transparência transparency fundo",
+            0, 100, 5, "%", () => Math.round(Settings.widgetOpacity * 100), v => Settings.widgetOpacity = v / 100),
 
         // ── notifications ──
         tog("notifications", "general", "ndnd", ["Não perturbe", "Do not disturb"], "dnd silêncio", () => Settings.dnd, v => Settings.dnd = v),

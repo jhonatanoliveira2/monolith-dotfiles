@@ -75,6 +75,8 @@ Singleton {
     property alias centerHistory: adapter.centerHistory
     property alias widgets: adapter.widgets
     property alias widgetsEnabled: adapter.widgetsEnabled
+    property alias widgetsAutoHide: adapter.widgetsAutoHide
+    property alias widgetOpacity: adapter.widgetOpacity
     property alias weatherLocation: adapter.weatherLocation
     property alias shellBlur: adapter.shellBlur
     property alias launcherIcons: adapter.launcherIcons
@@ -187,9 +189,9 @@ Singleton {
             property bool touchpadEnabled: true
             // quick menu (Arch button): sections in order, quick switches, shortcuts and session buttons (services/QuickMenu.qml)
             property var quickSections: []        // [{ id, on }] — empty = defaults
-            property var quickToggles: ["wifi", "dnd", "keepAwake", "darkMode"]
+            property var quickToggles: ["wifi", "dnd", "keepAwake"]               // = QuickMenu.defaultToggles
             property var quickShortcuts: null     // [{ k: "builtin" | "app" | "page", v, l }] — null = defaults
-            property var quickSession: ["lock", "suspend", "logout", "reboot", "poweroff"]
+            property var quickSession: ["logout", "reboot", "poweroff", "suspend", "hibernate"]   // = QuickMenu.defaultSession
             // bar clock: clockCustom (Qt date format) wins over the presets
             property bool clock24: true
             property bool clockSeconds: false
@@ -206,19 +208,21 @@ Singleton {
             // bar: edge of the screen and the modules of each zone (services/BarLayout.qml)
             property string barPosition: "top"     // top | bottom | left | right
             property var barModules: null          // { start: [ids], center: [ids], end: [ids] } — null = defaults
-            property int barGapStart: 6            // px between the modules of each zone
-            property int barGapCenter: 6
-            property int barGapEnd: 6
+            property int barGapStart: 5            // px between the modules of each zone
+            property int barGapCenter: 2
+            property int barGapEnd: 2
             property var widgets: []               // desktop widgets: [{ uid, type, screen, x, y }] (services/Widgets.qml)
             property bool widgetsEnabled: true
+            property bool widgetsAutoHide: false   // hide the widgets while the monitor's workspace has windows
+            property real widgetOpacity: 0.6       // widget card background, 0 (transparent) .. 1
             property bool centerMenu: true         // menus/CenterMenu.qml, opened by hovering the middle of the bar
             property int centerTab: 0              // its last open tab
             property var centerHistory: []         // its command line history (latest last)
             property string weatherLocation: ""    // wttr.in place ("" = by IP)
-            property string barStyle: "flat"       // flat | capsule | frame (core/Theme.qml)
+            property string barStyle: "capsule"    // flat | capsule | frame (core/Theme.qml)
             property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
-            property bool barShadow: false         // capsule / frame styles
-            property int barShadowStrength: 60     // %
+            property bool barShadow: true          // capsule / frame styles
+            property int barShadowStrength: 80     // %
             property string menuStyle: "auto"      // auto (attached on the sides / bottom) | attached | floating
             property bool shellBlur: true          // compositor blur behind the bar, menus, toasts and OSD
             // app launcher (menus/Launcher.qml)
@@ -240,7 +244,7 @@ Singleton {
             property int wpColumns: 4
             property string wpOrder: "name"      // picker order: name | name_desc | random
             // colour theme (Settings > Themes, core/Palettes.qml + services/Themes.qml)
-            property string themeMode: "default"   // default | dynamic | preset
+            property string themeMode: "dynamic"   // default | dynamic | preset
             property string themePreset: "nord"    // core/Palettes.qml presets
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
             property bool themeVscode: true        // workbench.colorCustomizations of VS Code follow the theme

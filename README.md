@@ -120,6 +120,7 @@ cd monolith-dotfiles
 | `SUPER + M` | Media | Opens the media player (cover, seek, volume, search) |
 | `SUPER + ,` | Settings | Opens the Monolith Settings app |
 | `SUPER + Escape` | Session | Opens the system / session menu |
+| `SUPER + B` | Widgets | Arranges the desktop widgets (add, move, resize, remove) |
 | Media keys | Volume / Brightness / Player | Handled natively by the shell with an on-screen display (CLI fallback when the shell is not running) |
 </details>
 

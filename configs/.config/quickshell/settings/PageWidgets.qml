@@ -29,15 +29,32 @@ Column {
     Repeater {
         model: Widgets.list
         delegate: Item {
+            id: placed
             required property var modelData
             readonly property var t: Widgets.type(modelData.type)
             width: parent.width; height: row.height
             ListRow {
                 id: row
-                anchors { left: parent.left; right: rm.left; rightMargin: 6 }
+                anchors { left: parent.left; right: sizes.left; rightMargin: 6 }
                 icon: Theme.g(parent.t.glyph)
                 title: Widgets.name(parent.t)
-                subtitle: modelData.screen + "  ·  " + modelData.x + ", " + modelData.y
+                subtitle: modelData.screen + "  ·  " + modelData.x + ", " + modelData.y + "  ·  " + Widgets.sizeName(Widgets.sizeOf(modelData))
+            }
+            // size: small / medium / large
+            Row {
+                id: sizes
+                anchors { right: rm.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                spacing: 2
+                Repeater {
+                    model: 3
+                    delegate: Btn {
+                        required property int index
+                        compact: true
+                        text: Widgets.sizeName(index)
+                        active: Widgets.sizeOf(placed.modelData) === index
+                        onActivated: Widgets.resize(placed.modelData.uid, index)
+                    }
+                }
             }
             Btn { id: rm; anchors { right: parent.right; verticalCenter: parent.verticalCenter } compact: true; icon: Theme.glyph.trash; text: Labels.pick(["Remover", "Remove"]); onActivated: Widgets.remove(modelData.uid) }
         }

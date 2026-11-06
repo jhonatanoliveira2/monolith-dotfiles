@@ -10,9 +10,14 @@ Singleton {
     id: root
 
     readonly property var sectionIds: ["header", "settings", "toggles", "sliders", "hyprland", "shortcuts", "session"]
+    // defaults (new installations and "Reset"): the Hyprland section starts hidden
+    readonly property var defaultOff: ["hyprland"]
+    readonly property var defaultToggles: ["wifi", "dnd", "keepAwake"]
+    readonly property var defaultShortcuts: [{ k: "builtin", v: "wallpaper" }, { k: "builtin", v: "reloadHypr" }, { k: "builtin", v: "reloadShell" }]
+    readonly property var defaultSession: ["logout", "reboot", "poweroff", "suspend", "hibernate"]
     readonly property var sections: {
         const saved = Array.from(Settings.quickSections || []).filter(s => s && sectionIds.indexOf(s.id) >= 0)
-        return saved.concat(sectionIds.filter(id => !saved.some(s => s.id === id)).map(id => ({ id: id, on: true })))
+        return saved.concat(sectionIds.filter(id => !saved.some(s => s.id === id)).map(id => ({ id: id, on: defaultOff.indexOf(id) < 0 })))
     }
 
     readonly property var toggleCatalog: [
@@ -39,7 +44,7 @@ Singleton {
     readonly property var shortcuts: {
         const saved = Settings.quickShortcuts
         // null = defaults (a list loaded from settings.json is not a plain JS array: copy it)
-        return saved !== null && saved !== undefined ? Array.from(saved) : builtins.map(b => ({ k: "builtin", v: b.id }))
+        return saved !== null && saved !== undefined ? Array.from(saved) : defaultShortcuts
     }
 
     readonly property var sessionCatalog: [
@@ -91,8 +96,8 @@ Singleton {
     function moveShortcut(i, dir) { Settings.quickShortcuts = moved(shortcuts, i, dir) }
     function reset() {
         Settings.quickSections = []
-        Settings.quickToggles = ["wifi", "dnd", "keepAwake", "darkMode"]
+        Settings.quickToggles = defaultToggles
         Settings.quickShortcuts = null
-        Settings.quickSession = ["lock", "suspend", "logout", "reboot", "poweroff"]
+        Settings.quickSession = defaultSession
     }
 }

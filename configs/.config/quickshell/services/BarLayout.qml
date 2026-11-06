@@ -22,9 +22,9 @@ Singleton {
     function defaults() {
         const keep = id => (id !== "player" || Settings.showPlayer) && (id !== "sysmon" || Settings.showSysmon) && (id !== "title" || Settings.showWindowTitle)
         return {
-            start: ["logo", "workspaces", "player", "title"].filter(keep),
+            start: ["logo", "workspaces", "player", "tray"].filter(keep),
             center: ["clock"],
-            end: ["tray", "sysmon", "network", "bluetooth", "battery", "brightness", "volume", "bell"].filter(keep)
+            end: ["sysmon", "network", "bluetooth", "battery", "brightness", "volume", "bell"].filter(keep)
         }
     }
     // saved layout, cleaned up: unknown ids dropped, each module in one zone at most
