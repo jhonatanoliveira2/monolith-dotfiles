@@ -58,6 +58,7 @@ FloatingWindow {
         NumberAnimation { to: 0.45; duration: 2600; easing.type: Easing.InOutSine }
     }
     property real flare: 0
+    onFlareChanged: if (flare > 0.05) sweep.play()   // the session starts: one last sweep with the flare
 
     Item {
         id: stage
@@ -107,13 +108,40 @@ FloatingWindow {
                 source: win.art + "/mark-white-512.png"
                 sourceSize.height: 512
                 smooth: true; mipmap: true
-                opacity: win.phase
+                // rests a touch below white, so the light sweep reads as light passing over it
+                opacity: win.phase * 0.86
+            }
+            // light sweep: a lit band clipped to the snowflake, with its bloom (1.5x canvas, frames from build.sh)
+            Image {
+                id: sweep
+                property int frame: -1
+                x: -parent.width * 0.25; y: -parent.height * 0.25
+                width: parent.width * 1.5; height: parent.height * 1.5
+                visible: frame >= 0
+                source: frame >= 0 ? win.art + "/mark-sweep-" + frame + ".png" : ""
+                sourceSize.height: 768
+                smooth: true
+                cache: true
+                Timer {
+                    id: sweepTick
+                    interval: 22; repeat: true
+                    onTriggered: { if (sweep.frame + 1 >= 36) { stop(); sweep.frame = -1 } else sweep.frame = sweep.frame + 1 }
+                }
+                function play() { if (!sweepTick.running) { frame = 0; sweepTick.start() } }
+                Timer {
+                    // first sweep right after the opening, then every ~6 s
+                    interval: 6000; repeat: true; triggeredOnStart: false
+                    running: Theme.animations && win.phase === 1 && !win.greeter.leaving
+                    onRunningChanged: if (running) firstSweep.start()
+                    onTriggered: sweep.play()
+                }
+                Timer { id: firstSweep; interval: 500; onTriggered: sweep.play() }
             }
         }
         Item {
             id: wordmark
             // Plymouth's size at first (continuity), larger in the login layout
-            height: Math.round(win.markH * win.mix(0.11, 0.19))
+            height: Math.round(win.markH * win.mix(0.11, 0.24))
             width: Math.round(height * 10)          // the wordmark SVG is 640 x 64
             x: Math.round((win.width - width) / 2)
             y: Math.round(mark.y + mark.height + win.markH * win.mix(0.16, 0.10))

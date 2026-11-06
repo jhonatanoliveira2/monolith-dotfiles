@@ -8,7 +8,8 @@
 #
 #   build.sh branding <out-dir> <snowflake.svg>
 #       logo-{64,128,256,512}.png, wordmark-{32,64,128}.png, sweep-<i>.png (light sweep frames),
-#       mark-white-512.png, mark-glow-512.png (bloom, 1.5x canvas), wordmark-glow-128.png (1.5x canvas),
+#       mark-white-512.png, mark-glow-512.png (bloom, 1.5x canvas), mark-sweep-<i>.png (light sweep over the
+#       white mark, 1.5x canvas), wordmark-glow-128.png (1.5x canvas),
 #       line-glow.png, star.png, pixel.png, bullet.png, frames (count).
 #       Needs rsvg-convert, magick and the JetBrains Mono font (fontconfig).
 #
@@ -81,6 +82,17 @@ branding() {
     # pure white mark (the greeter) and the bloom sprites
     mark_layer "$svg" 512 "$out/mark-white-512.png"
     glow "$out/mark-white-512.png" "$out/mark-glow-512.png" 26 0.85
+    # light sweep for the greeter's white mark: only the lit band (clipped to the snowflake) and its bloom,
+    # on a transparent 1.5x canvas, drawn over the mark (mark-sweep-<i>.png)
+    for ((i = 0; i < FRAMES; i++)); do
+        y=$((10 + i * 220 / (FRAMES - 1)))
+        sed "s|@Y@|$y|" "$here/band.svg" | png -w 410 -h 512 -o "$out/.band.png"
+        magick "$out/.band.png" "$out/mark-white-512.png" -compose DstIn -composite -compose over \
+            -background none -gravity center -extent 150%x150% "PNG32:$out/.lit.png"
+        magick "$out/.lit.png" \( +clone -blur 0x14 -channel A -evaluate multiply 1.6 +channel \) -compose over -composite \
+            "$out/.lit.png" -compose over -composite "PNG32:$out/mark-sweep-$i.png"
+    done
+    rm -f "$out"/.band.png "$out"/.lit.png
     glow "$out/wordmark-128.png" "$out/wordmark-glow-128.png" 10 0.9
     magick -size 512x64 xc:none -fill white -draw "rectangle 24,31 487,32" -blur 0x7 \
         -channel A -evaluate multiply 2.2 +channel "PNG32:$out/line-glow.png"

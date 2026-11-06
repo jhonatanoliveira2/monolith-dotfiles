@@ -205,8 +205,9 @@ a faint halo, standing above a lit horizon), the `MONOLITH` wordmark in JetBrain
    then every ~2 s, and the line (with its own glow) fills with the boot progress. Shutdown and reboot show the
    mark at once. Disk passwords and questions take the line's place; systemd messages show at the bottom.
 3. **Greeter**: opens on Plymouth's last frame (same place, same size) — the splash is kept on screen until then
-   (`plymouth quit --retain-splash`) — then the mark rises and turns pure white with its bloom, the line fades, a
-   night sky appears (twinkling stars drifting down, falling stars) and the minimal login fades in: clock, user,
+   (`plymouth quit --retain-splash`) — then the mark rises and turns white with its bloom and a light sweep, the line fades,
+   a night sky appears (star dust and stars drifting down in two layers, twinkles, sparkles, falling stars whose
+   bloom fades as they cross) and the minimal login fades in: clock, user,
    a password line that glows when focused, the session and three power icons. A successful login flares the
    bloom, fades to black and starts the session.
 

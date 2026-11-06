@@ -1,7 +1,8 @@
 import QtQuick
 
-// One falling star: a glowing head with a fading tail, crossing the sky diagonally (top right -> bottom left),
-// then waiting a random 1-4.5 s before the next one from another place.
+// One falling star: a tiny bright point with a fading tail, crossing the sky diagonally (top right -> bottom
+// left), then waiting a random 1-4.5 s before the next one from another place. Its bloom (a small soft glow at
+// the point and along the start of the tail) is strongest when it appears and fades as it crosses the sky.
 Item {
     id: m
     required property Item area
@@ -15,7 +16,6 @@ Item {
     property real startY: 0
     property real dist: 600
     property real progress: 0
-    // bloom: strongest when the star appears, fading as it crosses the sky
     readonly property real bloom: 1 - progress
     x: startX + dx * dist * progress
     y: startY + dy * dist * progress
@@ -26,43 +26,43 @@ Item {
         rotation: -m.angle
         transformOrigin: Item.TopLeft
         Rectangle {
-            x: 0; y: -1
-            width: m.len; height: 2
-            radius: 1
+            x: 0; y: -0.75
+            width: m.len; height: 1.5
+            radius: 0.75
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.95) }
-                GradientStop { position: 0.25; color: Qt.rgba(1, 1, 1, 0.35) }
+                GradientStop { position: 0.2; color: Qt.rgba(1, 1, 1, 0.4) }
                 GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0) }
             }
         }
-        // soft glow along the start of the tail, fading with the bloom
+        // bloom along the start of the tail
         Rectangle {
-            x: 0; y: -5
-            width: m.len * (0.35 + 0.3 * m.bloom); height: 10
-            radius: 5
-            opacity: 0.35 + 0.65 * m.bloom
+            x: 0; y: -3
+            width: m.len * (0.25 + 0.3 * m.bloom); height: 6
+            radius: 3
+            opacity: 0.25 + 0.75 * m.bloom
             gradient: Gradient {
                 orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.3) }
+                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.22) }
                 GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0) }
             }
         }
     }
-    // wide bloom around the head: large and bright at first, shrinking and dimming along the way
+    // small bloom at the point, shrinking with the bloom
     Image {
-        readonly property real size: 110 * (0.45 + 0.55 * m.bloom)
+        readonly property real size: 10 + 14 * m.bloom
         x: -size / 2; y: -size / 2
         width: size; height: size
         source: m.head
         smooth: true
-        opacity: 0.8 * m.bloom
+        opacity: 0.35 + 0.4 * m.bloom
     }
-    Image {
-        x: -14; y: -14
-        width: 28; height: 28
-        source: m.head
-        smooth: true
+    // the point itself
+    Rectangle {
+        x: -1.5; y: -1.5
+        width: 3; height: 3; radius: 1.5
+        color: "white"
     }
 
     function launch() {

@@ -208,8 +208,9 @@ claro, um halo discreto, sobre um horizonte iluminado), o wordmark `MONOLITH` em
    mostram a marca na hora. Senhas de disco e perguntas ocupam o lugar da linha; mensagens do systemd aparecem
    embaixo.
 3. **Greeter**: abre no último quadro do Plymouth (mesmo lugar, mesmo tamanho) — o splash fica na tela até
-   lá (`plymouth quit --retain-splash`) — então a marca sobe e fica branca com seu bloom, a linha some, surge um
-   céu noturno (estrelas cintilando descendo devagar, estrelas cadentes) e o login minimalista aparece: relógio,
+   lá (`plymouth quit --retain-splash`) — então a marca sobe e fica branca com bloom e light sweep, a linha some, surge
+   um céu noturno (poeira estelar e estrelas descendo em duas camadas, cintilações, brilhos em cruz, estrelas
+   cadentes cujo bloom diminui enquanto cruzam o céu) e o login minimalista aparece: relógio,
    usuário, uma linha de senha que brilha ao focar, a sessão e três ícones de energia. Um login bem-sucedido
    intensifica o bloom, escurece a tela e inicia a sessão.
 
