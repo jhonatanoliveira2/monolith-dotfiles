@@ -2,21 +2,23 @@
 # preview-grub.sh - boots the MONOLITH GRUB theme in QEMU: the real GRUB (BIOS build) with a NixOS-like menu,
 # so what you see is what the boot menu draws. Nothing is installed or written outside a temporary folder.
 #
-#   branding/preview-grub.sh [--res 1920x1080] [--lang pt|en] [--shot FILE.png] [--snowflake FILE.svg]
+#   branding/preview-grub.sh [--res 1920x1080] [--lang pt|en] [--shot FILE.png [--selected]] [--snowflake FILE.svg]
 #
 # Default: a QEMU window (arrows, Enter, e, c work like on the real menu; close the window to quit).
-# --shot: no window: boots, saves a screenshot to FILE.png and exits.
+# --shot: no window: boots, saves a screenshot to FILE.png and exits (--selected: after pressing Enter, i.e. the
+#         loading screen shown while the kernel loads). Choosing an entry in the window shows it for 6 s.
 # Needs: rsvg-convert, magick, grub-mkfont, grub-mkrescue (+ xorriso), qemu-system-x86_64, fc-match, and the
 # NixOS snowflake (nixos-icons, or --snowflake; downloaded from nixos-artwork as a last resort).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
-res=1920x1080 lang=pt shot="" svg=""
+res=1920x1080 lang=pt shot="" svg="" selected=0
 die() { printf 'preview-grub: %s\n' "$*" >&2; exit 1; }
 while (($#)); do
     case $1 in
         --res) res=$2; shift ;;
         --lang) lang=$2; shift ;;
         --shot) shot=$2; shift ;;
+        --selected) selected=1 ;;
         --snowflake) svg=$2; shift ;;
         -h | --help) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown option: $1" ;;
@@ -59,22 +61,23 @@ cp "$svg" "$work/br/snowflake.svg"
 cp "$here/wordmark.svg" "$work/br/"
 "$here/build.sh" grub "$work/br" "$work/iso/boot/grub/theme" "$res" "$lang" "$regular" "$bold" 2>&1 | grep -v -i 'aviso\|warning' || true
 
-# a menu shaped like NixOS' (the theme, fonts and background loaded the way install-grub.pl does)
+# a menu shaped like NixOS' (the theme, fonts and background loaded the way install-grub.pl does; each entry
+# sets loading.png as the module's extraPerEntryConfig does)
 {
     printf '%s\n' "insmod all_video" "insmod gfxterm" "insmod png" "set gfxmode=$res,auto" "set gfxpayload=keep" "terminal_output gfxterm"
     for f in "$work"/iso/boot/grub/theme/*.pf2; do printf 'loadfont ($root)/boot/grub/theme/%s\n' "${f##*/}"; done
     cat <<'CFG'
-background_image ($root)/boot/grub/theme/background.png
+background_image ($root)/boot/grub/theme/loading.png
 set theme=($root)/boot/grub/theme/theme.txt
 set timeout=15
 set default=0
-menuentry "NixOS" { echo "(preview) booting NixOS"; sleep 2 }
+menuentry "NixOS" { background_image ($root)/boot/grub/theme/loading.png; sleep 6 }
 submenu "NixOS - All configurations" {
-  menuentry "NixOS - Configuration 3 (2026-11-06 - 26.05)" { echo "(preview)"; sleep 2 }
-  menuentry "NixOS - Configuration 2 (2026-11-05 - 26.05)" { echo "(preview)"; sleep 2 }
+  menuentry "NixOS - Configuration 3 (2026-11-06 - 26.05)" { background_image ($root)/boot/grub/theme/loading.png; sleep 6 }
+  menuentry "NixOS - Configuration 2 (2026-11-05 - 26.05)" { background_image ($root)/boot/grub/theme/loading.png; sleep 6 }
 }
-menuentry "NixOS (recovery)" { echo "(preview) booting the recovery entry"; sleep 2 }
-menuentry "UEFI Firmware Settings" { echo "(preview)"; sleep 2 }
+menuentry "NixOS (recovery)" { background_image ($root)/boot/grub/theme/loading.png; sleep 6 }
+menuentry "UEFI Firmware Settings" { background_image ($root)/boot/grub/theme/loading.png; sleep 6 }
 CFG
 } >"$work/iso/boot/grub/grub.cfg"
 
@@ -89,6 +92,7 @@ if [[ -z $shot ]]; then
 else
     coproc QEMU { "${qemu[@]}" -display none -monitor stdio 2>/dev/null; }
     sleep 6
+    if ((selected)); then printf 'sendkey ret\n' >&"${QEMU[1]}"; sleep 2; fi
     printf 'screendump %s\n' "$work/shot.ppm" >&"${QEMU[1]}"
     sleep 1
     printf 'quit\n' >&"${QEMU[1]}"

@@ -142,7 +142,12 @@ in
     (mkIf cfg.grub.enable {
       boot.loader.grub = {
         theme = grubTheme;
-        splashImage = "${grubTheme}/background.png";
+        # black with only the snowflake, bottom right: before the menu appears and, through extraPerEntryConfig,
+        # after an entry is chosen while the kernel and initrd load (the theme's terminal window is full screen,
+        # so the menu's background and logo are hidden at that point)
+        splashImage = "${grubTheme}/loading.png";
+        # the theme lives in /theme when /boot is its own partition (ESP), in /boot/theme otherwise
+        extraPerEntryConfig = "if [ -f /theme/loading.png ]; then background_image /theme/loading.png; elif [ -f /boot/theme/loading.png ]; then background_image /boot/theme/loading.png; fi";
         gfxmodeEfi = mkDefault "${cfg.grub.resolution},auto";
         gfxmodeBios = mkDefault "${cfg.grub.resolution},auto";
         # the kernel keeps GRUB's mode: no mode switch (flash) before Plymouth

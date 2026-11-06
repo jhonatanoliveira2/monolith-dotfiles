@@ -203,6 +203,8 @@ claro, um halo discreto, sobre um horizonte iluminado), o wordmark `MONOLITH` em
 
 1. **GRUB**: marca e wordmark no topo, entradas em cinza, a selecionada em branco numa moldura fina (como as
    linhas selecionadas do shell). O tempo limite é a linha de 2 px, esvaziando. As teclas aparecem embaixo.
+   Escolhida a entrada, a tela fica preta só com o floco pequeno no canto inferior direito enquanto o kernel
+   carrega, até o splash assumir.
 2. **Plymouth**: a marca aparece no centro com um bloom que "respira", uma faixa de luz a atravessa logo de
    início e depois a cada ~2 s, e a linha (com brilho próprio) enche com o progresso do boot. Desligar e reiniciar
    mostram a marca na hora. Senhas de disco e perguntas ocupam o lugar da linha; mensagens do systemd aparecem

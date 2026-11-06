@@ -18,7 +18,8 @@
 #   build.sh plymouth <branding-dir> <out-dir> <installed-dir>
 #       monolith.plymouth + monolith.script + images; <installed-dir> is where the theme will live (Nix store).
 #   build.sh grub <branding-dir> <out-dir> <WIDTHxHEIGHT> <pt|en> <regular.ttf> <bold.ttf>
-#       theme.txt, background.png, fonts (*.pf2) and the selection / console pixmaps. Needs grub-mkfont.
+#       theme.txt, background.png (menu), loading.png (after an entry is chosen), fonts (*.pf2) and the
+#       selection / console / timeout pixmaps. Needs grub-mkfont.
 #
 # Layout shared by the three stages (keep greeter/GreeterWindow.qml in sync):
 #   Plymouth / greeter: mark canvas 4:5, height = 20 % of the screen, top = 50 % - 0.62 x its height (centered),
@@ -149,13 +150,27 @@ grub() {
         "$out/.wordmark.png" -gravity north -geometry "+0+$wmTop" -composite \
         -strip "PNG32:$out/background.png"
     rm -f "$out/.logo.png" "$out/.wordmark.png"
+
+    # loading.png: what stays on screen after an entry is chosen, while GRUB loads the kernel and the initrd
+    # (the terminal's background_image; with gfxpayload=keep it lasts until Plymouth draws): black, only the
+    # snowflake, small, with its bloom, in the bottom-right corner like a loading indicator
+    local lh=$((H * 9 / 100)) lw mx my
+    lw=$((lh * 4 / 5)); mx=$((W * 3 / 100)); my=$((H * 3 / 100))
+    mark_layer "$b/snowflake.svg" "$lh" "$out/.mark.png"
+    magick -size "${W}x${H}" xc:black \
+        \( "$out/.mark.png" -background none -gravity center -extent 150%x150% -blur "0x$((lh / 12 + 1))" \
+            -channel A -evaluate multiply 0.7 +channel \) -gravity southeast -geometry "+$((mx - lw / 4))+$((my - lh / 4))" -composite \
+        \( "$out/.mark.png" -fill "$MARK_TINT" -colorize 100 \) -gravity southeast -geometry "+$mx+$my" -composite \
+        -strip "PNG32:$out/loading.png"
+    rm -f "$out/.mark.png"
     menuTop=$(((wmTop + wmH + H * 7 / 100) * 100 / H))
 
     # selection box like the shell's selected rows: faint fill, thin light border
     for p in nw n ne w e sw s se; do rgba 1x1 'rgba(255,255,255,0.45)' "$out/select_$p.png"; done
     rgba 1x1 'rgba(255,255,255,0.09)' "$out/select_c.png"
-    for p in nw n ne w e sw s se; do rgba 1x1 'rgba(255,255,255,0.18)' "$out/terminal_box_$p.png"; done
-    rgba 1x1 'rgba(8,8,8,0.92)' "$out/terminal_box_c.png"
+    # full-screen terminal window (console, editor, boot): black, no frame
+    for p in nw n ne w e sw s se; do rgba 1x1 'rgba(0,0,0,0)' "$out/terminal_box_$p.png"; done
+    rgba 1x1 'rgba(0,0,0,1)' "$out/terminal_box_c.png"
     rgba 1x1 'rgba(255,255,255,0.35)' "$out/scrollbar_thumb_c.png"
     # timeout bar: GRUB gives the component the font's height whatever the theme says, so the pixmaps are a
     # 2 px line in the middle of a transparent strip; stretched to any height, only the thin line shows

@@ -200,7 +200,9 @@ The three stages share one visual line: black, the **NixOS snowflake drawn in th
 a faint halo, standing above a lit horizon), the `MONOLITH` wordmark in JetBrains Mono and a 2 px line.
 
 1. **GRUB**: the mark and wordmark at the top, grey entries, the selected one white in a thin light frame (the
-   shell's selected rows). The timeout is the 2 px line, emptying. Keys are listed at the bottom.
+   shell's selected rows). The timeout is the 2 px line, emptying. Keys are listed at the bottom. Once an entry
+   is chosen, the screen turns black with only the small snowflake in the bottom-right corner while the kernel
+   loads, until the splash takes over.
 2. **Plymouth**: the mark appears at the centre with a breathing bloom, a light sweep crosses it right away and
    then every ~2 s, and the line (with its own glow) fills with the boot progress. Shutdown and reboot show the
    mark at once. Disk passwords and questions take the line's place; systemd messages show at the bottom.
