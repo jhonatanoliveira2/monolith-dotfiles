@@ -351,9 +351,18 @@ fi
 
 # ── install ───────────────────────────────────────────────────────────────────────────────────────────────
 step "$(t "Instalando (download e compilação: pode levar bastante tempo)" "Installing (downloads and builds: this can take a while)")"
-refresh=()
-((RESUME)) && refresh=(--refresh)   # picks up fixes pushed to the branch since the first attempt
-if ! run nixos-install --no-root-passwd "${refresh[@]}" --flake "$MNT/etc/nixos#$HOST"; then
+# The lock file must exist BEFORE nixos-install: a path flake without flake.lock gets one written into it during
+# the install, its contents change after being hashed and Nix stops with "NAR hash mismatch in input 'path:...'".
+# On a resume, the monolith input is moved to the newest commit of the branch (fixes pushed since the attempt).
+cfgdir=$MNT/etc/nixos
+if ((RESUME)) && [[ -f $cfgdir/flake.lock ]]; then
+    step "$(t "Atualizando o MONOLITH para a versão mais recente da branch" "Updating MONOLITH to the newest commit of the branch")"
+    run nix flake update monolith --flake "$cfgdir" || run nix flake lock --update-input monolith "$cfgdir" ||
+        die "$(t "Não foi possível atualizar a entrada monolith (rede?)." "Could not update the monolith input (network?).")"
+else
+    run nix flake lock "$cfgdir" || die "$(t "Não foi possível criar o flake.lock (rede?)." "Could not create flake.lock (network?).")"
+fi
+if ! run nixos-install --no-root-passwd --no-channel-copy --flake "$cfgdir#$HOST"; then
     warn "$(t "A instalação falhou. O disco continua preparado: corrija o problema (ou aguarde a correção na branch) e rode o instalador de novo para retomar." \
         "The install failed. The disk stays prepared: fix the problem (or wait for the fix on the branch) and run the installer again to resume.")"
     exit 1
