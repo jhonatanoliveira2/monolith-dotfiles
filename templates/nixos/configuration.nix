@@ -5,7 +5,9 @@ in
 {
   system.stateVersion = "25.11"; # keep the value of your first install
 
-  # Bootloader: the MONOLITH GRUB theme applies when GRUB is used (systemd-boot keeps working, unthemed)
+  # Bootloader: the MONOLITH GRUB theme applies when GRUB is used (systemd-boot keeps working, unthemed).
+  # UEFI (ESP mounted at /boot), as below. BIOS: device = "/dev/sda" (the disk), efiSupport = false and
+  # remove the canTouchEfiVariables line. Check with: [ -d /sys/firmware/efi ] && echo UEFI || echo BIOS
   boot.loader.grub = {
     enable = true;
     device = "nodev";
@@ -23,6 +25,7 @@ in
     "flakes"
   ];
 
+  # after nixos-install, set the password: nixos-enter --root /mnt -c 'passwd alice' (the greeter needs one)
   users.users.${user} = {
     isNormalUser = true;
     description = "Alice";
@@ -52,7 +55,8 @@ in
       home.stateVersion = "25.11";
       programs.monolith = {
         apps.browser = "firefox";
-        updateCommand = "nix flake update monolith --flake ~/nixos && sudo nixos-rebuild switch --flake ~/nixos";
+        # the flake lives in /etc/nixos after an install from the ISO (use ~/nixos if you keep it there)
+        updateCommand = "sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos";
       };
     };
   };

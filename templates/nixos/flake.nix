@@ -22,7 +22,8 @@
       ...
     }:
     {
-      # rename "monolith-pc" to your hostname: sudo nixos-rebuild switch --flake .#monolith-pc
+      # rename "monolith-pc" to your hostname. Install: nixos-install --flake /mnt/etc/nixos#monolith-pc
+      # afterwards: sudo nixos-rebuild switch --flake /etc/nixos#monolith-pc
       nixosConfigurations.monolith-pc = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [

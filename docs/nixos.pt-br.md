@@ -56,17 +56,57 @@ e Configurações > Atualização.
 
 ## Instalação
 
-**Configuração nova** (um flake com NixOS + Home Manager + MONOLITH):
+### Pela ISO de instalação do NixOS (máquina nova)
+
+A ISO ainda não tem `/etc/nixos/hardware-configuration.nix`: ele é gerado para o disco de destino depois de
+particionar. Os flakes também vêm desligados na ISO, daí o `--extra-experimental-features`. Exemplo para uma
+máquina UEFI com um disco inteiro (`/dev/nvme0n1`, **apagado**; confira o nome com `lsblk`):
+
+```bash
+sudo -i                                    # tudo abaixo como root
+export NIX_CONFIG="experimental-features = nix-command flakes"
+[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS
+
+# 1. particionar, formatar, montar
+parted /dev/nvme0n1 -- mklabel gpt
+parted /dev/nvme0n1 -- mkpart ESP fat32 1MiB 1GiB
+parted /dev/nvme0n1 -- set 1 esp on
+parted /dev/nvme0n1 -- mkpart root ext4 1GiB 100%
+mkfs.fat -F 32 -n boot /dev/nvme0n1p1
+mkfs.ext4 -L nixos /dev/nvme0n1p2
+mount /dev/disk/by-label/nixos /mnt
+mkdir -p /mnt/boot && mount -o umask=077 /dev/disk/by-label/boot /mnt/boot
+
+# 2. hardware-configuration.nix desta máquina (em /mnt/etc/nixos)
+nixos-generate-config --root /mnt
+
+# 3. o template do MONOLITH ao lado (substitui o configuration.nix gerado)
+cd /mnt/etc/nixos && rm configuration.nix
+nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nano configuration.nix                     # usuário, hostname, fuso, teclado (e BIOS, veja o arquivo)
+
+# 4. instalar, definir a senha do usuário, reiniciar
+nixos-install --flake /mnt/etc/nixos#monolith-pc
+nixos-enter --root /mnt -c 'passwd alice'  # seu usuário: o greeter precisa de uma senha
+reboot
+```
+
+Numa máquina BIOS use tabela msdos e só a partição raiz, e no `configuration.nix` defina
+`boot.loader.grub.device = "/dev/sda"` (o disco), `efiSupport = false` e remova `canTouchEfiVariables`.
+
+### Num NixOS já instalado
 
 ```bash
 mkdir ~/nixos && cd ~/nixos
-nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nix --extra-experimental-features "nix-command flakes" flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
 cp /etc/nixos/hardware-configuration.nix .
-# edite configuration.nix: usuário, hostname, teclado, bootloader
+# edite configuration.nix: usuário, hostname, teclado, bootloader (mantenha o que você já usa)
 sudo nixos-rebuild switch --flake .#monolith-pc
 ```
 
-**Flake existente:** adicione a entrada e o módulo e ative as opções.
+### Flake existente
+
+Adicione a entrada e o módulo e ative as opções.
 
 ```nix
 inputs.monolith = {

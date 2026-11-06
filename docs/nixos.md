@@ -54,17 +54,57 @@ keeps the battery charge limit in `/var/lib/monolith` when `/etc` is read-only, 
 
 ## Installing
 
-**New configuration** (a flake with NixOS + Home Manager + MONOLITH):
+### From the NixOS installer ISO (new machine)
+
+The live ISO has no `/etc/nixos/hardware-configuration.nix` yet: it is generated for the target disk after
+partitioning. Flakes are also off on the ISO, hence `--extra-experimental-features`. Example for a UEFI machine
+and one whole disk (`/dev/nvme0n1`, **erased**; check the name with `lsblk`):
+
+```bash
+sudo -i                                    # everything below as root
+export NIX_CONFIG="experimental-features = nix-command flakes"
+[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS
+
+# 1. partition, format, mount
+parted /dev/nvme0n1 -- mklabel gpt
+parted /dev/nvme0n1 -- mkpart ESP fat32 1MiB 1GiB
+parted /dev/nvme0n1 -- set 1 esp on
+parted /dev/nvme0n1 -- mkpart root ext4 1GiB 100%
+mkfs.fat -F 32 -n boot /dev/nvme0n1p1
+mkfs.ext4 -L nixos /dev/nvme0n1p2
+mount /dev/disk/by-label/nixos /mnt
+mkdir -p /mnt/boot && mount -o umask=077 /dev/disk/by-label/boot /mnt/boot
+
+# 2. hardware-configuration.nix for this machine (in /mnt/etc/nixos)
+nixos-generate-config --root /mnt
+
+# 3. the MONOLITH template next to it (it replaces the generated configuration.nix)
+cd /mnt/etc/nixos && rm configuration.nix
+nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nano configuration.nix                     # user, hostname, time zone, keyboard (and BIOS, see the file)
+
+# 4. install, set the user's password, reboot
+nixos-install --flake /mnt/etc/nixos#monolith-pc
+nixos-enter --root /mnt -c 'passwd alice'  # your user name: the greeter needs a password
+reboot
+```
+
+On a BIOS machine use an msdos label and the root partition only, and in `configuration.nix` set
+`boot.loader.grub.device = "/dev/sda"` (the disk), `efiSupport = false` and remove `canTouchEfiVariables`.
+
+### On an installed NixOS
 
 ```bash
 mkdir ~/nixos && cd ~/nixos
-nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nix --extra-experimental-features "nix-command flakes" flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
 cp /etc/nixos/hardware-configuration.nix .
-# edit configuration.nix: user name, hostname, keyboard, bootloader
+# edit configuration.nix: user name, hostname, keyboard, bootloader (keep the one you already use)
 sudo nixos-rebuild switch --flake .#monolith-pc
 ```
 
-**Existing flake:** add the input and the module, then enable the options.
+### Existing flake
+
+Add the input and the module, then enable the options.
 
 ```nix
 inputs.monolith = {
