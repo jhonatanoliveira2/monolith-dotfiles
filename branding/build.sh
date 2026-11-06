@@ -8,7 +8,12 @@
 #
 #   build.sh branding <out-dir> <snowflake.svg>
 #       logo-{64,128,256,512}.png, wordmark-{32,64,128}.png, sweep-<i>.png (light sweep frames),
-#       pixel.png, bullet.png, frames (count). Needs rsvg-convert, magick and the JetBrains Mono font (fontconfig).
+#       mark-white-512.png, mark-glow-512.png (bloom, 1.5x canvas), wordmark-glow-128.png (1.5x canvas),
+#       line-glow.png, star.png, pixel.png, bullet.png, frames (count).
+#       Needs rsvg-convert, magick and the JetBrains Mono font (fontconfig).
+#
+# Every PNG written by ImageMagick is forced to 8-bit RGBA (PNG32:): the images are grey, ImageMagick would
+# otherwise save them as greyscale PNGs, which GRUB cannot read ("png: color type not supported").
 #   build.sh plymouth <branding-dir> <out-dir> <installed-dir>
 #       monolith.plymouth + monolith.script + images; <installed-dir> is where the theme will live (Nix store).
 #   build.sh grub <branding-dir> <out-dir> <WIDTHxHEIGHT> <pt|en> <regular.ttf> <bold.ttf>
@@ -20,31 +25,38 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 FRAMES=36
-MARK_TINT='#cfcfcf'      # resting colour of the snowflake (the shell's light grey); the sweep lifts it to white
+MARK_TINT='#e9e9e9'      # resting colour of the snowflake (near white); the sweep lifts it to pure white
 
 die() { printf 'build.sh: %s\n' "$*" >&2; exit 1; }
 png() { rsvg-convert "$@"; }
-rgba() { magick -size "$1" "xc:$2" "$3"; }   # rgba <WxH> <colour> <file>
+rgba() { magick -size "$1" "xc:$2" "PNG32:$3"; }   # rgba <WxH> <colour> <file>
 
 # mark_layer <snowflake.svg> <H> <out>: the snowflake alone on the transparent 4:5 canvas, at its place
 mark_layer() {
     local svg=$1 H=$2 out=$3 W m top
     W=$((H * 4 / 5)); m=$((W * 86 / 100)); top=$((H * 47 / 100 - m / 2))
     png -w "$m" -h "$m" "$svg" -o "$out.tmp.png"
-    magick -size "${W}x${H}" xc:none \( "$out.tmp.png" -fill white -colorize 100 \) -gravity north -geometry "+0+$top" -composite "$out"
+    magick -size "${W}x${H}" xc:none \( "$out.tmp.png" -fill white -colorize 100 \) -gravity north -geometry "+0+$top" -composite "PNG32:$out"
     rm -f "$out.tmp.png"
 }
 
-# compose_logo <snowflake.svg> <H> <out>: stage + halo + tinted snowflake
+# compose_logo <snowflake.svg> <H> <out>: stage + bloom (wide soft glow + tight halo) + tinted snowflake
 compose_logo() {
     local svg=$1 H=$2 out=$3 W
     W=$((H * 4 / 5))
     mark_layer "$svg" "$H" "$out.mark.png"
     png -w "$W" -h "$H" "$here/stage.svg" -o "$out.stage.png"
     magick "$out.stage.png" \
-        \( "$out.mark.png" -blur "0x$((H / 40 + 1))" -channel A -evaluate multiply 0.35 +channel \) -compose over -composite \
-        \( "$out.mark.png" -fill "$MARK_TINT" -colorize 100 \) -compose over -composite "$out"
+        \( "$out.mark.png" -blur "0x$((H / 14 + 1))" -channel A -evaluate multiply 0.30 +channel \) -compose over -composite \
+        \( "$out.mark.png" -blur "0x$((H / 45 + 1))" -channel A -evaluate multiply 0.55 +channel \) -compose over -composite \
+        \( "$out.mark.png" -fill "$MARK_TINT" -colorize 100 \) -compose over -composite "PNG32:$out"
     rm -f "$out.mark.png" "$out.stage.png"
+}
+
+# glow <in> <out> <sigma> <alpha>: the image on a 1.5x transparent canvas (same centre), blurred: a bloom sprite
+glow() {
+    magick "$1" -background none -gravity center -extent 150%x150% -blur "0x$3" \
+        -channel A -evaluate multiply "$4" +channel "PNG32:$2"
 }
 
 branding() {
@@ -60,13 +72,22 @@ branding() {
     for ((i = 0; i < FRAMES; i++)); do
         y=$((10 + i * 220 / (FRAMES - 1)))
         sed "s|@Y@|$y|" "$here/band.svg" | png -w "$W" -h "$H" -o "$out/.band.png"
-        magick "$out/.band.png" "$out/.mask.png" -compose DstIn -composite "$out/.lit.png"
-        magick "$out/.base.png" "$out/.lit.png" -compose over -composite "$out/sweep-$i.png"
+        magick "$out/.band.png" "$out/.mask.png" -compose DstIn -composite "PNG32:$out/.lit.png"
+        # the lit band blooms: its own blurred copy under it, then the band itself
+        magick "$out/.base.png" \( "$out/.lit.png" -blur 0x9 -channel A -evaluate multiply 0.9 +channel \) -compose over -composite \
+            "$out/.lit.png" -compose over -composite "PNG32:$out/sweep-$i.png"
     done
     rm -f "$out"/.base.png "$out"/.mask.png "$out"/.band.png "$out"/.lit.png
+    # pure white mark (the greeter) and the bloom sprites
+    mark_layer "$svg" 512 "$out/mark-white-512.png"
+    glow "$out/mark-white-512.png" "$out/mark-glow-512.png" 26 0.85
+    glow "$out/wordmark-128.png" "$out/wordmark-glow-128.png" 10 0.9
+    magick -size 512x64 xc:none -fill white -draw "rectangle 24,31 487,32" -blur 0x7 \
+        -channel A -evaluate multiply 2.2 +channel "PNG32:$out/line-glow.png"
+    magick -size 64x64 radial-gradient:white-none "PNG32:$out/star.png"
     echo "$FRAMES" >"$out/frames"
     rgba 1x1 white "$out/pixel.png"
-    magick -size 48x48 xc:none -fill white -draw "circle 24,24 24,6" "$out/bullet.png"
+    magick -size 48x48 xc:none -fill white -draw "circle 24,24 24,6" "PNG32:$out/bullet.png"
     cp "$svg" "$out/snowflake.svg"
     cp "$here/stage.svg" "$here/band.svg" "$here/wordmark.svg" "$out/"
 }
@@ -76,7 +97,9 @@ plymouth() {
     mkdir -p "$out"
     cp "$b/logo-512.png" "$out/logo.png"
     cp "$b/wordmark-128.png" "$out/wordmark.png"
-    cp "$b/pixel.png" "$b/bullet.png" "$out/"
+    cp "$b/pixel.png" "$b/bullet.png" "$b/line-glow.png" "$out/"
+    cp "$b/mark-glow-512.png" "$out/glow.png"
+    cp "$b/wordmark-glow-128.png" "$out/wordmark-glow.png"
     for ((i = 0; i < $(cat "$b/frames"); i++)); do cp "$b/sweep-$i.png" "$out/"; done
     sed "s|@FRAMES@|$(cat "$b/frames")|g" "$here/plymouth/monolith.script" >"$out/monolith.script"
     sed "s|@DIR@|$dest|g" "$here/plymouth/monolith.plymouth" >"$out/monolith.plymouth"
@@ -112,7 +135,7 @@ grub() {
         -gravity north -composite \
         "$out/.logo.png" -gravity north -geometry "+0+$logoTop" -composite \
         "$out/.wordmark.png" -gravity north -geometry "+0+$wmTop" -composite \
-        -strip "$out/background.png"
+        -strip "PNG32:$out/background.png"
     rm -f "$out/.logo.png" "$out/.wordmark.png"
     menuTop=$(((wmTop + wmH + H * 7 / 100) * 100 / H))
 

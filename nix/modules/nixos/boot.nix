@@ -49,6 +49,26 @@ in
       description = "MONOLITH Plymouth theme (also asks for LUKS passwords).";
     };
 
+    gpuModules = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "amdgpu" ];
+      description = ''
+        GPU kernel modules loaded in the initrd ("early KMS": i915 / xe, amdgpu, nouveau, virtio_gpu...). The splash
+        then starts on the real display at once instead of on the firmware framebuffer, and is not interrupted
+        when the driver loads later. The guided installer detects them. (Not for the proprietary NVIDIA driver.)
+      '';
+    };
+
+    splashMinSeconds = mkOption {
+      type = types.ints.between 0 15;
+      default = 6;
+      description = ''
+        The splash stays at least until this many seconds after the kernel started, so the animation completes
+        on very fast boots (NVMe). Never delays a boot that is already slower; 0 disables it.
+      '';
+    };
+
     seamless = mkOption {
       type = types.bool;
       default = true;
@@ -103,10 +123,19 @@ in
         themePackages = [ plymouthTheme ];
         font = "${plymouthTheme}/${plymouthTheme.font}";
       };
-      # the splash's last frame stays until the greeter (same frame) takes the screen
-      systemd.services.plymouth-quit.serviceConfig.ExecStart = mkIf (cfg.seamless && config.monolith.greeter.enable) [
+      # early KMS: the splash starts on the real display instead of the firmware framebuffer
+      boot.initrd.kernelModules = cfg.gpuModules;
+      # minimum splash time, then quit; with the MONOLITH greeter the last frame stays until it draws the same one
+      systemd.services.plymouth-quit.serviceConfig.ExecStart = [
         ""
-        "${config.boot.plymouth.package}/bin/plymouth quit --retain-splash"
+        "${pkgs.writeShellScript "monolith-plymouth-quit" ''
+          up=$(${pkgs.coreutils}/bin/cut -d. -f1 /proc/uptime)
+          wait=$((${toString cfg.splashMinSeconds} - up))
+          [ "$wait" -gt 0 ] && ${pkgs.coreutils}/bin/sleep "$wait"
+          exec ${config.boot.plymouth.package}/bin/plymouth quit ${
+            lib.optionalString (cfg.seamless && config.monolith.greeter.enable) "--retain-splash"
+          }
+        ''}"
       ];
     })
 

@@ -43,6 +43,12 @@ check "LUKS: no initrd option (systemd stage 1 is the only one, the option was r
 check "language en" has bios 'language = "en";'
 check "extra lines right after stateVersion" bash -c "grep -A2 'system.stateVersion' '$TMP/bios/configuration.nix' | grep -q swapDevices"
 
+fresh gpu
+check "GPU modules run succeeds" env MI_GPU="amdgpu i915" bash "$INST" --customize-only "$TMP/gpu"
+check "early KMS modules written" has gpu '    boot.gpuModules = [ "amdgpu" "i915" ];'
+check "early KMS inside the monolith block" bash -c "grep -A1 'boot.enable = true;' '$TMP/gpu/configuration.nix' | grep -q gpuModules"
+check "no GPU line without modules" bash -c "! grep -q gpuModules '$TMP/uefi/configuration.nix'"
+
 fresh broken
 sed -i 's/user = "alice";/username = "alice";/' "$TMP/broken/configuration.nix"
 check "a changed template is reported, not half-filled silently" bash -c "! bash '$INST' --customize-only '$TMP/broken'"

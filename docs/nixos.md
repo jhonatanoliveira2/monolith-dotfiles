@@ -168,6 +168,8 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `boot.silent` | `true` | `quiet` and low log levels (messages stay in the journal) |
 | `boot.plymouth.enable` | `true` | MONOLITH splash, also for LUKS passwords |
 | `boot.seamless` | `true` | splash's last frame stays until the greeter draws the same frame |
+| `boot.gpuModules` | `[ ]` | GPU driver in the initrd (`i915`, `xe`, `amdgpu`, `nouveau`...): the splash starts at once and is not cut when the driver loads; the guided installer fills it |
+| `boot.splashMinSeconds` | `6` | the splash lasts at least until this many seconds after the kernel starts (fast NVMe boots); `0` = off |
 | `boot.grub.enable` | GRUB in use | GRUB theme |
 | `boot.grub.resolution` | `"1920x1080"` | theme drawn for this size; GRUB's preferred mode (`,auto` fallback) |
 | `boot.recovery` | `true` | extra boot entry "recovery" (no splash, verbose, text login) |
@@ -199,11 +201,14 @@ a faint halo, standing above a lit horizon), the `MONOLITH` wordmark in JetBrain
 
 1. **GRUB**: the mark and wordmark at the top, grey entries, the selected one white in a thin light frame (the
    shell's selected rows). The timeout is the 2 px line, emptying. Keys are listed at the bottom.
-2. **Plymouth**: the mark fades in at the centre, a light sweep crosses it every few seconds and the line fills
-   with the boot progress. Disk passwords and questions take the line's place; systemd messages show at the bottom.
+2. **Plymouth**: the mark appears at the centre with a breathing bloom, a light sweep crosses it right away and
+   then every ~2 s, and the line (with its own glow) fills with the boot progress. Shutdown and reboot show the
+   mark at once. Disk passwords and questions take the line's place; systemd messages show at the bottom.
 3. **Greeter**: opens on Plymouth's last frame (same place, same size) — the splash is kept on screen until then
-   (`plymouth quit --retain-splash`) — then the mark rises, the line fades and the clock and login appear.
-   A successful login plays the light sweep, fades to black and starts the session.
+   (`plymouth quit --retain-splash`) — then the mark rises and turns pure white with its bloom, the line fades, a
+   night sky appears (twinkling stars drifting down, falling stars) and the minimal login fades in: clock, user,
+   a password line that glows when focused, the session and three power icons. A successful login flares the
+   bloom, fades to black and starts the session.
 
 The greeter authenticates through PAM (greetd): extra prompts (second factor, expired password) appear in the
 same field. Up / Down choose the user, Ctrl+Left / Right the session, Esc cancels. The last user and session

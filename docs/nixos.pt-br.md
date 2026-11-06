@@ -170,6 +170,8 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `boot.silent` | `true` | `quiet` e níveis de log baixos (as mensagens ficam no journal) |
 | `boot.plymouth.enable` | `true` | splash do MONOLITH, inclusive para senhas LUKS |
 | `boot.seamless` | `true` | o último quadro do splash fica na tela até o greeter desenhar o mesmo quadro |
+| `boot.gpuModules` | `[ ]` | driver de vídeo no initrd (`i915`, `xe`, `amdgpu`, `nouveau`...): o splash começa na hora e não é cortado quando o driver carrega; o instalador guiado preenche |
+| `boot.splashMinSeconds` | `6` | o splash dura pelo menos até esse número de segundos após o kernel iniciar (boots rápidos em NVMe); `0` = desliga |
 | `boot.grub.enable` | GRUB em uso | tema do GRUB |
 | `boot.grub.resolution` | `"1920x1080"` | tamanho para o qual o tema é desenhado; modo preferido do GRUB (com `,auto`) |
 | `boot.recovery` | `true` | entrada de boot extra "recovery" (sem splash, verbosa, login em texto) |
@@ -201,12 +203,15 @@ claro, um halo discreto, sobre um horizonte iluminado), o wordmark `MONOLITH` em
 
 1. **GRUB**: marca e wordmark no topo, entradas em cinza, a selecionada em branco numa moldura fina (como as
    linhas selecionadas do shell). O tempo limite é a linha de 2 px, esvaziando. As teclas aparecem embaixo.
-2. **Plymouth**: a marca surge no centro, uma faixa de luz a atravessa a cada poucos segundos e a linha enche
-   com o progresso do boot. Senhas de disco e perguntas ocupam o lugar da linha; mensagens do systemd aparecem
+2. **Plymouth**: a marca aparece no centro com um bloom que "respira", uma faixa de luz a atravessa logo de
+   início e depois a cada ~2 s, e a linha (com brilho próprio) enche com o progresso do boot. Desligar e reiniciar
+   mostram a marca na hora. Senhas de disco e perguntas ocupam o lugar da linha; mensagens do systemd aparecem
    embaixo.
 3. **Greeter**: abre no último quadro do Plymouth (mesmo lugar, mesmo tamanho) — o splash fica na tela até
-   lá (`plymouth quit --retain-splash`) — então a marca sobe, a linha some e o relógio e o login aparecem.
-   Um login bem-sucedido passa a faixa de luz, escurece a tela e inicia a sessão.
+   lá (`plymouth quit --retain-splash`) — então a marca sobe e fica branca com seu bloom, a linha some, surge um
+   céu noturno (estrelas cintilando descendo devagar, estrelas cadentes) e o login minimalista aparece: relógio,
+   usuário, uma linha de senha que brilha ao focar, a sessão e três ícones de energia. Um login bem-sucedido
+   intensifica o bloom, escurece a tela e inicia a sessão.
 
 O greeter autentica pelo PAM (greetd): prompts extras (segundo fator, senha expirada) aparecem no mesmo campo.
 Cima / Baixo escolhem o usuário, Ctrl+Esquerda / Direita a sessão, Esc cancela. O último usuário e a última

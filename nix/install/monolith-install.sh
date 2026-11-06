@@ -21,7 +21,7 @@ FLAKE_REF=${MONOLITH_FLAKE:-github:jhonatanoliveira2/monolith-dotfiles/feature/n
 TEMPLATE_DIR=${MONOLITH_TEMPLATE:-}      # set by the Nix package (templates/nixos from the same revision)
 MNT=/mnt
 MIN_GIB=20
-DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi
+DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS=""
 
 # ── output / input ────────────────────────────────────────────────────────────────────────────────────────
 if [[ -t 1 ]]; then B=$'\e[1m' D=$'\e[2m' R=$'\e[31m' Y=$'\e[33m' G=$'\e[32m' N=$'\e[0m'; else B="" D="" R="" Y="" G="" N=""; fi
@@ -84,6 +84,13 @@ customize() {
         sed -i -e "s|device = \"nodev\";|device = \"$DISK\";|" -e 's|efiSupport = true;|efiSupport = false;|' \
             -e '/boot.loader.efi.canTouchEfiVariables = true;/d' "$c"
     fi
+    if [[ -n $GPUMODS ]]; then   # early KMS: the splash starts on the real display (monolith.boot.gpuModules)
+        local list="" m
+        for m in $GPUMODS; do list+="\"$m\" "; done
+        sed -i "/boot.enable = true;/a\\
+    boot.gpuModules = [ ${list}]; # GPU driver in the initrd: splash from the first second" "$c"
+        grep -qF "boot.gpuModules = [ $list]" "$c" || die "template: gpuModules not set"
+    fi
     local extra=""
     ((SWAP_GIB > 0)) && extra+="  swapDevices = [ { device = \"/var/lib/swapfile\"; size = $((SWAP_GIB * 1024)); } ];\\n"
     [[ -n $extra ]] && sed -i "/system.stateVersion = /a\\
@@ -105,7 +112,7 @@ if [[ -n $CUSTOMIZE_ONLY ]]; then
     : "${MI_LANG:=pt}" "${MI_BOOT:=uefi}" "${MI_DISK:=/dev/vda}" "${MI_SWAP:=0}" "${MI_LUKS:=0}"
     LANGX=$MI_LANG BOOTMODE=$MI_BOOT DISK=$MI_DISK SWAP_GIB=$MI_SWAP LUKS=$MI_LUKS
     USERNAME=${MI_USER:-maria} FULLNAME=${MI_NAME:-Maria Silva} HOST=${MI_HOST:-estacao} TZONE=${MI_TZ:-Europe/Lisbon}
-    LOCALE=${MI_LOCALE:-pt_PT.UTF-8} XKB=${MI_XKB:-pt} KEYMAP=${MI_KEYMAP:-pt-latin1} STATEVER=${MI_STATE:-26.05}
+    LOCALE=${MI_LOCALE:-pt_PT.UTF-8} XKB=${MI_XKB:-pt} KEYMAP=${MI_KEYMAP:-pt-latin1} STATEVER=${MI_STATE:-26.05} GPUMODS=${MI_GPU-}
     customize "$CUSTOMIZE_ONLY"
     exit 0
 fi
@@ -144,6 +151,17 @@ else
         "No access to cache.nixos.org. Plug the cable or use nmtui / wpa_cli first.")"
     yes_no "$(t "Continuar mesmo assim?" "Continue anyway?")" n || exit 1
 fi
+# GPU drivers bound on the ISO, kept for the initrd (early KMS) when they are open drivers the kernel ships
+for drv in /sys/class/drm/card[0-9]*/device/driver; do
+    [[ -e $drv ]] || continue
+    d=$(basename "$(readlink -f "$drv")")
+    case $d in i915 | xe | amdgpu | radeon | nouveau | virtio_gpu | virtio-pci | qxl | bochs-drm | vmwgfx)
+        [[ $d == virtio-pci ]] && d=virtio_gpu
+        [[ $d == bochs-drm ]] && d=bochs
+        [[ " $GPUMODS " == *" $d "* ]] || GPUMODS+="${GPUMODS:+ }$d" ;;
+    esac
+done
+[[ -n $GPUMODS ]] && ok "$(t "Vídeo" "Graphics"): $GPUMODS ($(t "carregado no initrd" "loaded in the initrd"))"
 STATEVER=$(nixos-version 2>/dev/null | cut -c1-5)
 [[ $STATEVER =~ ^[0-9]{2}\.[0-9]{2}$ ]] || STATEVER=25.11
 export NIX_CONFIG="experimental-features = nix-command flakes"
