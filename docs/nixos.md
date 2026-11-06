@@ -169,7 +169,7 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `boot.plymouth.enable` | `true` | MONOLITH splash, also for LUKS passwords |
 | `boot.seamless` | `true` | splash's last frame stays until the greeter draws the same frame |
 | `boot.gpuModules` | `[ ]` | GPU driver in the initrd (`i915`, `xe`, `amdgpu`, `nouveau`...): the splash starts at once and is not cut when the driver loads; the guided installer fills it |
-| `boot.splashMinSeconds` | `6` | the splash lasts at least until this many seconds after the kernel starts (fast NVMe boots); `0` = off |
+| `boot.splashMinSeconds` | `6` | minimum loading screen time: at startup the splash lasts until this many seconds after the kernel starts (fast NVMe boots), at reboot / power off at least this long; `0` = off. Initial value: **Settings › System › Startup** changes it without a rebuild (`/var/lib/monolith/splash-min-seconds`) |
 | `boot.grub.enable` | GRUB in use | GRUB theme |
 | `boot.grub.resolution` | `"1920x1080"` | theme drawn for this size; GRUB's preferred mode (`,auto` fallback) |
 | `boot.recovery` | `true` | extra boot entry "recovery" (no splash, verbose, text login) |
@@ -178,6 +178,7 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `greeter.defaultUser` / `defaultSession` | `null` / `"hyprland"` | used until a login is remembered |
 | `greeter.allowOtherUsers` / `consoleSession` | `true` / `true` | type another user name / "Console" session |
 | `greeter.clock24`, `animations`, `keyboard` | `true`, `true`, xkb layout | footer and behaviour |
+| `greeter.output` | `null` | with several monitors, the one showing the login (e.g. `"HDMI-A-1"`); the others show the night sky. `null` = the built-in panel unless the lid is closed, else the first monitor |
 | `greeter.startTimeout`, `fallback` | `25`, `true` | seconds before the text greeter (tuigreet) takes over |
 
 ### Home Manager (`programs.monolith.*`)

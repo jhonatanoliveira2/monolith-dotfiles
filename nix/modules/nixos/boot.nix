@@ -32,6 +32,14 @@ let
     inherit (config.monolith) language;
   };
   plymouthTheme = mpkgs.plymouth-theme;
+  # minimum splash time: the value set in Settings (digits only, at most 30), else the option
+  readSplashMin = pkgs.writeShellScript "monolith-splash-min" ''
+    n=$(${pkgs.coreutils}/bin/head -c 8 /var/lib/monolith/splash-min-seconds 2>/dev/null | ${pkgs.coreutils}/bin/tr -cd 0-9)
+    n=''${n:-${toString cfg.splashMinSeconds}}
+    [ "$n" -gt 30 ] && n=30
+    echo "$n"
+  '';
+  splashMin = "$(${readSplashMin})";
 in
 {
   options.monolith.boot = {
@@ -61,11 +69,13 @@ in
     };
 
     splashMinSeconds = mkOption {
-      type = types.ints.between 0 15;
+      type = types.ints.between 0 30;
       default = 6;
       description = ''
-        The splash stays at least until this many seconds after the kernel started, so the animation completes
-        on very fast boots (NVMe). Never delays a boot that is already slower; 0 disables it.
+        Minimum time of the loading screen. At startup the splash stays until this many seconds after the
+        kernel started (never delays a boot that is already slower); at reboot / power off it stays at least
+        this long. 0 disables it. Initial value only: Settings > System > Startup changes it at runtime
+        (kept in /var/lib/monolith/splash-min-seconds, writable by the wheel group).
       '';
     };
 
@@ -117,6 +127,27 @@ in
     })
 
     (mkIf cfg.plymouth.enable {
+      # reboot / power off: hold the shutdown until the splash has been up for the minimum time. Stopped (and
+      # so sleeping) only when the system goes down, in parallel with the other services; never on a switch.
+      systemd.services.monolith-splash-hold = {
+        description = "Minimum time of the MONOLITH shutdown splash";
+        wantedBy = [ "multi-user.target" ];
+        restartIfChanged = false;
+        stopIfChanged = false;
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.coreutils}/bin/true";
+          ExecStop = pkgs.writeShellScript "monolith-splash-hold" ''
+            [ "$(${pkgs.systemd}/bin/systemctl is-system-running)" = stopping ] || exit 0
+            n=${splashMin}
+            [ "$n" -gt 0 ] && exec ${pkgs.coreutils}/bin/sleep "$n"
+            exit 0
+          '';
+          TimeoutStopSec = 45;
+        };
+      };
+
       boot.plymouth = {
         enable = true;
         theme = "monolith";
@@ -126,11 +157,15 @@ in
       # early KMS: the splash starts on the real display instead of the firmware framebuffer
       boot.initrd.kernelModules = cfg.gpuModules;
       # minimum splash time, then quit; with the MONOLITH greeter the last frame stays until it draws the same one
+      systemd.tmpfiles.rules = [
+        "f /var/lib/monolith/splash-min-seconds 0664 root wheel - ${toString cfg.splashMinSeconds}"
+        "z /var/lib/monolith/splash-min-seconds 0664 root wheel -"
+      ];
       systemd.services.plymouth-quit.serviceConfig.ExecStart = [
         ""
         "${pkgs.writeShellScript "monolith-plymouth-quit" ''
           up=$(${pkgs.coreutils}/bin/cut -d. -f1 /proc/uptime)
-          wait=$((${toString cfg.splashMinSeconds} - up))
+          wait=$((${splashMin} - up))
           [ "$wait" -gt 0 ] && ${pkgs.coreutils}/bin/sleep "$wait"
           exec ${config.boot.plymouth.package}/bin/plymouth quit ${
             lib.optionalString (cfg.seamless && config.monolith.greeter.enable) "--retain-splash"

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import Quickshell
+import Quickshell.Io
 import "core"
 import "components"
 
@@ -45,7 +46,30 @@ FloatingWindow {
         duration: Theme.dur(1300); easing.type: Easing.InOutCubic
     }
     function mix(a, b) { return a + (b - a) * phase }
-    readonly property real screenH: height
+    readonly property real screenH: stage.height
+
+    // ── several monitors: cage stretches this one window over all of them (its "extend" mode), so the sky
+    // covers every monitor and the login sits on one: monolith.greeter.output if set, else the built-in panel
+    // (eDP / LVDS / DSI) unless the lid is closed, else the first monitor. Screen positions are relative to the
+    // layout's top-left corner, which is the window's origin.
+    property bool lidClosed: false
+    Process {
+        running: true
+        command: ["sh", "-c", "cat /proc/acpi/button/lid/*/state 2>/dev/null"]
+        stdout: StdioCollector { onStreamFinished: win.lidClosed = /closed/.test(text) }
+    }
+    readonly property rect loginRect: {
+        const list = Quickshell.screens
+        const all = []
+        for (let i = 0; i < list.length; i++) all.push(list[i])
+        if (all.length < 2) return Qt.rect(0, 0, width, height)
+        const internal = s => /^(eDP|LVDS|DSI)/.test(s.name || "")
+        let pick = all.find(s => win.cfg.output && s.name === win.cfg.output)
+        if (!pick && !win.lidClosed) pick = all.find(internal)
+        if (!pick) pick = all.find(s => !(win.lidClosed && internal(s))) || all[0]
+        const x0 = Math.min(...all.map(s => s.x)), y0 = Math.min(...all.map(s => s.y))
+        return Qt.rect(pick.x - x0, pick.y - y0, Math.min(pick.width, width), Math.min(pick.height, height))
+    }
     readonly property real markH: mix(screenH * 0.20, screenH * 0.12)
     readonly property real markY: mix(screenH / 2 - screenH * 0.20 * 0.62, screenH * 0.13)
     readonly property real ui: Math.max(0, Math.min(1, (phase - 0.5) / 0.5))
@@ -62,12 +86,13 @@ FloatingWindow {
 
     Item {
         id: stage
-        anchors.fill: parent
+        x: win.loginRect.x; y: win.loginRect.y
+        width: win.loginRect.width; height: win.loginRect.height
 
         // optional wallpaper (monolith.greeter.background), very dark
         Image {
             id: wall
-            anchors.fill: parent
+            x: -stage.x; y: -stage.y; width: win.width; height: win.height
             source: win.cfg.background ? "file://" + win.cfg.background : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
@@ -75,7 +100,8 @@ FloatingWindow {
         }
 
         Starfield {
-            anchors.fill: parent
+            x: -stage.x; y: -stage.y; width: win.width; height: win.height
+            clear: Qt.rect(stage.x, stage.y, stage.width, stage.height)
             branding: win.cfg.branding || ""
             opacity: win.phase * (1 - win.flare)
             running: Theme.animations && !win.greeter.leaving && win.visible
@@ -85,7 +111,7 @@ FloatingWindow {
         Item {
             id: mark
             width: Math.round(win.markH * 0.8); height: Math.round(win.markH)
-            x: Math.round((win.width - width) / 2); y: Math.round(win.markY)
+            x: Math.round((stage.width - width) / 2); y: Math.round(win.markY)
             scale: 1 + win.flare * 0.06
             Image {
                 // bloom sprite: 1.5x canvas centred on the mark
@@ -143,7 +169,7 @@ FloatingWindow {
             // Plymouth's size at first (continuity), larger in the login layout
             height: Math.round(win.markH * win.mix(0.11, 0.24))
             width: Math.round(height * 10)          // the wordmark SVG is 640 x 64
-            x: Math.round((win.width - width) / 2)
+            x: Math.round((stage.width - width) / 2)
             y: Math.round(mark.y + mark.height + win.markH * win.mix(0.16, 0.10))
             Image {
                 x: -parent.width * 0.25; y: -parent.height * 0.25
@@ -163,7 +189,7 @@ FloatingWindow {
         Rectangle {
             readonly property real w: win.screenH * 0.20 * 0.8 * 2.2
             width: Math.round(w * (1 - win.phase * 0.6)); height: 2
-            x: Math.round((win.width - width) / 2)
+            x: Math.round((stage.width - width) / 2)
             y: Math.round(wordmark.y + wordmark.height + win.markH * 0.16)
             color: "white"
             opacity: 0.95 * Math.max(0, 1 - win.phase * 2.5)
@@ -215,7 +241,7 @@ FloatingWindow {
             id: card
             width: 300
             property real dx: 0
-            x: Math.round((win.width - width) / 2 + dx)
+            x: Math.round((stage.width - width) / 2 + dx)
             y: Math.round(win.screenH * 0.58 + (1 - win.ui) * 28)
             opacity: win.ui * (1 - win.flare)
             enabled: !win.greeter.leaving
@@ -414,7 +440,7 @@ FloatingWindow {
         // ── leaving: the bloom flares, then black; greetd starts the session ──
         Rectangle {
             id: curtain
-            anchors.fill: parent
+            x: -stage.x; y: -stage.y; width: win.width; height: win.height
             color: "black"
             opacity: 0
         }

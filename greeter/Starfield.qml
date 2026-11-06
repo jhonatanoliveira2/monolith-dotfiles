@@ -12,6 +12,7 @@ Item {
     id: sky
     property bool running: true
     property string branding: ""
+    property rect clear: Qt.rect(0, 0, width, height)     // the login's monitor: sparkles keep off its middle
     readonly property real area: width * height / 1000000          // megapixels (~2 on 1920 x 1080)
     clip: true
 

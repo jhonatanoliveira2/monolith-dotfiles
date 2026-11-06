@@ -171,7 +171,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `boot.plymouth.enable` | `true` | splash do MONOLITH, inclusive para senhas LUKS |
 | `boot.seamless` | `true` | o último quadro do splash fica na tela até o greeter desenhar o mesmo quadro |
 | `boot.gpuModules` | `[ ]` | driver de vídeo no initrd (`i915`, `xe`, `amdgpu`, `nouveau`...): o splash começa na hora e não é cortado quando o driver carrega; o instalador guiado preenche |
-| `boot.splashMinSeconds` | `6` | o splash dura pelo menos até esse número de segundos após o kernel iniciar (boots rápidos em NVMe); `0` = desliga |
+| `boot.splashMinSeconds` | `6` | tempo mínimo da tela de carregamento: ao ligar, o splash dura até esse número de segundos após o kernel iniciar (boots rápidos em NVMe); ao reiniciar / desligar, pelo menos esse tempo; `0` = desliga. Valor inicial: **Configurações › Sistema › Inicialização** muda sem rebuild (`/var/lib/monolith/splash-min-seconds`) |
 | `boot.grub.enable` | GRUB em uso | tema do GRUB |
 | `boot.grub.resolution` | `"1920x1080"` | tamanho para o qual o tema é desenhado; modo preferido do GRUB (com `,auto`) |
 | `boot.recovery` | `true` | entrada de boot extra "recovery" (sem splash, verbosa, login em texto) |
@@ -180,6 +180,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `greeter.defaultUser` / `defaultSession` | `null` / `"hyprland"` | usados até um login ser lembrado |
 | `greeter.allowOtherUsers` / `consoleSession` | `true` / `true` | digitar outro usuário / sessão "Console" |
 | `greeter.clock24`, `animations`, `keyboard` | `true`, `true`, layout xkb | rodapé e comportamento |
+| `greeter.output` | `null` | com vários monitores, o que mostra o login (ex.: `"HDMI-A-1"`); os outros mostram o céu. `null` = a tela do notebook, a menos que a tampa esteja fechada; senão o primeiro monitor |
 | `greeter.startTimeout`, `fallback` | `25`, `true` | segundos até o greeter em texto (tuigreet) assumir |
 
 ### Home Manager (`programs.monolith.*`)

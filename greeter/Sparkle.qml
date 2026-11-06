@@ -36,9 +36,11 @@ Item {
     Rectangle { anchors.centerIn: parent; width: 2; height: 2; radius: 1; color: "white" }
 
     function place() {
-        // the sides of the screen only: never over the logo, the clock or the login column
-        const r = Math.random() * 0.64
-        x = (r < 0.32 ? r : r + 0.36) * area.width
+        // never over the logo, the clock or the login column (the middle 36 % of the login's monitor)
+        const c = area.clear, l = c.x + c.width * 0.32, r = c.x + c.width * 0.68
+        const free = area.width - (r - l)
+        const u = Math.random() * free
+        x = u < l ? u : u + (r - l)
         y = Math.random() * area.height * 0.85
         size = 12 + Math.random() * 16
         anim.restart()

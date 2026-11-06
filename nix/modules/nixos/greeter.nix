@@ -40,6 +40,7 @@ let
       allowOtherUsers
       clock24
       animations
+      output
       ;
     console = cfg.consoleSession;
     users = map (u: {
@@ -75,7 +76,7 @@ let
 
     run=$(mktemp -d)
     export MONOLITH_GREETER_READY=$run/ready
-    cage -s -d -- sh -c 'qs -p "$1"; echo $? >"$2"' sh ${greeter}/${greeter.configDir} "$run/status" &
+    cage -s -d -m extend -- sh -c 'qs -p "$1"; echo $? >"$2"' sh ${greeter}/${greeter.configDir} "$run/status" &
     pid=$!
     # watchdog: no window after the timeout = fall back below
     ( sleep ${toString cfg.startTimeout}; [ -e "$run/ready" ] || kill "$pid" 2>/dev/null ) &
@@ -134,6 +135,15 @@ in
       type = types.bool;
       default = true;
       description = "Opening, light sweep and fade animations.";
+    };
+    output = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "HDMI-A-1";
+      description = ''
+        With several monitors, the one showing the login (connector name, as in `hyprctl monitors`); the others
+        show the night sky. Null = the built-in panel (eDP / LVDS / DSI) unless the lid is closed, else the first.
+      '';
     };
     keyboard = mkOption {
       type = types.nullOr types.str;
