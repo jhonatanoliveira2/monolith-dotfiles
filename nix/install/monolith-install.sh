@@ -124,7 +124,7 @@ fi
 step "$(t "Verificações" "Checks")"
 ((DRY || EUID == 0)) || die "$(t "Execute como root (sudo)." "Run as root (sudo).")"
 [[ -e /etc/NIXOS ]] || die "$(t "Isto não é um sistema NixOS: use a ISO de instalação." "This is not NixOS: use the installer ISO.")"
-for c in nixos-install nixos-generate-config nixos-enter parted wipefs lsblk findmnt mkfs.ext4 mkfs.fat; do
+for c in nixos-install nixos-generate-config nixos-enter parted partprobe wipefs blkid blockdev lsblk findmnt udevadm mkfs.ext4 mkfs.fat; do
     command -v "$c" >/dev/null || die "$(t "Comando ausente" "Missing command"): $c"
 done
 LIVE_SRC=$(findmnt -no SOURCE /iso 2>/dev/null || findmnt -no SOURCE /nix/.ro-store 2>/dev/null || true)
@@ -249,48 +249,77 @@ EOF
 
     # ── partition, format, mount ──────────────────────────────────────────────────────────────────────────
     step "$(t "Preparando o disco" "Preparing the disk")"
+    # 1. clear the old layout (partitions first, then the tables) and let udev finish with the disk
+    run udevadm settle
+    mapfile -t OLD < <(lsblk -lnpo NAME,TYPE "$DISK" | awk '$2 == "part" { print $1 }')
+    for p in "${OLD[@]}"; do run wipefs -af "$p"; done
     run wipefs -af "$DISK"
+    run udevadm settle
+
+    # 2. new table; START = first sector (512-byte units, as in /sys) of each partition, checked below
     if [[ $BOOTMODE == uefi ]]; then
         run parted -s "$DISK" -- mklabel gpt mkpart ESP fat32 1MiB 1GiB set 1 esp on mkpart root ext4 1GiB 100%
+        START=(2048 2097152)
+    elif ((LUKS)); then   # /boot must stay outside the encrypted volume for GRUB
+        run parted -s "$DISK" -- mklabel msdos mkpart primary ext4 1MiB 1GiB set 1 boot on mkpart primary ext4 1GiB 100%
+        START=(2048 2097152)
     else
-        if ((LUKS)); then   # /boot must stay outside the encrypted volume for GRUB
-            run parted -s "$DISK" -- mklabel msdos mkpart primary ext4 1MiB 1GiB set 1 boot on mkpart primary ext4 1GiB 100%
-        else
-            run parted -s "$DISK" -- mklabel msdos mkpart primary ext4 1MiB 100% set 1 boot on
-        fi
+        run parted -s "$DISK" -- mklabel msdos mkpart primary ext4 1MiB 100% set 1 boot on
+        START=(2048)
     fi
-    run udevadm settle
-    if ((DRY)); then
-        PARTS=("${DISK}-part1" "${DISK}-part2")
-    else
-        need=2; [[ $BOOTMODE == bios && $LUKS == 0 ]] && need=1
+
+    # 3. the kernel must use the NEW table before anything is formatted: right after parted it may still
+    #    show the old partitions while udev re-reads the disk, and mkfs would then write at the old offsets
+    partdev() { if [[ $DISK =~ [0-9]$ ]]; then printf '%sp%s' "$DISK" "$1"; else printf '%s%s' "$DISK" "$1"; fi; }
+    PARTS=()
+    for ((n = 1; n <= ${#START[@]}; n++)); do PARTS+=("$(partdev "$n")"); done
+    if ((!DRY)); then
+        synced=0
         for _ in 1 2 3 4 5 6 7 8 9 10; do
-            mapfile -t PARTS < <(lsblk -lnpo NAME,TYPE "$DISK" | awk '$2 == "part" { print $1 }')
-            ((${#PARTS[@]} >= need)) && break
+            partprobe "$DISK" 2>/dev/null || blockdev --rereadpt "$DISK" 2>/dev/null || true
+            udevadm settle
+            synced=1
+            for ((n = 1; n <= ${#START[@]}; n++)); do
+                dev=${PARTS[n - 1]} sys=/sys/class/block/$(basename "${PARTS[n - 1]}")/start
+                [[ -b $dev && -r $sys && $(<"$sys") == "${START[n - 1]}" ]] || synced=0
+            done
+            ((synced)) && break
             sleep 1
         done
+        ((synced)) || die "$(t "O kernel continua usando a tabela de partições antiga de $DISK. Reinicie a ISO e rode o instalador de novo (o disco já foi limpo)." \
+            "The kernel still uses the old partition table of $DISK. Reboot the ISO and run the installer again (the disk is already wiped).")"
+        ok "$(t "Partições" "Partitions"): ${PARTS[*]}"
     fi
-    if [[ $BOOTMODE == bios && $LUKS == 0 ]]; then BOOTP="" ROOTP=${PARTS[0]-}; else BOOTP=${PARTS[0]} ROOTP=${PARTS[1]-}; fi
-    [[ -n $ROOTP ]] || die "$(t "As partições não apareceram em $DISK." "The partitions did not appear on $DISK.")"
+    if [[ $BOOTMODE == bios && $LUKS == 0 ]]; then BOOTP="" ROOTP=${PARTS[0]}; else BOOTP=${PARTS[0]} ROOTP=${PARTS[1]}; fi
     for p in "${PARTS[@]}"; do run wipefs -af "$p"; done
 
+    # fs_is <device> <type>: what is really on the device now (blkid -p reads it, no cache)
+    fs_is() {
+        ((DRY)) && return 0
+        udevadm settle
+        [[ $(blkid -p -s TYPE -o value "$1" 2>/dev/null) == "$2" ]]
+    }
     ROOTFS=$ROOTP
     if ((LUKS)); then
         printf '  %s\n' "$(t "Escolha a senha do disco (pedida a cada boot):" "Choose the disk password (asked at every boot):")"
         until run cryptsetup -q luksFormat --type luks2 --verify-passphrase "$ROOTP"; do warn "$(t "Tente de novo." "Try again.")"; done
+        fs_is "$ROOTP" crypto_LUKS || die "LUKS: $(t "formatação não encontrada em" "no LUKS header on") $ROOTP"
         until run cryptsetup open "$ROOTP" cryptroot; do warn "$(t "Senha incorreta, tente de novo." "Wrong password, try again.")"; done
         ROOTFS=/dev/mapper/cryptroot
     fi
     run mkfs.ext4 -F -q -L nixos "$ROOTFS"
-    run mount "$ROOTFS" "$MNT"
+    fs_is "$ROOTFS" ext4 || die "$(t "ext4 não encontrado em $ROOTFS depois do mkfs." "No ext4 on $ROOTFS after mkfs.")"
+    run mount -t ext4 "$ROOTFS" "$MNT"
     if [[ $BOOTMODE == uefi ]]; then
         run mkfs.fat -F 32 -n BOOT "$BOOTP"
+        fs_is "$BOOTP" vfat || die "$(t "FAT32 não encontrado em $BOOTP depois do mkfs." "No FAT32 on $BOOTP after mkfs.")"
         run mkdir -p "$MNT/boot"
-        run mount -o umask=077 "$BOOTP" "$MNT/boot"
+        run mount -t vfat -o umask=077 "$BOOTP" "$MNT/boot"
     elif [[ -n $BOOTP ]]; then
         run mkfs.ext4 -F -q -L boot "$BOOTP"
+        fs_is "$BOOTP" ext4 || die "$(t "ext4 não encontrado em $BOOTP depois do mkfs." "No ext4 on $BOOTP after mkfs.")"
         run mkdir -p "$MNT/boot"
-        run mount "$BOOTP" "$MNT/boot"
+        run mount -t ext4 "$BOOTP" "$MNT/boot"
     fi
     ok "$(t "Disco pronto" "Disk ready"): $ROOTFS$( [[ -n $BOOTP ]] && printf ' + %s' "$BOOTP")"
 
