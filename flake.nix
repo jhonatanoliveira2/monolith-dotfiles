@@ -43,10 +43,20 @@
             plymouth-theme
             grub-theme
             greeter
+            installer
             ;
           default = set.shell;
         }
       );
+
+      # sudo nix --extra-experimental-features "nix-command flakes" run github:<repo>/feature/nixos-support#install
+      apps = forAllSystems (pkgs: {
+        install = {
+          type = "app";
+          program = "${self.packages.${pkgs.stdenv.hostPlatform.system}.installer}/bin/monolith-install";
+          meta.description = "Guided NixOS + MONOLITH installer (run from the NixOS installer ISO)";
+        };
+      });
 
       homeManagerModules = rec {
         monolith = import ./nix/modules/home.nix { inherit meta; };

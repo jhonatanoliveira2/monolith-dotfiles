@@ -15,6 +15,8 @@ rec {
   branding = callPackage ./branding.nix { };
   plymouth-theme = callPackage ./plymouth-theme.nix { inherit branding; };
   grub-theme = callPackage ./grub-theme.nix { inherit branding; };
+  # guided installer for the NixOS ISO (`nix run .#install`)
+  installer = callPackage ./installer.nix { };
   # Quickshell greeter for greetd (greeter/ + shared components of the shell)
   greeter = callPackage ./greeter.nix { inherit branding shell; };
 }

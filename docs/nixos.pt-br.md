@@ -56,7 +56,27 @@ e Configurações > Atualização.
 
 ## Instalação
 
-### Pela ISO de instalação do NixOS (máquina nova)
+### Instalador guiado (ISO do NixOS, recomendado)
+
+Inicie a ISO de instalação do NixOS (a mínima basta), conecte-se à rede e rode:
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support#install
+```
+
+Ele pergunta o idioma, o disco de destino, usuário, hostname, fuso, locale, teclado, criptografia do disco
+(LUKS) e swap, mostra um resumo e só apaga o disco depois que o nome dele é digitado de volta. Então particiona
+(GPT + partição EFI de 1 GiB no UEFI, MBR no BIOS), formata em ext4, executa `nixos-generate-config`, preenche o
+template com as respostas, instala, define a senha do usuário (o root fica bloqueado: use `sudo`) e reinicia.
+
+- Segurança: o pendrive da ISO, discos montados, discos em uso (swap, LUKS, LVM, RAID) e discos com menos de
+  20 GiB nunca são oferecidos; `-- --dry-run` mostra cada comando sem alterar nada.
+- Se a instalação parar depois de o disco ser preparado (rede, um erro corrigido na branch), rode o mesmo comando
+  de novo: ele oferece retomar e busca a versão mais recente da branch (`--refresh`).
+- Depois de instalar: `sudo nixos-rebuild switch --flake /etc/nixos`.
+
+### Pela ISO de instalação do NixOS, à mão
 
 A ISO ainda não tem `/etc/nixos/hardware-configuration.nix`: ele é gerado para o disco de destino depois de
 particionar. Os flakes também vêm desligados na ISO, daí o `--extra-experimental-features`. Exemplo para uma

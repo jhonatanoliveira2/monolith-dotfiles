@@ -54,7 +54,27 @@ keeps the battery charge limit in `/var/lib/monolith` when `/etc` is read-only, 
 
 ## Installing
 
-### From the NixOS installer ISO (new machine)
+### Guided installer (NixOS ISO, recommended)
+
+Boot the NixOS installer ISO (the minimal one is enough), connect to the network and run:
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support#install
+```
+
+It asks for the language, the target disk, user, hostname, time zone, locale, keyboard, disk encryption (LUKS)
+and swap, shows a summary and only erases the disk after its name is typed back. Then it partitions
+(GPT + 1 GiB EFI partition on UEFI, MBR on BIOS), formats ext4, runs `nixos-generate-config`, fills the
+template with the answers, installs, sets the user's password (root stays locked: use `sudo`) and reboots.
+
+- Safety: the ISO stick, mounted disks, disks in use (swap, LUKS, LVM, RAID) and disks under 20 GiB are never
+  offered; `-- --dry-run` shows every command without changing anything.
+- If the install stops after the disk was prepared (network, an error fixed on the branch), run the same command
+  again: it offers to resume and fetches the latest version of the branch (`--refresh`).
+- After installing: `sudo nixos-rebuild switch --flake /etc/nixos`.
+
+### From the NixOS installer ISO, by hand
 
 The live ISO has no `/etc/nixos/hardware-configuration.nix` yet: it is generated for the target disk after
 partitioning. Flakes are also off on the ISO, hence `--extra-experimental-features`. Example for a UEFI machine
