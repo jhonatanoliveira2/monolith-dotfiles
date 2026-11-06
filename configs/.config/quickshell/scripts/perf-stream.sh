@@ -50,7 +50,7 @@ scan_gpu() {    # fdinfo paths of every open DRM node
 }
 
 while :; do
-    now=${EPOCHREALTIME/./}    # µs
+    now=$(( 10#${EPOCHREALTIME/[.,]/} ))    # µs (either decimal separator)
     dt=$(( now - prevT )); (( prevT > 0 && dt > 0 )) || dt=0
     prevT=$now
 
@@ -128,5 +128,7 @@ while :; do
 
     printf 'self\t%d\t%d\t%d\nend\n' "$selfCpu" "$selfRss" "$selfGpu"
     unset cpuBy memBy curTicks gpuBy seen curGpu
-    read -r -t "$INTERVAL" -u "$fd" _ || true
+    # wait; if the pipe ever returns early (EOF on some systems), fall back to sleep instead of spinning
+    read -r -t "$INTERVAL" -u "$fd" _
+    (( 10#${EPOCHREALTIME/[.,]/} - now < INTERVAL * 500000 )) && sleep "$INTERVAL"
 done
