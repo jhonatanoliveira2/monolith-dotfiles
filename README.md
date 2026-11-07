@@ -72,6 +72,8 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 
 > [!NOTE]
 > **NixOS:** this branch ships a flake (NixOS + Home Manager modules, GRUB theme, Plymouth splash and greeter). See [`docs/nixos.md`](docs/nixos.md); the steps below are for Arch Linux / CachyOS.
+>
+> **Nothing theme:** dot-matrix / LED look, on by default on this branch. See [`docs/nothing-theme.md`](docs/nothing-theme.md). This project is not affiliated with Nothing Technology Limited.
 
 **Requirements:** Arch Linux or CachyOS ([details](docs/installation.md#arch-linux-and-cachyos)) · Bash 4.4+ · Git · a regular user account · Hyprland 0.55 or newer. An AUR helper (**paru** or **yay**) is only needed if you want the installer to build AUR packages.
 

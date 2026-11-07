@@ -261,6 +261,12 @@ Editar um arquivo ligado não funciona (ele está na store, somente leitura): al
 coloque-o em `mutableFiles`. Tudo o que o app de Configurações escreve (`~/.config/hypr/generated/`,
 `~/.local/state/quickshell-monolith/`) continua gravável.
 
+## Tema Nothing
+
+A branch `feature/nothing-theme` acrescenta um visual opcional de matriz de pontos / LEDs (cinzas, fontes Doto
+/ Space, medidores de LEDs, brilho de borda, wallpapers em matriz de LEDs). Veja
+[`nothing-theme.pt-br.md`](nothing-theme.pt-br.md).
+
 ## Verificação e problemas
 
 ```bash

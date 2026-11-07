@@ -258,6 +258,11 @@ Editing a linked file does not work (it is in the read-only store): change it in
 add it to `mutableFiles`. Everything the Settings app writes (`~/.config/hypr/generated/`,
 `~/.local/state/quickshell-monolith/`) stays writable.
 
+## Nothing theme
+
+The `feature/nothing-theme` branch adds an optional dot-matrix / LED look (greys, Doto / Space fonts, LED
+meters, edge glow, LED-matrix wallpapers). See [`nothing-theme.md`](nothing-theme.md).
+
 ## Checking and troubleshooting
 
 ```bash
