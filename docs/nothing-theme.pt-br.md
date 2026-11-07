@@ -32,6 +32,7 @@ shell fica exatamente como o da `feature/nixos-support`.
 | Menu central | relógio em Doto, abas com LED, calendário com o dia contornado, colunas de LEDs para CPU / GPU / RAM e fileiras de LEDs em toda barra de progresso, uso e temperatura; com a barra na lateral, ele abre no topo central quando o mouse para no meio da borda de cima (ou com um clique no relógio), como uma gaveta da moldura (estilo moldura: mesmo preto, junções côncavas, a linha da moldura contornando) |
 | Bateria | a carga em LEDs (uma fileira; oito em coluna na barra lateral), vermelhos com carga baixa, uma luz subindo enquanto carrega |
 | Widgets | todos os widgets de um tamanho têm a mesma largura (pequeno 256, médio 320, grande 416 px), o relógio centralizado no card; o espectro de áudio (cava) do widget de letra é desenhado em colunas de LEDs |
+| Cursor | **MONOLITH Dots**: um "+" de LEDs como ponteiro e formas de LEDs para links, texto, espera (animada), mover e redimensionar; LEDs brancos com contorno escuro e sombra, visíveis em fundo claro e escuro (Hyprland, GTK, Qt) |
 | Superfícies | uma grade discreta de LEDs apagados atrás dos cards e dos widgets da área de trabalho; títulos das Configurações com marcador de LEDs |
 | Notificações | nome do app em maiúsculas com um LED, texto em Space Grotesk; **brilho de borda** opcional: um trecho de luz percorre a borda interna da tela a cada notificação, duas vezes e em vermelho nas críticas |
 | Wallpapers | wallpapers estáticos exibidos como matriz de LEDs na resolução nativa de cada monitor (os arquivos originais nunca são alterados); wallpapers animados (vídeo) ficam como estão |
@@ -72,6 +73,7 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `led.spacing` | `3` | na hora | espaço entre LEDs em px |
 | `led.shape` | `"circle"` | na hora | `circle`, `rounded` ou `square` (wallpapers e LEDs da interface) |
 | `monochrome` | `true` | na hora | paleta cinza no shell e LEDs cinza nos wallpapers; desligado: o tema de cores fica e os LEDs pegam as cores da imagem |
+| `cursor.enable`, `cursor.size` | `true`, `32` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
 | `edgeGlow` | `true` | na hora | luz na borda da tela nas notificações |
 | `wallpaper.style` | `"dotmatrix"` | na hora | `dotmatrix` ou `original` |
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |

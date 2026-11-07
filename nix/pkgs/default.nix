@@ -23,4 +23,5 @@ rec {
   # modules (nix/modules/nothing.nix), which know the outputs
   dotmatrix = callPackage ./dotmatrix.nix { };
   nothing-fonts = callPackage ./nothing-fonts.nix { };
+  nothing-cursors = callPackage ./nothing-cursors.nix { };
 }

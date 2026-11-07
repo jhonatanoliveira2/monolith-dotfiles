@@ -63,7 +63,27 @@ in
     home.packages = [
       mpkgs.dotmatrix
       mpkgs.nothing-fonts
-    ];
+    ]
+    ++ lib.optional cfg.cursor.enable mpkgs.nothing-cursors;
+    # cursor theme: Hyprland reads ~/.config/monolith/cursor (hypr/modules/environment.lua); GTK's "default"
+    # theme (settings.ini) inherits it; GNOME-style settings and Qt follow the same name and size
+    home.file = lib.mkIf cfg.cursor.enable {
+      ".icons/Monolith-Dots".source = "${mpkgs.nothing-cursors}/share/icons/Monolith-Dots";
+      ".icons/default/index.theme".text = "[Icon Theme]\nName=Default\nInherits=Monolith-Dots\n";
+    };
+    home.sessionVariables = lib.mkIf cfg.cursor.enable {
+      XCURSOR_THEME = "Monolith-Dots";
+      XCURSOR_SIZE = toString cfg.cursor.size;
+    };
+    dconf.settings = lib.mkIf cfg.cursor.enable {
+      "org/gnome/desktop/interface" = {
+        cursor-theme = "Monolith-Dots";
+        cursor-size = cfg.cursor.size;
+      };
+    };
+    xdg.configFile."monolith/cursor" = lib.mkIf cfg.cursor.enable {
+      text = "Monolith-Dots ${toString cfg.cursor.size}\n";
+    };
     xdg.configFile."monolith/nothing.json".text = builtins.toJSON {
       version = 1;
       # what the shell starts from; Settings > Themes > Nothing changes them at runtime

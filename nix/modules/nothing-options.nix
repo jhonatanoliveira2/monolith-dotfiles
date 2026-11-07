@@ -45,6 +45,18 @@ in
       theme in use stays and wallpaper LEDs take the picture's hues.
     '';
   };
+  cursor = {
+    enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = "MONOLITH Dots cursors: a \"+\" of LEDs as the pointer (Hyprland, GTK, Qt). Requires a rebuild.";
+    };
+    size = mkOption {
+      type = types.ints.between 16 96;
+      default = 32;
+      description = "Cursor size in px (24 / 32 / 48 / 64 / 96 are drawn; others are scaled).";
+    };
+  };
   edgeGlow = mkOption {
     type = types.bool;
     default = true;

@@ -31,6 +31,7 @@ the `feature/nixos-support` one.
 | Center menu | Doto clock, LED tab markers, calendar with an outlined day, LED columns for CPU / GPU / RAM, LED rows for every progress, usage and temperature bar; with a side bar it opens at the top centre when the pointer rests on the middle of the top edge (or on a click on the clock), as a drawer of the frame (frame style: same black, concave joints, the frame line running around it) |
 | Battery | the charge as LEDs (a row; eight in a column on a side bar), red when low, a light scanning up while charging |
 | Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
+| Cursor | **MONOLITH Dots**: a "+" of LEDs as the pointer and LED shapes for links, text, waiting (animated), moving and resizing; white LEDs with a dark rim and shadow, visible on light and dark backgrounds (Hyprland, GTK, Qt) |
 | Surfaces | a faint grid of unlit LEDs behind cards and desktop widgets; Settings headings with an LED marker |
 | Notifications | app name as an upper-case label with an LED, Space Grotesk text; optional **edge glow**: a segment of light runs around the inside of the screen edge on each toast, twice and red for critical ones |
 | Wallpapers | still wallpapers shown as LED matrices at each monitor's native resolution (the original files are never changed); live (video) wallpapers are left alone |
@@ -71,6 +72,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.spacing` | `3` | runtime | gap between LEDs in px |
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
+| `cursor.enable`, `cursor.size` | `true`, `32` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |
