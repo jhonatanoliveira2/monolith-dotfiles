@@ -99,6 +99,7 @@ Singleton {
     property alias themePreset: adapter.themePreset
     property alias themePalette: adapter.themePalette
     property alias themeFollow: adapter.themeFollow
+    property alias nothing: adapter.nothing
     property alias themeVscode: adapter.themeVscode
     property alias micNoise: adapter.micNoise
     property alias micNoiseLevel: adapter.micNoiseLevel
@@ -248,6 +249,7 @@ Singleton {
             property string themePreset: "nord"    // core/Palettes.qml presets
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
             property bool themeVscode: true        // workbench.colorCustomizations of VS Code follow the theme
+            property var nothing: ({})             // Nothing theme: runtime overrides of the Nix defaults (core/Nothing.qml)
             property bool themeFollow: true        // dynamic theme regenerates on every wallpaper change (off: only on request)
             // microphone effects (Settings > Microphone, services/MicFx.qml)
             property bool micNoise: false          // RNNoise noise suppression

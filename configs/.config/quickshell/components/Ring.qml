@@ -15,8 +15,15 @@ Item {
     property real shown: Math.max(0, Math.min(1, value))
     Behavior on shown { NumberAnimation { duration: Theme.dur(600); easing.type: Easing.OutCubic } }
 
+    LedRing {
+        anchors.fill: parent
+        visible: Theme.nothing
+        value: root.shown
+        litColor: root.color; offColor: root.trackColor
+    }
     Shape {
         anchors.fill: parent
+        visible: !Theme.nothing
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
             strokeColor: root.trackColor; strokeWidth: root.thickness; fillColor: "transparent"; capStyle: ShapePath.RoundCap

@@ -67,7 +67,13 @@ Scope {
                     anchors { left: ic.right; leftMargin: 10; right: pct.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
                     spacing: 6
                     Txt { visible: Osd.kind === "media"; width: parent.width; text: Media.title + (Media.artist ? "  ·  " + Media.artist : ""); color: Theme.foreground; font.pixelSize: Theme.small }
+                    DotMeter {
+                        visible: Theme.nothing
+                        width: parent.width; dot: 6
+                        value: box.value
+                    }
                     Rectangle {
+                        visible: !Theme.nothing
                         width: parent.width; height: 4; radius: 2; color: Theme.grayDark
                         Rectangle {
                             width: parent.width * Math.max(0, Math.min(1, box.value)); height: parent.height; radius: 2

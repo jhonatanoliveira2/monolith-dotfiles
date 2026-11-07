@@ -9,7 +9,9 @@ MenuButton {
     id: root
     menu: "calendar"
     SystemClock { id: clock; precision: /s/.test(Settings.clockPattern.replace(/'[^']*'/g, "")) ? SystemClock.Seconds : SystemClock.Minutes }
-    BarTxt { visible: !root.vertical; text: Qt.formatDateTime(clock.date, Settings.clockPattern) }
+    BarTxt { visible: !root.vertical; text: Qt.formatDateTime(clock.date, Settings.clockPattern)
+             font.family: Theme.fontDot; font.pixelSize: Theme.nothing && Nothing.hasDot ? 17 : Theme.fontSize
+             font.weight: Theme.nothing && Nothing.hasDot ? Font.Black : Font.Bold }
     BarTxt { visible: root.vertical; text: Qt.formatDateTime(clock.date, Settings.clock24 ? "HH" : "hh"); color: BarTheme.white }
     BarTxt { visible: root.vertical; text: Qt.formatDateTime(clock.date, "mm") }
     BarTxt { visible: root.vertical && Settings.clockSeconds; text: Qt.formatDateTime(clock.date, "ss"); font.pixelSize: Theme.small; color: BarTheme.grayMid }

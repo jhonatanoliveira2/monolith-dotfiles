@@ -7,7 +7,9 @@ import Quickshell
 Singleton {
     // Colours come from the active theme (core/Palettes.qml, Settings > Themes); the default theme is the
     // original palette below, unchanged: #111111 / #eeeeee / #ffffff / #cccccc / #888888 / #444444.
-    readonly property var p: Palettes.active
+    // The Nothing theme (core/Nothing.qml, monochrome) replaces the colour theme with its greys.
+    readonly property var p: Nothing.monochrome ? Nothing.palette : Palettes.active
+    readonly property bool nothing: Nothing.active
     readonly property color background: p.background
     readonly property color foreground: p.foreground
     readonly property color white: p.white
@@ -25,11 +27,16 @@ Singleton {
     readonly property color pressed: tint(0.16)
     readonly property color selected: Palettes.alpha(p.accent, 0.12)
     readonly property color selectedBorder: grayLight
-    readonly property color critical: tint(0.14)
+    readonly property color critical: nothing ? Palettes.alpha(Nothing.alert, 0.22) : tint(0.14)
+    readonly property color alert: Nothing.alert                 // red: critical alerts only (Nothing theme)
     // translucent light overlay (white on the default theme)
     function tint(a) { return Palettes.alpha(p.tint, a) }
 
-    readonly property string font: "JetBrainsMono Nerd Font"
+    // Nothing theme: Space Mono for the interface (monospaced like the default, so layouts keep their widths),
+    // Space Grotesk for headings and notification text, Doto for large numbers; glyphs fall back to the Nerd Font
+    readonly property string font: nothing ? Nothing.fontMono : "JetBrainsMono Nerd Font"
+    readonly property string fontSans: nothing ? Nothing.fontSans : font
+    readonly property string fontDot: nothing ? Nothing.fontDot : font
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int barHeight: 32

@@ -16,8 +16,15 @@ Item {
         root.moved(v)
     }
 
+    DotMeter {
+        visible: Theme.nothing
+        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
+        dot: 5
+        value: root.value
+    }
     Rectangle {
         id: track
+        visible: !Theme.nothing
         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
         height: 4
         color: Theme.grayDark
@@ -33,7 +40,8 @@ Item {
     }
     Rectangle {
         visible: mouse.containsMouse || mouse.pressed
-        width: 6; height: 12
+        width: Theme.nothing ? 9 : 6; height: Theme.nothing ? 9 : 12
+        radius: Theme.nothing && Nothing.ledShape === "circle" ? width / 2 : 0
         x: track.width * Math.max(0, Math.min(1, root.value)) - width / 2
         anchors.verticalCenter: parent.verticalCenter
         color: Theme.foreground

@@ -15,8 +15,10 @@ Item {
         spacing: 2
         Row {
             spacing: 2
-            Txt { id: big; text: Qt.formatTime(root.now, Settings.clock24 ? "HH:mm" : "h:mm"); font.pixelSize: Math.round(52 * root.k); color: Theme.white }
-            Txt { y: big.baselineOffset - baselineOffset; text: Qt.formatTime(root.now, ":ss"); font.pixelSize: Math.round(20 * root.k); color: Theme.grayMid }
+            Txt { id: big; text: Qt.formatTime(root.now, Settings.clock24 ? "HH:mm" : "h:mm"); font.pixelSize: Math.round(52 * root.k); color: Theme.white
+                  font.family: Theme.fontDot; font.weight: Theme.nothing && Nothing.hasDot ? Font.Black : Font.Bold }
+            Txt { y: big.baselineOffset - baselineOffset; text: Qt.formatTime(root.now, ":ss"); font.pixelSize: Math.round(20 * root.k); color: Theme.grayMid
+                  font.family: Theme.fontDot }
         }
         Txt { text: root.loc.toString(root.now, "dddd, d MMMM"); color: Theme.foreground; font.pixelSize: Math.round(Theme.fontSize * root.k); font.bold: false }
     }
