@@ -70,11 +70,39 @@ Item {
 
     // ── bars ──
     readonly property int count: bands * 2 - 1
+    // Nothing theme: each bar is a column of LEDs lit outwards from the centre line, mirrored up and down
+    readonly property real ledW: Math.max(2, (sp.width - sp.gap * (sp.count - 1)) / sp.count)
+    readonly property int rows: Math.max(3, Math.floor((sp.height + sp.gap) / (ledW + sp.gap)) | 1)    // odd: a middle LED
     Row {
+        visible: Theme.nothing
         anchors.centerIn: parent
         spacing: sp.gap
         Repeater {
-            model: sp.count
+            model: Theme.nothing ? sp.count : 0
+            delegate: Column {
+                required property int index
+                readonly property int band: Math.abs(index - (sp.bands - 1))
+                readonly property real v: sp.values.length > band ? sp.values[band] : 0
+                readonly property int reach: Math.round(v * (sp.rows - 1) / 2)          // LEDs lit each side of the middle
+                spacing: sp.gap
+                Repeater {
+                    model: sp.rows
+                    delegate: Led {
+                        required property int index
+                        width: sp.ledW; height: sp.ledW
+                        lit: Math.abs(index - (sp.rows - 1) / 2) <= parent.reach
+                        litColor: sp.color
+                    }
+                }
+            }
+        }
+    }
+    Row {
+        visible: !Theme.nothing
+        anchors.centerIn: parent
+        spacing: sp.gap
+        Repeater {
+            model: Theme.nothing ? 0 : sp.count
             delegate: Rectangle {
                 required property int index
                 readonly property int band: Math.abs(index - (sp.bands - 1))          // bass in the middle
