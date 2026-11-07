@@ -8,8 +8,9 @@ import "../core"
 // restarts). Drawn by WidgetLayer.qml on the desktop (bottom layer, under the windows) and, in edit mode, on an
 // overlay where they are dragged, resized, added and removed.
 //
-// Sizes: every widget comes in small / medium / large (entry.size 0..2, medium when missing). The card is the
-// type's w x h times `scales[size]`, and the widget's file gets that factor as `k` to scale its contents.
+// Sizes: every widget comes in small / medium / large (entry.size 0..2, medium when missing). All widgets of a
+// size have the same width (`width` x `scales[size]`, so they line up in columns); the height is the type's `h`
+// at that scale, and the widget's file gets the factor as `k` to scale its contents.
 //
 // Temporary widgets (Widgets.addTemp, from the widget editor, Super+B): kept only in memory, so they are gone when the
 // shell restarts, like a program's window; each one stays on the workspace it was created on and ignores
@@ -17,20 +18,21 @@ import "../core"
 //
 // Adding a widget type: create widgets/<Name>Widget.qml (an Item that fills its parent and declares
 // `property real k: 1`; see ClockWidget.qml) and add one line to `types` below with its id, name, glyph,
-// medium size and file.
+// medium height and file.
 Singleton {
     id: root
     property bool editing: false
     readonly property int grid: 8            // positions snap to this
     readonly property var scales: [0.8, 1, 1.3]
+    readonly property int width: 320            // every widget, medium size (small 256, large 416)
     readonly property var sizeNames: [["P", "S"], ["M", "M"], ["G", "L"]]
 
     readonly property var types: [
-        { id: "clock", glyph: 0xf017, name: ["Relógio", "Clock"], desc: ["Hora e data", "Time and date"], w: 280, h: 128, file: "ClockWidget.qml" },
-        { id: "system", glyph: 0xf4bc, name: ["Sistema", "System"], desc: ["CPU, RAM e GPU", "CPU, RAM and GPU"], w: 300, h: 128, file: "SystemWidget.qml" },
-        { id: "weather", glyph: 0xf0590, name: ["Clima", "Weather"], desc: ["Tempo agora (Open-Meteo)", "Current weather (Open-Meteo)"], w: 240, h: 128, file: "WeatherWidget.qml" },
-        { id: "media", glyph: 0xf0ea2, name: ["Mídia", "Media"], desc: ["Música tocando e controles", "Now playing and controls"], w: 340, h: 104, file: "MediaWidget.qml" },
-        { id: "lyrics", glyph: 0xf0c9, name: ["Letra", "Lyrics"], desc: ["Letra karaokê da música tocando", "Karaoke lyrics of the playing song"], w: 380, h: 200, file: "LyricsWidget.qml" }
+        { id: "clock", glyph: 0xf017, name: ["Relógio", "Clock"], desc: ["Hora e data", "Time and date"], h: 128, file: "ClockWidget.qml" },
+        { id: "system", glyph: 0xf4bc, name: ["Sistema", "System"], desc: ["CPU, RAM e GPU", "CPU, RAM and GPU"], h: 128, file: "SystemWidget.qml" },
+        { id: "weather", glyph: 0xf0590, name: ["Clima", "Weather"], desc: ["Tempo agora (Open-Meteo)", "Current weather (Open-Meteo)"], h: 128, file: "WeatherWidget.qml" },
+        { id: "media", glyph: 0xf0ea2, name: ["Mídia", "Media"], desc: ["Música tocando e controles", "Now playing and controls"], h: 104, file: "MediaWidget.qml" },
+        { id: "lyrics", glyph: 0xf0c9, name: ["Letra", "Lyrics"], desc: ["Letra karaokê da música tocando", "Karaoke lyrics of the playing song"], h: 200, file: "LyricsWidget.qml" }
     ]
     function type(id) { return types.find(t => t.id === id) || null }
     function name(t) { return t ? t.name[Settings.language === "en" ? 1 : 0] : "" }
@@ -39,7 +41,7 @@ Singleton {
     // card size of a placed widget (or of a type at a size)
     function dims(w, size) {
         const t = type(w.type || w.id), k = scales[size !== undefined ? size : sizeOf(w)]
-        return t ? { w: Math.round(t.w * k / grid) * grid, h: Math.round(t.h * k / grid) * grid, k: k } : { w: 0, h: 0, k: 1 }
+        return t ? { w: Math.round(root.width * k / grid) * grid, h: Math.round(t.h * k / grid) * grid, k: k } : { w: 0, h: 0, k: 1 }
     }
 
     readonly property var list: (Settings.widgets || []).filter(w => w && type(w.type))
