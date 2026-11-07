@@ -14,5 +14,5 @@ MenuButton {
         while (Math.abs(acc) >= 60) { Brightness.nudge(acc > 0 ? 5 : -5); acc -= acc > 0 ? 60 : -60 }
     }
     BarTxt { text: Theme.glyph.backlight; font.pixelSize: Theme.barIcon }
-    BarTxt { text: Math.round(Brightness.fraction * 100) + "%"; font.pixelSize: Settings.barVertical ? Theme.small : Theme.fontSize }
+    BarTxt { text: Math.round(Brightness.fraction * 100) + "%"; visible: !root.vertical }   // icon only on a side bar
 }
