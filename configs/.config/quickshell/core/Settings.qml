@@ -79,6 +79,7 @@ Singleton {
     property alias widgetOpacity: adapter.widgetOpacity
     property alias weatherLocation: adapter.weatherLocation
     property alias shellBlur: adapter.shellBlur
+    property alias opaque: adapter.opaque
     property alias launcherIcons: adapter.launcherIcons
     property alias launcherComments: adapter.launcherComments
     property alias launcherSort: adapter.launcherSort
@@ -225,6 +226,7 @@ Singleton {
             property bool barShadow: true          // capsule / frame styles
             property int barShadowStrength: 80     // %
             property string menuStyle: "auto"      // auto (attached on the sides / bottom) | attached | floating
+            property bool opaque: false            // no transparency anywhere: bar, menus, widgets, windows (legibility)
             property bool shellBlur: true          // compositor blur behind the bar, menus, toasts and OSD
             // app launcher (menus/Launcher.qml)
             property bool launcherIcons: true

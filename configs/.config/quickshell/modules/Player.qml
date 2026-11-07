@@ -123,7 +123,7 @@ Item {
             height: parent.height - 10
             radius: 4
             // light glass over the bar (follows its opacity setting); the bright controls keep it readable
-            color: Palettes.alpha(Theme.p.panel, Math.min(0.5, Config.barOpacity * 0.6))
+            color: Palettes.alpha(Theme.p.panel, Settings.opaque ? 1 : Math.min(0.5, Config.barOpacity * 0.6))
             border.width: 1
             border.color: BarTheme.line
             opacity: root.expanded && !root.menuOpen ? 1 : 0

@@ -30,7 +30,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: Theme.menuRadius
-        color: Palettes.alpha(Theme.p.panel, Settings.widgetOpacity)
+        color: Palettes.alpha(Theme.p.panel, Config.widgetOpacity)
         border.width: 1
         border.color: drag.drag.active ? Theme.accent : host.editing ? Theme.grayMid : Theme.line
         Behavior on border.color { ColorAnimation { duration: Theme.dur(120) } }
