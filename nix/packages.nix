@@ -1,4 +1,4 @@
-# The NixOS counterpart of packages.txt (same groups, same reasons). System services (Hyprland, PipeWire,
+# User programs of the MONOLITH Shell, required and optional (programs.monolith.optionalPackages). System services (Hyprland, PipeWire,
 # NetworkManager, BlueZ, UPower, udisks, power-profiles-daemon, the portal, polkit) are enabled by the NixOS
 # module instead (nix/modules/nixos/system.nix); these are the user programs Home Manager installs.
 pkgs: {
