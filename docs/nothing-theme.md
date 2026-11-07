@@ -72,12 +72,13 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.spacing` | `3` | runtime | gap between LEDs in px |
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
-| `cursor.enable`, `cursor.size` | `true`, `32` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
+| `cursor.enable`, `cursor.size` | `true`, `28` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |
 | `wallpaper.levels` | `2` | runtime | brightness steps with dithering (`2` = on / off) |
 | `wallpaper.invert` | `false` | runtime | light the dark parts |
+| `wallpaper.contrast`, `wallpaper.brightness` | `100`, `100` | runtime | contrast and brightness of the wallpapers in % (50 to 200; Settings has a button back to the default) |
 | `wallpaper.colors.{lit,off,background}` | `f2f2f2`, `141414`, `000000` | rebuild | LED colours of the wallpapers |
 | `wallpaper.outputs` | `{ }` | rebuild | monitors rendered at build time, `{ eDP-1 = { width = 1920; height = 1200; }; }` |
 | `wallpaper.dirs` | `[ <repo>/wallpapers/static ]` | rebuild | folders whose still pictures are rendered at build time |
@@ -100,7 +101,7 @@ monolith.nothingTheme = {
 **Settings > Themes > Nothing** (shown only when `nothing.json` exists):
 
 - **Apply at once:** theme on / off, monochrome, edge glow, LED shape, size and spacing, wallpaper style,
-  dithering, brightness levels, invert. They are saved as overrides in
+  dithering, brightness levels, invert, wallpaper contrast and brightness (with a button back to the default). They are saved as overrides in
   `~/.local/state/quickshell-monolith/settings.json` (`nothing`); changing a wallpaper option shows the current
   still wallpaper again with the new look.
 - **Reset to defaults:** drops the overrides, back to the values of the Nix configuration.

@@ -210,12 +210,13 @@ dm_load() {
     local fields
     fields=$(jq -r 'select(.enabled == true and .wallpaperStyle == "dotmatrix")
         | [.ledSize // 6, .ledSpacing // 3, .ledShape // "circle", .dither // "none", .levels // 2,
-           (.invert // false), (.monochrome // true), .lit // "f2f2f2", .off // "141414", .background // "000000"] | @tsv' <<<"$look" 2>/dev/null)
+           (.invert // false), (.monochrome // true), .lit // "f2f2f2", .off // "141414", .background // "000000",
+           ((.contrast // 100) / 100), ((.brightness // 100) / 100)] | @tsv' <<<"$look" 2>/dev/null)
     [[ -n $fields ]] || return 1
-    local size spacing shape dither levels invert mono lit off bg
-    IFS=$'\t' read -r size spacing shape dither levels invert mono lit off bg <<<"$fields"
+    local size spacing shape dither levels invert mono lit off bg contrast brightness
+    IFS=$'\t' read -r size spacing shape dither levels invert mono lit off bg contrast brightness <<<"$fields"
     DM_ARGS=(--size "$size" --spacing "$spacing" --shape "$shape" --dither "$dither" --levels "$levels"
-             --lit "${lit#\#}" --off "${off#\#}" --background "${bg#\#}")
+             --lit "${lit#\#}" --off "${off#\#}" --background "${bg#\#}" --contrast "$contrast" --brightness "$brightness")
     [[ $invert == true ]] && DM_ARGS+=(--invert)
     [[ $mono == true ]] || DM_ARGS+=(--color)
     DM_KEY=$(monolith-dotmatrix --key "${DM_ARGS[@]}") || return 1

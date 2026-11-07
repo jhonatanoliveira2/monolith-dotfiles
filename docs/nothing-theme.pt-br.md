@@ -73,12 +73,13 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `led.spacing` | `3` | na hora | espaço entre LEDs em px |
 | `led.shape` | `"circle"` | na hora | `circle`, `rounded` ou `square` (wallpapers e LEDs da interface) |
 | `monochrome` | `true` | na hora | paleta cinza no shell e LEDs cinza nos wallpapers; desligado: o tema de cores fica e os LEDs pegam as cores da imagem |
-| `cursor.enable`, `cursor.size` | `true`, `32` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
+| `cursor.enable`, `cursor.size` | `true`, `28` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
 | `edgeGlow` | `true` | na hora | luz na borda da tela nas notificações |
 | `wallpaper.style` | `"dotmatrix"` | na hora | `dotmatrix` ou `original` |
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |
 | `wallpaper.levels` | `2` | na hora | níveis de brilho com pontilhado (`2` = aceso / apagado) |
 | `wallpaper.invert` | `false` | na hora | acende as partes escuras |
+| `wallpaper.contrast`, `wallpaper.brightness` | `100`, `100` | na hora | contraste e brilho dos wallpapers em % (50 a 200; as Configurações têm um botão para voltar ao padrão) |
 | `wallpaper.colors.{lit,off,background}` | `f2f2f2`, `141414`, `000000` | rebuild | cores dos LEDs dos wallpapers |
 | `wallpaper.outputs` | `{ }` | rebuild | monitores convertidos no build, `{ eDP-1 = { width = 1920; height = 1200; }; }` |
 | `wallpaper.dirs` | `[ <repo>/wallpapers/static ]` | rebuild | pastas cujas imagens estáticas são convertidas no build |
@@ -101,7 +102,8 @@ monolith.nothingTheme = {
 **Configurações › Temas › Nothing** (só aparece quando o `nothing.json` existe):
 
 - **Aplicam na hora:** tema ligado / desligado, monocromático, brilho de borda, formato, tamanho e espaçamento
-  dos LEDs, estilo do wallpaper, pontilhado, níveis de brilho, inverter. Ficam salvos como ajustes em
+  dos LEDs, estilo do wallpaper, pontilhado, níveis de brilho, inverter, contraste e brilho do wallpaper (com um
+  botão para voltar ao padrão). Ficam salvos como ajustes em
   `~/.local/state/quickshell-monolith/settings.json` (`nothing`); mudar uma opção de wallpaper reaplica o
   wallpaper estático atual com o novo visual.
 - **Restaurar padrões:** descarta os ajustes e volta aos valores da configuração Nix.

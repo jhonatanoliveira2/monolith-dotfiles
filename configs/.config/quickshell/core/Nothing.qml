@@ -28,6 +28,14 @@ Singleton {
         Settings.nothing = o
         if (wallpaperKeys.indexOf(k) >= 0) wallpaperSoon.restart()
     }
+    // wallpaper contrast and brightness back to the Nix defaults (Settings > Themes > Nothing)
+    function resetTone() {
+        const o = Object.assign({}, overrides)
+        delete o.contrast; delete o.brightness
+        Settings.nothing = o
+        wallpaperSoon.restart()
+    }
+    readonly property bool toneChanged: overrides.contrast !== undefined || overrides.brightness !== undefined
     function reset() { Settings.nothing = ({}); wallpaperSoon.restart() }
     readonly property bool customised: Object.keys(overrides).length > 0
 
@@ -41,7 +49,7 @@ Singleton {
     readonly property string wallpaperStyle: get("wallpaperStyle") || "original"
 
     // wallpaper look changed: services/Wallpapers.qml re-applies the current still wallpaper
-    readonly property var wallpaperKeys: ["enabled", "monochrome", "ledShape", "ledSize", "ledSpacing", "wallpaperStyle", "dither", "levels", "invert"]
+    readonly property var wallpaperKeys: ["enabled", "monochrome", "ledShape", "ledSize", "ledSpacing", "wallpaperStyle", "dither", "levels", "invert", "contrast", "brightness"]
     signal wallpaperChanged()
     Timer { id: wallpaperSoon; interval: 700; onTriggered: root.wallpaperChanged() }
 

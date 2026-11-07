@@ -26,7 +26,7 @@ from PIL import Image
 SHAPES = ("circle", "square", "rounded")
 DITHERS = ("none", "floyd", "bayer")
 # version of the look: part of the cache key, so a change of the curve below renders every wallpaper again
-LOOK = "v4"
+LOOK = "v5"
 BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
 
 
@@ -54,7 +54,8 @@ def resolution(text):
 def key(a):
     """Canonical description of the look; equal keys = identical output (the Nix module builds the same)."""
     return "-".join([LOOK, str(a.size), str(a.spacing), a.shape, a.dither, str(a.levels), "inv" if a.invert else "pos",
-                     "color" if a.color else "mono", a.lit, a.off, a.background])
+                     "color" if a.color else "mono", a.lit, a.off, a.background,
+                     f"c{round(a.contrast * 100)}", f"b{round(a.brightness * 100)}"])
 
 
 def cover(img, width, height):

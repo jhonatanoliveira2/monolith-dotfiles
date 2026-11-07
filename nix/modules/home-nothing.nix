@@ -17,7 +17,7 @@ let
   colors = lib.mapAttrs (_: bare) w.colors;
   # the same string as `monolith-dotmatrix --key` (nix/nothing/dotmatrix.py): equal keys = identical output
   key = lib.concatStringsSep "-" [
-    "v4" # LOOK in dotmatrix.py
+    "v5" # LOOK in dotmatrix.py
     (toString cfg.led.size)
     (toString cfg.led.spacing)
     cfg.led.shape
@@ -28,7 +28,11 @@ let
     colors.lit
     colors.off
     colors.background
+    "c${toString w.contrast}"
+    "b${toString w.brightness}"
   ];
+  # 115 -> "1.15": the renderer takes factors, the options are percentages
+  factor = p: "${toString (p / 100)}.${lib.fixedWidthNumber 2 (lib.mod p 100)}";
   args = [
     "--size"
     (toString cfg.led.size)
@@ -46,6 +50,10 @@ let
     colors.off
     "--background"
     colors.background
+    "--contrast"
+    (factor w.contrast)
+    "--brightness"
+    (factor w.brightness)
   ]
   ++ lib.optional w.invert "--invert"
   ++ lib.optional (!cfg.monochrome) "--color";
@@ -94,7 +102,7 @@ in
         ledSpacing = cfg.led.spacing;
         ledShape = cfg.led.shape;
         wallpaperStyle = w.style;
-        inherit (w) dither levels invert;
+        inherit (w) dither levels invert contrast brightness;
         inherit (colors) lit off background;
       };
       palette = lib.mapAttrs (_: c: "#${c}") tokens.palette;

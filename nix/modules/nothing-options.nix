@@ -53,8 +53,8 @@ in
     };
     size = mkOption {
       type = types.ints.between 16 96;
-      default = 32;
-      description = "Cursor size in px (24 / 32 / 48 / 64 / 96 are drawn; others are scaled).";
+      default = 28;
+      description = "Cursor size in px (24 / 28 / 32 / 48 / 64 / 96 are drawn; others are scaled).";
     };
   };
   edgeGlow = mkOption {
@@ -89,6 +89,16 @@ in
       type = types.bool;
       default = false;
       description = "Light the dark parts of the picture.";
+    };
+    contrast = mkOption {
+      type = types.ints.between 50 200;
+      default = 100;
+      description = "Contrast of the wallpapers in % (100 = the original curve; more = blacker blacks, whiter whites).";
+    };
+    brightness = mkOption {
+      type = types.ints.between 50 200;
+      default = 100;
+      description = "Brightness of the lit LEDs in % (100 = the original).";
     };
     colors = {
       lit = mkOption {
