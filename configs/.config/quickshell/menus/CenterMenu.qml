@@ -16,7 +16,9 @@ MenuWindow {
     menu: "center"
     panelWidth: 760
     maxHeight: 900
-    hoverKeep: true
+    // side bar: opens at the top centre (a drawer of the frame in frame style), by a click on the clock
+    topCenter: Settings.barVertical
+    hoverKeep: !Settings.barVertical
     hoverScroll: true
 
     Column {
@@ -171,9 +173,16 @@ MenuWindow {
                         width: tabRow.width / col.tabs.length; height: tabRow.height
                         readonly property bool current: col.tab === index
                         Rectangle { anchors { fill: parent; margins: 2 } radius: Theme.radius; color: tabHov.hovered && !parent.current ? Theme.hover : "transparent" }
+                        Led {             // Nothing theme: the open tab has a lit LED before its name
+                            visible: Theme.nothing
+                            anchors { right: tabLabel.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                            width: 5; height: 5; lit: parent.current
+                        }
                         Txt {
+                            id: tabLabel
                             anchors.centerIn: parent
-                            text: modelData.icon + "  " + modelData.label
+                            text: Theme.nothing ? modelData.label.toUpperCase() : modelData.icon + "  " + modelData.label
+                            font.letterSpacing: Theme.nothing ? 1.5 : 0
                             color: parent.current ? Theme.white : Theme.grayMid
                             Behavior on color { ColorAnimation { duration: Theme.dur(150) } }
                         }
@@ -185,6 +194,7 @@ MenuWindow {
             Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: 1; color: Theme.line }
             // the underline slides to the open tab
             Rectangle {
+                visible: !Theme.nothing
                 anchors.bottom: parent.bottom
                 height: 2; radius: 1; color: Theme.accent
                 width: tabRow.width / col.tabs.length * 0.5

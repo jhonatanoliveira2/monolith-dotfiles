@@ -7,7 +7,8 @@ import "../components"
 // A vertical bar stacks hours, minutes (seconds) and a short date.
 MenuButton {
     id: root
-    menu: "calendar"
+    // side bar: the clock opens the whole center menu at the top centre (the calendar is in its Dashboard)
+    menu: root.vertical && Settings.centerMenu ? "center" : "calendar"
     SystemClock { id: clock; precision: /s/.test(Settings.clockPattern.replace(/'[^']*'/g, "")) ? SystemClock.Seconds : SystemClock.Minutes }
     BarTxt { visible: !root.vertical; text: Qt.formatDateTime(clock.date, Settings.clockPattern)
              font.family: Theme.fontDot; font.pixelSize: Theme.nothing && Nothing.hasDot ? 17 : Theme.fontSize
