@@ -117,16 +117,22 @@ PanelWindow {
         border.width: win.attached ? 0 : 1
         border.color: Theme.line
         clip: true
-        // drawer (Nothing theme): the frame's inner line continues around the drawer (not along its top edge)
-        Rectangle {
+        // drawer (Nothing theme): the frame's inner line continues around the drawer. It starts where the joints'
+        // arcs end (one fillet below the top edge), so no straight piece sticks out above the curves.
+        Item {
             visible: win.drawer && Theme.nothing
-            x: 0; y: -panel.r - 2
-            width: parent.width; height: parent.height + panel.r + 2
-            radius: panel.r
-            color: "transparent"
-            border.width: 1
-            border.color: Nothing.line
+            y: win.fillet
+            width: parent.width; height: parent.height - win.fillet
+            clip: true
             z: 10
+            Rectangle {
+                y: -panel.r - win.fillet - 2
+                width: parent.width; height: parent.height + panel.r + win.fillet + 2
+                radius: panel.r
+                color: "transparent"
+                border.width: 1
+                border.color: Nothing.line
+            }
         }
 
         // direction away from the bar: attached menus come out from behind it, floating ones nudge in
