@@ -2,7 +2,7 @@ hl.env("LANG", "pt_BR.UTF-8")
 hl.env("LC_TIME", "pt_BR.UTF-8")
 hl.env("XCURSOR_SIZE", "23")
 hl.env("HYPRCURSOR_SIZE", "24")
--- Cursor theme chosen by the system configuration (NixOS, Nothing theme: "Monolith-Dots 32" in
+-- Cursor theme chosen by the system configuration (NixOS, Nothing theme: "Monolith-Dots 28" in
 -- ~/.config/monolith/cursor); without the file the default theme and the sizes above stay.
 do
     local f = io.open(os.getenv("HOME") .. "/.config/monolith/cursor", "r")

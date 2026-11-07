@@ -2,7 +2,7 @@
 # MONOLITH Dots: the cursor theme of the Nothing theme. Every cursor is drawn with LEDs (white dots with a dark
 # rim and a soft shadow, so they read on light and dark backgrounds alike); the pointer is a "+".
 #
-#   cursor.py OUTDIR [--name Monolith-Dots] [--sizes 24,32,48,64,96] [--preview preview.png]
+#   cursor.py OUTDIR [--name Monolith-Dots] [--sizes 24,28,32,48,64,96] [--preview preview.png]
 #
 # Writes OUTDIR/index.theme and OUTDIR/cursors/<shape> as XCursor files (written here directly: a header, a
 # table of contents and one ARGB image per size and frame), plus symbolic links for every alias name.
@@ -155,7 +155,7 @@ def main():
     p = argparse.ArgumentParser(description="MONOLITH Dots cursor theme")
     p.add_argument("outdir")
     p.add_argument("--name", default="Monolith-Dots")
-    p.add_argument("--sizes", default="24,32,48,64,96")
+    p.add_argument("--sizes", default="24,28,32,48,64,96")
     p.add_argument("--preview", help="also write a PNG sheet of every cursor at 48 px")
     a = p.parse_args()
     sizes = [int(s) for s in a.sizes.split(",")]
