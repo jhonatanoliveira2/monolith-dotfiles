@@ -28,15 +28,15 @@ the `feature/nixos-support` one.
 | Type | Space Mono for the interface (monospaced, so layouts keep their widths), Space Grotesk for headings and notification text, Doto for the clocks (bar and widget); Nerd Font glyphs fall back to JetBrainsMono Nerd Font |
 | Meters | the OSD (volume, brightness...), every slider and the circular gauges become rows / rings of LEDs; switches are pills with an LED knob |
 | Bar | frame style: OLED-black frame with a 1 px line along its inner edge and 20 px corners (NIHIL Shell's frame); on a side bar the clock is hours over minutes in Doto; side-bar modules show icons only |
-| Center menu | Doto clock, LED tab markers, calendar with an outlined day, LED columns for CPU / GPU / RAM, LED rows for every progress, usage and temperature bar; with a side bar the clock opens it at the top centre, as a drawer of the frame (frame style: same black, concave joints, the frame line running around it) |
+| Center menu | Doto clock, LED tab markers, calendar with an outlined day, LED columns for CPU / GPU / RAM, LED rows for every progress, usage and temperature bar; with a side bar it opens at the top centre when the pointer rests on the middle of the top edge (or on a click on the clock), as a drawer of the frame (frame style: same black, concave joints, the frame line running around it) |
 | Battery | the charge as LEDs (a row; eight in a column on a side bar), red when low, a light scanning up while charging |
-| Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px); the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
+| Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
 | Surfaces | a faint grid of unlit LEDs behind cards and desktop widgets; Settings headings with an LED marker |
 | Notifications | app name as an upper-case label with an LED, Space Grotesk text; optional **edge glow**: a segment of light runs around the inside of the screen edge on each toast, twice and red for critical ones |
 | Wallpapers | still wallpapers shown as LED matrices at each monitor's native resolution (the original files are never changed); live (video) wallpapers are left alone |
 
-Wallpapers get extra contrast and brightness (blacker blacks, whiter whites; `monolith-dotmatrix --contrast`
-/ `--brightness`). For legibility, Settings > Bar > **No transparency** makes the bar, menus, widgets and every
+Contrast and brightness of the wallpapers can be raised by hand (`monolith-dotmatrix --contrast` /
+`--brightness`, 1 = the default curve). For legibility, Settings > Bar > **No transparency** makes the bar, menus, widgets and every
 window opaque in one switch (Hyprland reloads once; it works with or without the theme).
 
 Motion stays short and decelerating; everything follows Settings > Appearance > animations (off = no glow, no fades).
@@ -75,7 +75,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |
 | `wallpaper.levels` | `2` | runtime | brightness steps with dithering (`2` = on / off) |
 | `wallpaper.invert` | `false` | runtime | light the dark parts |
-| `wallpaper.colors.{lit,off,background}` | `ffffff`, `0e0e0e`, `000000` | rebuild | LED colours of the wallpapers |
+| `wallpaper.colors.{lit,off,background}` | `f2f2f2`, `141414`, `000000` | rebuild | LED colours of the wallpapers |
 | `wallpaper.outputs` | `{ }` | rebuild | monitors rendered at build time, `{ eDP-1 = { width = 1920; height = 1200; }; }` |
 | `wallpaper.dirs` | `[ <repo>/wallpapers/static ]` | rebuild | folders whose still pictures are rendered at build time |
 
@@ -143,7 +143,7 @@ monolith-dotmatrix --key [options]     # the cache key of a look (what the build
 ```
 
 `--size` / `--spacing` in px, `--shape circle|rounded|square`, `--dither none|floyd|bayer`, `--levels 2..16`,
-`--color` keeps the picture's hues, `--gamma`, `--black`, `--contrast` (1.18) and `--brightness` (1.06) tune the curve. It refuses to write over its source
+`--color` keeps the picture's hues, `--gamma`, `--black`, `--contrast` (1) and `--brightness` (1) tune the curve. It refuses to write over its source
 and to convert animated pictures (exit code 2). The result is a normal PNG: apply it with
 `wallpaper-menu --set static out.png` (set the style to `original` first, or it would be converted again).
 
