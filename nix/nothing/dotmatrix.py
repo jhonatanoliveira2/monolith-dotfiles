@@ -26,7 +26,7 @@ from PIL import Image
 SHAPES = ("circle", "square", "rounded")
 DITHERS = ("none", "floyd", "bayer")
 # version of the look: part of the cache key, so a change of the curve below renders every wallpaper again
-LOOK = "v2"
+LOOK = "v3"
 BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
 
 
@@ -190,9 +190,9 @@ def main():
                    "picture; floyd / bayer: whole LEDs at --levels brightness steps")
     p.add_argument("--levels", type=int, default=2, help="brightness steps with dithering (2 = on / off)")
     p.add_argument("--gamma", type=float, default=1.25)
-    p.add_argument("--black", type=float, default=0.12, help="black point (0..0.9): below it LEDs stay off")
-    p.add_argument("--contrast", type=float, default=1.35, help="contrast around the middle grey (1 = none)")
-    p.add_argument("--brightness", type=float, default=1.12, help="brightness of the lit LEDs (1 = none)")
+    p.add_argument("--black", type=float, default=0.11, help="black point (0..0.9): below it LEDs stay off")
+    p.add_argument("--contrast", type=float, default=1.18, help="contrast around the middle grey (1 = none)")
+    p.add_argument("--brightness", type=float, default=1.06, help="brightness of the lit LEDs (1 = none)")
     a = p.parse_args()
 
     if not 1 <= a.size <= 64 or not 0 <= a.spacing <= 64:
