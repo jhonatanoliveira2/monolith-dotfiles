@@ -81,12 +81,12 @@ in
     colors = {
       lit = mkOption {
         type = hex;
-        default = "ffffff";
+        default = "f2f2f2";
         description = "Fully lit LED.";
       };
       off = mkOption {
         type = hex;
-        default = "0e0e0e";
+        default = "141414";
         description = "Unlit LED.";
       };
       background = mkOption {

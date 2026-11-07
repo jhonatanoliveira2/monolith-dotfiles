@@ -26,7 +26,7 @@ from PIL import Image
 SHAPES = ("circle", "square", "rounded")
 DITHERS = ("none", "floyd", "bayer")
 # version of the look: part of the cache key, so a change of the curve below renders every wallpaper again
-LOOK = "v3"
+LOOK = "v4"
 BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
 
 
@@ -181,8 +181,8 @@ def main():
     p.add_argument("--size", type=int, default=6, help="LED diameter in px (default 6)")
     p.add_argument("--spacing", type=int, default=3, help="gap between LEDs in px (default 3)")
     p.add_argument("--shape", choices=SHAPES, default="circle")
-    p.add_argument("--lit", type=colour, default="ffffff", help="colour of a fully lit LED")
-    p.add_argument("--off", type=colour, default="0e0e0e", help="colour of an unlit LED")
+    p.add_argument("--lit", type=colour, default="f2f2f2", help="colour of a fully lit LED")
+    p.add_argument("--off", type=colour, default="141414", help="colour of an unlit LED")
     p.add_argument("--background", type=colour, default="000000", help="colour between the LEDs")
     p.add_argument("--color", action="store_true", help="colour LEDs (the picture's hues) instead of monochrome")
     p.add_argument("--invert", action="store_true", help="light the dark parts")
@@ -190,9 +190,9 @@ def main():
                    "picture; floyd / bayer: whole LEDs at --levels brightness steps")
     p.add_argument("--levels", type=int, default=2, help="brightness steps with dithering (2 = on / off)")
     p.add_argument("--gamma", type=float, default=1.25)
-    p.add_argument("--black", type=float, default=0.11, help="black point (0..0.9): below it LEDs stay off")
-    p.add_argument("--contrast", type=float, default=1.18, help="contrast around the middle grey (1 = none)")
-    p.add_argument("--brightness", type=float, default=1.06, help="brightness of the lit LEDs (1 = none)")
+    p.add_argument("--black", type=float, default=0.10, help="black point (0..0.9): below it LEDs stay off")
+    p.add_argument("--contrast", type=float, default=1.0, help="contrast around the middle grey (1 = none)")
+    p.add_argument("--brightness", type=float, default=1.0, help="brightness of the lit LEDs (1 = none)")
     a = p.parse_args()
 
     if not 1 <= a.size <= 64 or not 0 <= a.spacing <= 64:
