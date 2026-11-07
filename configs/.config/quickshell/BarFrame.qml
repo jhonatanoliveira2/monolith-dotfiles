@@ -71,6 +71,18 @@ Scope {
                 border.width: win.big
                 border.color: Theme.barSolid
             }
+            // Nothing theme: a 1 px line along the inner edge, as in NIHIL Shell's frame (black + hairline)
+            Rectangle {
+                visible: Theme.nothing
+                x: root.edge === "left" ? win.b : root.f
+                y: root.edge === "top" ? win.b : root.f
+                width: win.width - x - (root.edge === "right" ? win.b : root.f)
+                height: win.height - y - (root.edge === "bottom" ? win.b : root.f)
+                radius: Theme.frameRadius
+                color: "transparent"
+                border.width: 1
+                border.color: Nothing.line
+            }
         }
     }
 }

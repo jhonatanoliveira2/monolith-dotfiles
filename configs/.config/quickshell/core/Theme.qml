@@ -49,12 +49,13 @@ Singleton {
     readonly property int barSideGap: barStyle === "capsule" ? 18 : 0       // capsule: screen sides -> bar ends
     // frame style: opaque, from black (0 %) to the theme's tint colour (100 %; white on a black-and-white theme),
     // Settings > Bar > frame tone. (The palettes' `panel` is almost black: it is meant to be seen through.)
-    readonly property string barSolidHex: Palettes.mix("#000000", p.tint, Math.max(0, Math.min(100, Settings.frameTone)) / 100)
+    // (Nothing theme: OLED black, like NIHIL Shell's frame)
+    readonly property string barSolidHex: nothing ? "#000000" : Palettes.mix("#000000", p.tint, Math.max(0, Math.min(100, Settings.frameTone)) / 100)
     readonly property color barSolid: Palettes.alpha(barSolidHex, 1)
     readonly property int barFillet: 14                                     // capsule: concave curve into the screen edge
     readonly property int barThickness: barSize + barEdgeGap                // space the bar takes from the screen
     readonly property int frameWidth: 8                                     // frame: the other three edges
-    readonly property int frameRadius: 16                                   // frame: inner corners
+    readonly property int frameRadius: nothing ? 20 : 16                    // frame: inner corners
     readonly property int frameEdge: barStyle === "frame" ? frameWidth : 0
     readonly property int barIcon: Settings.barVertical ? 17 : fontSize     // module glyphs (larger on a side bar, which has no text)
     readonly property int menuRadius: 12
