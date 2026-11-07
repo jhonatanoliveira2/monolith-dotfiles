@@ -12,9 +12,12 @@ import "../core"
 // size have the same width (`width` x `scales[size]`, so they line up in columns); the height is the type's `h`
 // at that scale, and the widget's file gets the factor as `k` to scale its contents.
 //
+// Workspaces: every widget belongs to the workspace it was added on (entry.workspace, a Hyprland workspace id)
+// and shows only there. Saved widgets keep it across restarts; ones saved before this existed are given the
+// workspace their monitor shows when the shell starts (once).
+//
 // Temporary widgets (Widgets.addTemp, from the widget editor, Super+B): kept only in memory, so they are gone when the
-// shell restarts, like a program's window; each one stays on the workspace it was created on and ignores
-// "hide when a program is open".
+// shell restarts, like a program's window; they also ignore "hide when a program is open".
 //
 // Adding a widget type: create widgets/<Name>Widget.qml (an Item that fills its parent and declares
 // `property real k: 1`; see ClockWidget.qml) and add one line to `types` below with its id, name, glyph,
@@ -52,6 +55,24 @@ Singleton {
         return list.filter(w => w.screen === screenName || (names.indexOf(w.screen) < 0 && screenName === first))
     }
 
+    // the saved widgets of one monitor on one workspace
+    function onWorkspace(screenName, workspaceId) { return onScreen(screenName).filter(w => w.workspace === undefined || w.workspace === workspaceId) }
+    function activeWorkspaceOf(screenName) {
+        const mon = Hyprland.monitors.values.find(m => m.name === screenName) || Hyprland.focusedMonitor
+        return mon && mon.activeWorkspace ? mon.activeWorkspace.id : undefined
+    }
+    // widgets saved before workspaces existed: put each on the workspace its monitor shows now (once)
+    function migrate() {
+        if (!Settings.loaded || !(Settings.widgets || []).some(w => w && w.workspace === undefined)) return true
+        if (!Hyprland.focusedMonitor || !Hyprland.focusedMonitor.activeWorkspace) return false
+        Settings.widgets = (Settings.widgets || []).map(w => !w || w.workspace !== undefined ? w
+            : Object.assign({}, w, { workspace: activeWorkspaceOf(w.screen) !== undefined ? activeWorkspaceOf(w.screen) : 1 }))
+        console.log("[widgets] saved widgets assigned to their monitor's current workspace")
+        return true
+    }
+    Timer { id: migrateSoon; interval: 500; repeat: true; running: true; property int tries: 0
+            onTriggered: if (root.migrate() || ++tries > 40) stop() }
+
     property var temps: []               // [{ uid, type, screen, workspace, x, y, size, temp: true }]
     function tempsOn(workspaceId) { return temps.filter(w => w.workspace === workspaceId) }
 
@@ -60,8 +81,9 @@ Singleton {
         const t = type(typeId)
         const scr = Quickshell.screens.find(s => s.name === screenName) || Quickshell.screens[0]
         if (!t || !scr) return
-        const spot = freeSpot(scr, dims(t, 1), "")
-        const w = { uid: newUid(), type: typeId, screen: scr.name, x: spot.x, y: spot.y, size: 1 }
+        const ws = activeWorkspaceOf(scr.name)
+        const spot = freeSpot(scr, dims(t, 1), "", [], ws)
+        const w = { uid: newUid(), type: typeId, screen: scr.name, workspace: ws !== undefined ? ws : 1, x: spot.x, y: spot.y, size: 1 }
         console.log("[widgets] add", typeId, "on", scr.name, "at", w.x + "," + w.y)
         Settings.widgets = list.concat([w])
     }
@@ -72,13 +94,14 @@ Singleton {
         const scr = mon ? Quickshell.screens.find(s => s.name === mon.name) : Quickshell.screens[0]
         if (!t || !scr || !mon || !mon.activeWorkspace) return
         const ws = mon.activeWorkspace.id
-        const spot = freeSpot(scr, dims(t, 1), "", tempsOn(ws))
+        const spot = freeSpot(scr, dims(t, 1), "", tempsOn(ws), ws)
         console.log("[widgets] temporary", typeId, "on workspace", ws)
         temps = temps.concat([{ uid: newUid(), type: typeId, screen: scr.name, workspace: ws, x: spot.x, y: spot.y, size: 1, temp: true }])
     }
     // first place (left to right, top to bottom, 24 px margin) where a `d`-sized widget overlaps no other one
-    function freeSpot(scr, d, skipUid, extra) {
-        const others = onScreen(scr.name).concat(extra || []).filter(o => o.uid !== skipUid).map(o => Object.assign({ x: o.x, y: o.y }, dims(o)))
+    // (of the same workspace, when given)
+    function freeSpot(scr, d, skipUid, extra, ws) {
+        const others = (ws === undefined ? onScreen(scr.name) : onWorkspace(scr.name, ws)).concat(extra || []).filter(o => o.uid !== skipUid).map(o => Object.assign({ x: o.x, y: o.y }, dims(o)))
         const m = 24, top = 128            // below the edit toolbar
         const free = (x, y) => others.every(o => x + d.w + m <= o.x || o.x + o.w + m <= x || y + d.h + m <= o.y || o.y + o.h + m <= y)
         for (let y = top; y + d.h <= scr.height - m; y += grid * 2)
