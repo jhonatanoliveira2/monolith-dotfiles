@@ -45,6 +45,9 @@ in
     greeter.enable = true; # Quickshell greeter on greetd
     greeter.defaultUser = user;
     # battery.chargeLimit = 80;
+    # "Nothing" theme (dot matrix / LEDs, docs/nothing-theme.md): on by default on this branch
+    # nothingTheme.enable = false;
+    # nothingTheme.wallpaper.outputs.eDP-1 = { width = 1920; height = 1200; }; # rendered at build time
   };
 
   home-manager = {

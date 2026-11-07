@@ -12,5 +12,5 @@ in
   shortRev = self.shortRev or self.dirtyShortRev or "dirty";
   lastModified = "${lib.substring 0 4 date}-${lib.substring 4 2 date}-${lib.substring 6 2 date}";
   repo = "https://github.com/jhonatanoliveira2/monolith-dotfiles";
-  branch = "feature/nixos-support";
+  branch = "feature/nothing-theme";
 }

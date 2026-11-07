@@ -49,7 +49,7 @@
         }
       );
 
-      # sudo nix --extra-experimental-features "nix-command flakes" run github:<repo>/feature/nixos-support#install
+      # sudo nix --extra-experimental-features "nix-command flakes" run github:<repo>/feature/nothing-theme#install
       apps = forAllSystems (pkgs: {
         install = {
           type = "app";

@@ -8,7 +8,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     monolith = {
-      url = "github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support";
+      url = "github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };

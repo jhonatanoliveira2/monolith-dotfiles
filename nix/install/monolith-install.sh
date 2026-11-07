@@ -2,7 +2,7 @@
 # monolith-install - installs NixOS with the MONOLITH desktop from the NixOS installer ISO.
 #
 #   sudo nix --extra-experimental-features "nix-command flakes" \
-#       run github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support#install [-- options]
+#       run github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme#install [-- options]
 #
 # Options:  --dry-run        show every step and command, change nothing
 #           --lang pt|en     language of the questions (asked otherwise)
@@ -17,7 +17,7 @@
 # disk was prepared (network, an evaluation error fixed upstream), running it again offers to resume.
 set -euo pipefail
 
-FLAKE_REF=${MONOLITH_FLAKE:-github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support}
+FLAKE_REF=${MONOLITH_FLAKE:-github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme}
 TEMPLATE_DIR=${MONOLITH_TEMPLATE:-}      # set by the Nix package (templates/nixos from the same revision)
 MNT=/mnt
 MIN_GIB=20
