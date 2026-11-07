@@ -37,9 +37,9 @@ shell fica exatamente como o da `feature/nixos-support`.
 | Wallpapers | wallpapers estáticos exibidos como matriz de LEDs na resolução nativa de cada monitor (os arquivos originais nunca são alterados); wallpapers animados (vídeo) ficam como estão |
 
 O contraste e o brilho dos wallpapers podem ser aumentados à mão (`monolith-dotmatrix --contrast` /
-`--brightness`, 1 = a curva padrão). Para legibilidade, Configurações › Barra › **Sem transparência** deixa a barra,
-os menus, os widgets e todas as janelas opacos com um único botão (o Hyprland recarrega uma vez; funciona com ou
-sem o tema).
+`--brightness`, 1 = a curva padrão). Para legibilidade, Configurações › Barra › **Sem transparência no shell** deixa a
+barra, os menus e os widgets opacos com um único botão (o terminal e os outros apps mantêm a transparência deles;
+funciona com ou sem o tema).
 
 As animações são curtas e desaceleradas, e seguem Configurações › Aparência › animações (desligadas = sem brilho e sem fades).
 

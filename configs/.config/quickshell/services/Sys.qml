@@ -199,20 +199,10 @@ Singleton {
             const key = options[k] ? k : Object.keys(options).find(x => options[x].opt === k)
             if (key) e[key] = o[k]
         }
-        if (Settings.opaque) { e.activeOpacity = 1; e.inactiveOpacity = 1 }     // "No transparency" wins
         return e
     }
     function reapply() { apply(chosen()); if (!Settings.touchpadEnabled) applyTouchpad() }
 
-    // "No transparency" (Settings > Bar): hypr/modules/window-rules.lua reads generated/opaque ("1") when the
-    // config loads and makes every window opaque (force_rgbx, window opacity 1); written and reloaded on change
-    function setOpaque(on) { Settings.opaque = on; syncOpaque() }
-    function syncOpaque() {
-        opaqueProc.command = ["sh", "-c", "f=\"$1/opaque\"; [ \"$(cat \"$f\" 2>/dev/null || echo 0)\" = \"$2\" ] && exit 0; " +
-                              "mkdir -p \"$1\" && printf %s \"$2\" > \"$f\" && hyprctl reload >/dev/null", "sh", hyprDir + "/generated", Settings.opaque ? "1" : "0"]
-        opaqueProc.running = true
-    }
-    Process { id: opaqueProc }
 
     // Blur behind the shell's surfaces: hypr/modules/window-rules.lua reads generated/shell-blur (0 / 1) when the
     // config loads, so a change writes the flag and reloads Hyprland (Sys then reapplies the Settings choices).
@@ -283,7 +273,7 @@ Singleton {
 
     Connections {
         target: Settings
-        function onLoadedOnce() { root.syncBlur(); root.syncOpaque(); root.reapply(); if (Object.keys(root.chosen()).length) writeSoon.restart() }
+        function onLoadedOnce() { root.syncBlur(); root.reapply(); if (Object.keys(root.chosen()).length) writeSoon.restart() }
     }
     // `hyprctl reload` re-runs hyprland.lua and drops runtime changes: put the menu's choices back.
     Connections {

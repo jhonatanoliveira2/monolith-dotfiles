@@ -36,8 +36,9 @@ the `feature/nixos-support` one.
 | Wallpapers | still wallpapers shown as LED matrices at each monitor's native resolution (the original files are never changed); live (video) wallpapers are left alone |
 
 Contrast and brightness of the wallpapers can be raised by hand (`monolith-dotmatrix --contrast` /
-`--brightness`, 1 = the default curve). For legibility, Settings > Bar > **No transparency** makes the bar, menus, widgets and every
-window opaque in one switch (Hyprland reloads once; it works with or without the theme).
+`--brightness`, 1 = the default curve). For legibility, Settings > Bar > **No transparency in the shell** makes the bar, menus and
+widgets opaque in one switch (the terminal and other apps keep their own transparency; it works with or without
+the theme).
 
 Motion stays short and decelerating; everything follows Settings > Appearance > animations (off = no glow, no fades).
 

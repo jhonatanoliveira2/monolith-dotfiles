@@ -65,21 +65,3 @@ hl.layer_rule({
     ignore_alpha = 0.3,
     no_anim = true,
 })
-
--- Settings > Bar > "No transparency" writes generated/opaque ("1"): every window opaque (its own alpha, e.g. a
--- translucent terminal, is ignored) and no window opacity, for legibility. Missing file = off.
-local function opaque()
-    local f = io.open(os.getenv("HOME") .. "/.config/hypr/generated/opaque", "r")
-    if not f then return false end
-    local v = f:read("l")
-    f:close()
-    return v == "1"
-end
-if opaque() then
-    hl.window_rule({
-        name = "monolith-opaque",
-        match = { class = ".*" },
-        force_rgbx = true,
-    })
-    hl.config({ decoration = { active_opacity = 1, inactive_opacity = 1, fullscreen_opacity = 1 } })
-end
