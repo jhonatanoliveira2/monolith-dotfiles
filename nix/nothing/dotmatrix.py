@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # monolith-dotmatrix: renders a still picture as an LED dot matrix (MONOLITH "Nothing" theme).
 #
-# Adapted from dotmatrix.py of NIHIL Shell by poligle (MIT, github.com/poligle/Nihil-Shell): the luminance
+# Adapted from dotmatrix.py of NIHIL Shell by poligle (MIT, github.com/poligle/Nihil-Shell; notice in
+# nix/nothing/LICENSE.NIHIL): the luminance
 # curve (black point raised so dark skies stay off, isolated highlights still light their cell) and the
 # cover-crop to the output's native size come from there. New here: LED shapes, size + spacing instead of a
 # pitch, colours, inversion, dithering, colour LEDs, a vectorised renderer (4K in about a second) and a CLI.

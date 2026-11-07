@@ -8,10 +8,12 @@
 }:
 let
   rev = "5174b3333331c966c38f4355d50b03ca1c1df2f9";
+  # (an explicit name: "%5B" and "," of the variable-font file names are not allowed in store paths)
   get =
     path: hash:
     fetchurl {
       url = "https://raw.githubusercontent.com/google/fonts/${rev}/${path}";
+      name = "monolith-font-" + lib.replaceStrings [ "/" "%5B" "%5D" "," ] [ "-" "-" "" "-" ] path;
       inherit hash;
     };
   files = {
