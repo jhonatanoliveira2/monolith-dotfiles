@@ -16,9 +16,10 @@ MenuWindow {
     menu: "center"
     panelWidth: 760
     maxHeight: 900
-    // side bar: opens at the top centre (a drawer of the frame in frame style), by a click on the clock
+    // side bar: opens at the top centre (a drawer of the frame in frame style), when the pointer rests on the
+    // middle of the top edge (components/CenterHotZone.qml) or by a click on the clock
     topCenter: Settings.barVertical
-    hoverKeep: !Settings.barVertical
+    hoverKeep: true
     hoverScroll: true
 
     Column {

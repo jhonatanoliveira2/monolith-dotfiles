@@ -44,6 +44,7 @@ ShellRoot {
             LazyLoader { active: Notifs.popups.length + Notifs.internal.length > 0; Toasts { screen: scope.modelData } }
             OsdWindow { screen: scope.modelData }
             EdgeGlow { screen: scope.modelData }
+            LazyLoader { active: Settings.centerMenu && Settings.barVertical; CenterHotZone { screen: scope.modelData } }
             // full-screen overlays, on the monitor that was focused when they opened
             OverlaySlot { name: "launcher"; screen: scope.modelData; Launcher { screen: scope.modelData } }
             OverlaySlot { name: "wallpaper"; screen: scope.modelData; WallpaperPicker { screen: scope.modelData } }
