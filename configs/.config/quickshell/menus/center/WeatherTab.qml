@@ -64,7 +64,7 @@ Column {
             spacing: 2
             Row {
                 spacing: 6
-                Txt { text: Weather.ok ? Weather.temp + "°" : "—"; font.pixelSize: 56; color: Theme.white }
+                Txt { text: Weather.ok ? Weather.temp + "°" : "—"; font.pixelSize: 56; color: Theme.white; font.family: Theme.fontDot }
                 Txt { anchors.top: parent.top; anchors.topMargin: 12; text: "C"; font.pixelSize: 18; color: Theme.grayMid }
             }
             Txt { text: Weather.ok ? Weather.desc : Weather.loading ? Labels.pick(["Carregando…", "Loading…"]) : Labels.pick(["Clima indisponível", "Weather unavailable"]); color: Theme.foreground; font.pixelSize: 15 }
@@ -156,8 +156,16 @@ Column {
                         Rectangle {
                             id: track
                             x: 152; anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - 152 - 36; height: 5; radius: 2.5; color: Theme.grayDark
+                            width: parent.width - 152 - 36; height: 5; radius: 2.5
+                            color: Theme.nothing ? "transparent" : Theme.grayDark
+                            DotMeter {
+                                visible: Theme.nothing; anchors.fill: parent; dot: 5
+                                readonly property real span: Math.max(1, week.hi - week.lo)
+                                from: (modelData.min - week.lo) / span
+                                value: (modelData.max - week.lo) / span
+                            }
                             Rectangle {
+                                visible: !Theme.nothing
                                 readonly property real span: Math.max(1, week.hi - week.lo)
                                 x: track.width * (modelData.min - week.lo) / span
                                 width: Math.max(5, track.width * (modelData.max - modelData.min) / span)

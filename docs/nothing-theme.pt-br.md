@@ -29,6 +29,9 @@ shell fica exatamente como o da `feature/nixos-support`.
 | Fontes | Space Mono na interface (monoespaçada, as larguras do layout se mantêm), Space Grotesk em títulos e no texto das notificações, Doto nos relógios (barra e widget); os ícones Nerd Font vêm da JetBrainsMono Nerd Font |
 | Medidores | o OSD (volume, brilho...), todos os sliders e os medidores circulares viram fileiras / anéis de LEDs; os interruptores viram pílulas com um LED |
 | Barra | estilo moldura: moldura preta OLED com uma linha de 1 px na borda interna e cantos de 20 px (a moldura do NIHIL Shell); na barra lateral o relógio fica em horas sobre minutos em Doto; os módulos da barra lateral mostram só ícones |
+| Menu central | relógio em Doto, abas com LED, calendário com o dia contornado, colunas de LEDs para CPU / GPU / RAM e fileiras de LEDs em toda barra de progresso, uso e temperatura; com a barra na lateral, o relógio o abre no topo central, como uma gaveta da moldura (estilo moldura: mesmo preto, junções côncavas, a linha da moldura contornando) |
+| Bateria | a carga em LEDs (uma fileira; oito em coluna na barra lateral), vermelhos com carga baixa, uma luz subindo enquanto carrega |
+| Widgets | todos os widgets de um tamanho têm a mesma largura (pequeno 256, médio 320, grande 416 px); o espectro de áudio (cava) do widget de letra é desenhado em colunas de LEDs |
 | Superfícies | uma grade discreta de LEDs apagados atrás dos cards e dos widgets da área de trabalho; títulos das Configurações com marcador de LEDs |
 | Notificações | nome do app em maiúsculas com um LED, texto em Space Grotesk; **brilho de borda** opcional: um trecho de luz percorre a borda interna da tela a cada notificação, duas vezes e em vermelho nas críticas |
 | Wallpapers | wallpapers estáticos exibidos como matriz de LEDs na resolução nativa de cada monitor (os arquivos originais nunca são alterados); wallpapers animados (vídeo) ficam como estão |
@@ -142,7 +145,7 @@ monolith-dotmatrix --key [opções]     # a chave de cache de um visual (o que o
 ```
 
 `--size` / `--spacing` em px, `--shape circle|rounded|square`, `--dither none|floyd|bayer`, `--levels 2..16`,
-`--color` mantém as cores da imagem, `--gamma`, `--black`, `--contrast` (1.35) e `--brightness` (1.12) ajustam a curva. Ele se recusa a gravar por cima da
+`--color` mantém as cores da imagem, `--gamma`, `--black`, `--contrast` (1.18) e `--brightness` (1.06) ajustam a curva. Ele se recusa a gravar por cima da
 origem e a converter imagens animadas (código de saída 2). O resultado é um PNG comum: aplique com
 `wallpaper-menu --set static saida.png` (com o estilo em `original`, senão ele seria convertido de novo).
 

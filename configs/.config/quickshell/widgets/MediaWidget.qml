@@ -17,7 +17,9 @@ Item {
         spacing: 4
         Txt { width: parent.width; text: Media.title; color: Theme.white; font.pixelSize: Math.round(Theme.fontSize * root.k); elide: Text.ElideRight }
         Txt { width: parent.width; text: Media.artist; color: Theme.grayMid; font.pixelSize: Math.round(Theme.fontSize * root.k); font.bold: false; elide: Text.ElideRight }
+        DotMeter { visible: Theme.nothing; width: parent.width; dot: Math.round(4 * root.k); value: Media.progress }
         Rectangle {
+            visible: !Theme.nothing
             width: parent.width; height: 3; radius: 1.5; color: Theme.grayDark
             Rectangle { width: parent.width * Media.progress; height: parent.height; radius: 1.5; color: Theme.accent }
         }
