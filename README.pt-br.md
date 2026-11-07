@@ -3,12 +3,10 @@
 </h1>
 
 <p align="center">
-  <img alt="Arch Linux" src="https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white">
-  <img alt="CachyOS" src="https://img.shields.io/badge/CachyOS-00aa88?style=for-the-badge&logo=archlinux&logoColor=white">
+  <img alt="NixOS" src="https://img.shields.io/badge/NixOS-5277c3?style=for-the-badge&logo=nixos&logoColor=white">
   <img alt="Hyprland" src="https://img.shields.io/badge/Hyprland_0.55+-00d9f5?style=for-the-badge&logo=hyprland&logoColor=black">
   <img alt="Quickshell" src="https://img.shields.io/badge/Quickshell-QML-41cd52?style=for-the-badge&logo=qt&logoColor=white">
-  <img alt="Lua" src="https://img.shields.io/badge/Config-Lua-2c2d72?style=for-the-badge&logo=lua&logoColor=white">
-  <img alt="Licença MIT" src="https://img.shields.io/badge/Licen%C3%A7a-MIT-8b9099?style=for-the-badge">
+  <img alt="MIT" src="https://img.shields.io/badge/License-MIT-8b9099?style=for-the-badge">
 </p>
 
 <p align="center">
@@ -16,34 +14,21 @@
 </p>
 
 <p align="center">
-  <em>Um desktop Hyprland monocromático — compositor, shell, terminal e ferramentas em um só repositório.</em>
+  <em>Um desktop Hyprland monocromático para NixOS — compositor, shell, boot e ferramentas em um flake.</em>
 </p>
 
 <p align="center">
-  <a href="#capturas-de-tela">Capturas</a> &nbsp;•&nbsp;
   <a href="#destaques">Destaques</a> &nbsp;•&nbsp;
-  <a href="#início-rápido">Instalar</a> &nbsp;•&nbsp;
+  <a href="#instalação">Instalação</a> &nbsp;•&nbsp;
   <a href="#atalhos">Atalhos</a> &nbsp;•&nbsp;
-  <a href="#documentação">Docs</a>
+  <a href="#documentação">Documentação</a>
 </p>
 
 ---
 
-https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
-
-<p align="center"><a href="https://youtu.be/W_SYo-i9fXk">▶ Assista ao tour completo no YouTube</a></p>
-
-## Capturas de tela
-
-<p align="center">
-  <img src="assets/screenshots/1.png" alt="Desktop MONOLITH com a barra do Quickshell" width="100%">
-</p>
-<table>
-  <tr>
-    <td width="50%"><img src="assets/screenshots/2.png" alt="Menus e configurações" width="100%"></td>
-    <td width="50%"><img src="assets/screenshots/3.png" alt="Terminal e ferramentas" width="100%"></td>
-  </tr>
-</table>
+> [!IMPORTANT]
+> **Branch `feature/nixos-support` — somente NixOS.** A versão para Arch Linux / CachyOS (instalador em shell,
+> `packages.txt`) fica na [`main`](https://github.com/jhonatanoliveira2/monolith-dotfiles/tree/main).
 
 ## Destaques
 
@@ -51,7 +36,8 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 - **App de Configurações do Monolith** — páginas pesquisáveis de tela (arranjo dos monitores arrastando, com encaixe e reversão automática), áudio, rede, Bluetooth, energia, limpeza de armazenamento, entrada e atualização. As mudanças são aplicadas na hora pela API Lua do Hyprland.
 - **Menu de mídia** — transição de capas, barra de progresso, volume, troca de player e histórico pesquisável das faixas tocadas recentemente, que voltam a tocar com um clique.
 - **Hyprland em Lua** — `hyprland.lua` modular, com arquivos separados para atalhos, layout, regras e autostart.
-- **Instalador seguro** — verificação de dependências, backups automáticos, reversão em caso de falha e restauração com simulação.
+- **Instalação declarativa** — um flake Nix: módulos NixOS + Home Manager, instalador guiado para a ISO do NixOS e versões fixadas.
+- **Do boot à área de trabalho** — tema do GRUB, splash do Plymouth e um greeter em Quickshell com o mesmo visual.
 - **Bilíngue** — textos do shell e documentação em português do Brasil e inglês.
 
 ## O que vem incluído
@@ -65,42 +51,19 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 | 🛠️ Ferramentas pessoais | Configurações para Neovim, Micro e btop |
 | 🎨 Aparência | Ajustes GTK, paletas derivadas de wallpapers e shaders de cursor |
 
-## Início rápido
+## Instalação
 
-> [!CAUTION]
-> Algumas opções dependem do hardware (monitores, entrada, idioma). Revise [`docs/configuracao.md`](docs/configuracao.md) antes de instalar.
-
-> [!NOTE]
-> **NixOS:** esta branch traz um flake (módulos NixOS + Home Manager, tema do GRUB, splash do Plymouth e greeter). Veja [`docs/nixos.pt-br.md`](docs/nixos.pt-br.md); os passos abaixo são para Arch Linux / CachyOS.
-
-**Requisitos:** Arch Linux ou CachyOS ([detalhes](docs/instalacao.md#arch-linux-e-cachyos)) · Bash 4.4+ · Git · uma conta de usuário comum · Hyprland 0.55 ou superior. Um auxiliar do AUR (**paru** ou **yay**) só é necessário se você quiser que o instalador compile pacotes do AUR.
+Pela ISO de instalação do NixOS (a mínima basta), conectado à rede:
 
 ```bash
-git clone https://github.com/jhonatanoliveira2/monolith-dotfiles.git
-cd monolith-dotfiles
-./scripts/install.sh
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support#install
 ```
 
-> [!TIP]
-> O instalador copia `configs/` para sua pasta pessoal, instala os pacotes (pule com `--no-deps`) e coloca os wallpapers incluídos em `~/Pictures/Wallpapers` e `~/Videos/wallpaper-live`.
-
-<details>
-  <summary><strong>Backup e recuperação</strong></summary>
-
-  ```bash
-  ./scripts/backup.sh --list
-  ./scripts/restore.sh
-  ./scripts/restore.sh --dry-run
-  ```
-
-  Os backups ficam em `~/.local/share/monolith-dotfiles/backups/`. Consulte o [guia de instalação](docs/instalacao.md#backup-e-recuperação) para restaurar um snapshot específico ou recuperar arquivos manualmente.
-</details>
-
-<details>
-  <summary><strong>Prévia do instalador</strong></summary>
-  <p align="center"><img src="assets/previews/installer-welcome.svg" alt="Boas-vindas e etapas do instalador MONOLITH" width="760"></p>
-  <p align="center"><img src="assets/previews/installer-run.svg" alt="Progresso e conclusão do instalador MONOLITH" width="760"></p>
-</details>
+O instalador guiado pergunta o disco, usuário, hostname, idioma, teclado, LUKS e swap, mostra um resumo e só
+apaga o disco depois que o nome dele é digitado de volta. Num NixOS já instalado, ou num flake existente, veja
+[docs/nixos.pt-br.md](docs/nixos.pt-br.md#instalação). Atualizações: Configurações > Atualização, ou
+`sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos`.
 
 ## Atalhos
 
@@ -114,7 +77,7 @@ cd monolith-dotfiles
 | `SUPER + Return` | Terminal | Abre o terminal (`programs.terminal`) |
 | `SUPER + X` | Gerenciador de Arquivos | Abre o gerenciador de arquivos (`programs.fileManager`) |
 | `SUPER + C` | Code | Abre o VS Code / Cursor |
-| `SUPER + TAB` | Navegador | Abre o Zen Browser |
+| `SUPER + TAB` | Navegador | Abre o navegador (`programs.monolith.apps.browser`, Firefox por padrão) |
 | `SUPER + Z` | Bloquear | Bloqueia a sessão com `hyprlock` |
 | `SUPER + A` | Lançador de Apps | Alterna o Rofi (`~/.config/hypr/rofi/launcher.sh`) |
 | `SUPER + D` | Menu de Wallpaper | Abre o seletor de wallpapers (`~/.local/bin/wallpaper-menu`) |
@@ -178,32 +141,29 @@ cd monolith-dotfiles
 ## Estrutura do repositório
 
 ```text
-configs/                 Configurações de desktop instaladas na pasta pessoal
-scripts/                 Instalador, backup, restauração, verificações e importação
-docs/                    Guias em inglês e português do Brasil
-assets/                  Identidade visual, prévias do instalador e capturas
-wallpapers/              Wallpapers estáticos e animados incluídos
-tests/                   Testes do instalador e da documentação
-tools/                   Utilitário para renderizar prévias do terminal
-packages.txt             Relação de pacotes oficiais, opcionais e AUR
-LICENSE                  MIT
+flake.nix, flake.lock    o flake (pacotes, módulos NixOS / Home Manager, instalador, template)
+nix/                     módulos, pacotes, instalador guiado, verificações
+configs/                 configuração do desktop, ligada no seu home pelo Home Manager
+branding/                fontes do tema do GRUB, do splash do Plymouth e da arte do boot
+greeter/                 greeter em Quickshell para o greetd
+templates/nixos/         configuração inicial (nix flake init -t)
+wallpapers/              wallpapers incluídos
+docs/                    guias em inglês e português do Brasil
+tests/                   verificações do instalador e da documentação
 ```
 
 ## Documentação
 
 | Guia | English | Português (Brasil) |
 |---|---|---|
-| Instalação e recuperação | [Installation](docs/installation.md) | [Instalação](docs/instalacao.md) |
-| Configuração e notas de hardware | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
-| Justificativas dos pacotes | [Dependencies](docs/dependencies.md) | [Dependências](docs/dependencias.md) |
-| Problemas comuns | [Troubleshooting](docs/troubleshooting.md) | [Solução de problemas](docs/problemas-conhecidos.md) |
+| Instalação, opções, boot e login | [NixOS](docs/nixos.md) | [NixOS](docs/nixos.pt-br.md) |
 | Contribuição | [Contributing](CONTRIBUTING.en.md) | [Contribuindo](CONTRIBUTING.md) |
 
 > [!NOTE]
-> O instalador e os arquivos de configuração são fornecidos como estão. Leia os [avisos de terceiros](THIRD-PARTY-CREDITS.md) antes de redistribuir componentes incluídos.
+> Fornecido como está. Leia os [avisos de terceiros](THIRD-PARTY-CREDITS.md) antes de redistribuir componentes incluídos.
 
 ---
 
 <p align="center">
-  Feito com ☕ no Arch Linux · <a href="LICENSE">Licença MIT</a>
+  Feito com ☕ no NixOS · <a href="LICENSE">Licença MIT</a>
 </p>
