@@ -21,6 +21,7 @@
   wpgtk,
   awww,
   mpvpaper,
+  dotmatrix,
 }:
 let
   runtime = [
@@ -39,6 +40,7 @@ let
     wpgtk
     awww
     mpvpaper
+    dotmatrix # Nothing theme: dot-matrix wallpapers
   ];
 in
 stdenvNoCC.mkDerivation {

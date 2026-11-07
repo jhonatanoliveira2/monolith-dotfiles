@@ -79,6 +79,8 @@ let
   };
 in
 {
+  imports = [ ./home-nothing.nix ];
+
   options.programs.monolith = {
     enable = mkEnableOption "the MONOLITH Shell (Hyprland + Quickshell desktop)";
 

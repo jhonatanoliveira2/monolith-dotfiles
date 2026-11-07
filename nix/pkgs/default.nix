@@ -8,7 +8,7 @@ rec {
   # the Quickshell configuration (configs/.config/quickshell), linked as ~/.config/quickshell
   shell = callPackage ./shell.nix { };
   # ~/.local/bin helpers (wallpaper-menu, monolith-theme, monolith-vscode) with their tools on PATH
-  scripts = callPackage ./scripts.nix { };
+  scripts = callPackage ./scripts.nix { inherit dotmatrix; };
   # prctl(PR_SET_THP_DISABLE) launcher used by scripts/start.sh instead of python3
   nothp = callPackage ./nothp.nix { };
   # logo, wordmark and animation frames rendered from branding/*.svg (one source for every boot stage)
@@ -19,4 +19,8 @@ rec {
   installer = callPackage ./installer.nix { };
   # Quickshell greeter for greetd (greeter/ + shared components of the shell)
   greeter = callPackage ./greeter.nix { inherit branding shell; };
+  # Nothing theme: dot-matrix renderer (build + runtime) and its fonts; the wallpapers are rendered by the
+  # modules (nix/modules/nothing.nix), which know the outputs
+  dotmatrix = callPackage ./dotmatrix.nix { };
+  nothing-fonts = callPackage ./nothing-fonts.nix { };
 }
