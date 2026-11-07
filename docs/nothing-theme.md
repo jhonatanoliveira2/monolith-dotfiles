@@ -47,8 +47,8 @@ configs/.config/quickshell/core/Nothing.qml   reads nothing.json + the runtime o
 ```
 
 Nix generates the tokens as JSON; `core/Nothing.qml` exposes them to the QML (`Theme.p`, `Theme.font`,
-`Theme.fontSans`, `Theme.fontDot`, `Theme.alert`, `Theme.nothing`). Without `nothing.json` (Arch / CachyOS,
-or the theme off) `Nothing.available` is false and no file of the shell behaves differently.
+`Theme.fontSans`, `Theme.fontDot`, `Theme.alert`, `Theme.nothing`). Without `nothing.json` (the theme
+off) `Nothing.available` is false and no file of the shell behaves differently.
 
 ## Options (`monolith.nothingTheme`)
 

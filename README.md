@@ -3,11 +3,9 @@
 </h1>
 
 <p align="center">
-  <img alt="Arch Linux" src="https://img.shields.io/badge/Arch_Linux-1793d1?style=for-the-badge&logo=archlinux&logoColor=white">
-  <img alt="CachyOS" src="https://img.shields.io/badge/CachyOS-00aa88?style=for-the-badge&logo=archlinux&logoColor=white">
+  <img alt="NixOS" src="https://img.shields.io/badge/NixOS-5277c3?style=for-the-badge&logo=nixos&logoColor=white">
   <img alt="Hyprland" src="https://img.shields.io/badge/Hyprland_0.55+-00d9f5?style=for-the-badge&logo=hyprland&logoColor=black">
   <img alt="Quickshell" src="https://img.shields.io/badge/Quickshell-QML-41cd52?style=for-the-badge&logo=qt&logoColor=white">
-  <img alt="Lua" src="https://img.shields.io/badge/Config-Lua-2c2d72?style=for-the-badge&logo=lua&logoColor=white">
   <img alt="MIT" src="https://img.shields.io/badge/License-MIT-8b9099?style=for-the-badge">
 </p>
 
@@ -16,34 +14,24 @@
 </p>
 
 <p align="center">
-  <em>A monochrome, Hyprland desktop — compositor, shell, terminal and tools in one repository.</em>
+  <em>A monochrome Hyprland desktop for NixOS — compositor, shell, boot and tools in one flake.</em>
 </p>
 
 <p align="center">
-  <a href="#screenshots">Screenshots</a> &nbsp;•&nbsp;
   <a href="#highlights">Highlights</a> &nbsp;•&nbsp;
-  <a href="#quick-start">Install</a> &nbsp;•&nbsp;
+  <a href="#install">Install</a> &nbsp;•&nbsp;
   <a href="#keybinds">Keybinds</a> &nbsp;•&nbsp;
   <a href="#documentation">Docs</a>
 </p>
 
 ---
 
-https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
-
-<p align="center"><a href="https://youtu.be/W_SYo-i9fXk">▶ Watch the full tour on YouTube</a></p>
-
-## Screenshots
-
-<p align="center">
-  <img src="assets/screenshots/1.png" alt="MONOLITH desktop with the Quickshell bar" width="100%">
-</p>
-<table>
-  <tr>
-    <td width="50%"><img src="assets/screenshots/2.png" alt="Menus and settings" width="100%"></td>
-    <td width="50%"><img src="assets/screenshots/3.png" alt="Terminal and tools" width="100%"></td>
-  </tr>
-</table>
+> [!IMPORTANT]
+> **Branch `feature/nothing-theme` — NixOS only.** The Arch Linux / CachyOS version (shell installer, `packages.txt`) lives
+> on [`main`](https://github.com/jhonatanoliveira2/monolith-dotfiles/tree/main); the plain NixOS version on
+> [`feature/nixos-support`](https://github.com/jhonatanoliveira2/monolith-dotfiles/tree/feature/nixos-support).
+> This branch adds the **Nothing theme** (dot matrix / LEDs), on by default. This project is not affiliated with
+> Nothing Technology Limited.
 
 ## Highlights
 
@@ -51,7 +39,9 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 - **Monolith Settings app** — searchable pages for display (drag-and-drop monitor layout with snapping and auto-revert), audio, network, Bluetooth, power, storage cleanup, input and updates. Changes apply live through the Hyprland Lua API.
 - **Media menu** — cover crossfade, seekable progress, volume, player switcher and a searchable history of recently played tracks that plays again with one click.
 - **Hyprland in Lua** — modular `hyprland.lua` with separate files for keybindings, layout, rules and autostart.
-- **Safe installer** — dependency checks, automatic backups, rollback on failure and a dry-run restore.
+- **Declarative install** — a Nix flake: NixOS + Home Manager modules, a guided installer for the NixOS ISO and pinned versions.
+- **Nothing theme** — greys, Doto / Space Grotesk / Space Mono, LED meters, an edge glow on notifications and still wallpapers rendered as LED matrices per monitor (`monolith-dotmatrix`).
+- **Boot to desktop** — GRUB theme, Plymouth splash and a Quickshell greeter with the same look.
 - **Bilingual** — shell strings and documentation in English and Brazilian Portuguese.
 
 ## What's inside
@@ -65,44 +55,19 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 | 🛠️ Personal tools | Neovim, Micro and btop settings |
 | 🎨 Appearance | GTK settings, wallpaper-derived palettes and cursor shaders |
 
-## Quick start
+## Install
 
-> [!CAUTION]
-> Some options are hardware-specific (monitors, input, language). Review [`docs/config.md`](docs/config.md) before installing.
-
-> [!NOTE]
-> **NixOS:** this branch ships a flake (NixOS + Home Manager modules, GRUB theme, Plymouth splash and greeter). See [`docs/nixos.md`](docs/nixos.md); the steps below are for Arch Linux / CachyOS.
->
-> **Nothing theme:** dot-matrix / LED look, on by default on this branch. See [`docs/nothing-theme.md`](docs/nothing-theme.md). This project is not affiliated with Nothing Technology Limited.
-
-**Requirements:** Arch Linux or CachyOS ([details](docs/installation.md#arch-linux-and-cachyos)) · Bash 4.4+ · Git · a regular user account · Hyprland 0.55 or newer. An AUR helper (**paru** or **yay**) is only needed if you want the installer to build AUR packages.
+From the NixOS installer ISO (the minimal one is enough), connected to the network:
 
 ```bash
-git clone https://github.com/jhonatanoliveira2/monolith-dotfiles.git
-cd monolith-dotfiles
-./scripts/install.sh
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme#install
 ```
 
-> [!TIP]
-> The installer copies `configs/` into your home directory, installs packages (skip with `--no-deps`) and places the bundled wallpapers in `~/Pictures/Wallpapers` and `~/Videos/wallpaper-live`.
-
-<details>
-  <summary><strong>Backup and recovery</strong></summary>
-
-  ```bash
-  ./scripts/backup.sh --list
-  ./scripts/restore.sh
-  ./scripts/restore.sh --dry-run
-  ```
-
-  Backups are stored under `~/.local/share/monolith-dotfiles/backups/`. See the [installation guide](docs/installation.md#backup-and-recovery) to restore a specific snapshot or recover files manually.
-</details>
-
-<details>
-  <summary><strong>Installer preview</strong></summary>
-  <p align="center"><img src="assets/previews/installer-welcome.svg" alt="MONOLITH installer welcome and setup steps" width="760"></p>
-  <p align="center"><img src="assets/previews/installer-run.svg" alt="MONOLITH installer progress and completion screen" width="760"></p>
-</details>
+The guided installer asks for the disk, user, hostname, locale, keyboard, LUKS and swap, shows a summary and only
+erases the disk after its name is typed back. On an installed NixOS, or in an existing flake, see
+[docs/nixos.md](docs/nixos.md#installing). Updates: Settings > Update, or
+`sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos`.
 
 ## Keybinds
 
@@ -116,7 +81,7 @@ cd monolith-dotfiles
 | `SUPER + Return` | Terminal | Opens the terminal (`programs.terminal`) |
 | `SUPER + X` | File Manager | Opens the file manager (`programs.fileManager`) |
 | `SUPER + C` | Code | Opens VS Code / Cursor |
-| `SUPER + TAB` | Browser | Opens Zen Browser |
+| `SUPER + TAB` | Browser | Opens the browser (`programs.monolith.apps.browser`, Firefox by default) |
 | `SUPER + Z` | Lock | Locks the session with `hyprlock` |
 | `SUPER + A` | App Launcher | Toggles Rofi launcher (`~/.config/hypr/rofi/launcher.sh`) |
 | `SUPER + D` | Wallpaper Menu | Opens wallpaper selector (`~/.local/bin/wallpaper-menu`) |
@@ -180,32 +145,30 @@ cd monolith-dotfiles
 ## Repository map
 
 ```text
-configs/                 Desktop configuration payload copied into your home
-scripts/                 Installer, backup, restore, checks and import utility
-docs/                    Paired English and Brazilian Portuguese guides
-assets/                  Brand artwork, installer previews and screenshots
-wallpapers/              Bundled static and live wallpapers
-tests/                   Installer and documentation checks
-tools/                   Utility for rendering terminal previews
-packages.txt             Required, optional and AUR package manifest
-LICENSE                  MIT
+flake.nix, flake.lock    the flake (packages, NixOS / Home Manager modules, installer, template)
+nix/                     modules, packages, guided installer, checks
+configs/                 desktop configuration linked into your home by Home Manager
+branding/                GRUB theme, Plymouth splash and boot artwork sources
+greeter/                 Quickshell greeter for greetd
+templates/nixos/         starting configuration (nix flake init -t)
+wallpapers/              bundled wallpapers
+docs/                    English and Brazilian Portuguese guides
+tests/                   installer and documentation checks
 ```
 
 ## Documentation
 
 | Guide | English | Português (Brasil) |
 |---|---|---|
-| Installation and recovery | [Installation](docs/installation.md) | [Instalação](docs/instalacao.md) |
-| Configuration and hardware notes | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
-| Package rationale | [Dependencies](docs/dependencies.md) | [Dependências](docs/dependencias.md) |
-| Common issues | [Troubleshooting](docs/troubleshooting.md) | [Solução de problemas](docs/problemas-conhecidos.md) |
+| Install, options, boot and login | [NixOS](docs/nixos.md) | [NixOS](docs/nixos.pt-br.md) |
+| Nothing theme, wallpapers, switching branches | [Nothing theme](docs/nothing-theme.md) | [Tema Nothing](docs/nothing-theme.pt-br.md) |
 | Contributing | [Contributing](CONTRIBUTING.en.md) | [Contribuindo](CONTRIBUTING.md) |
 
 > [!NOTE]
-> The installer and configuration files are provided as-is. Read the [third-party notices](THIRD-PARTY-CREDITS.md) before redistributing included components.
+> Provided as-is. Read the [third-party notices](THIRD-PARTY-CREDITS.md) before redistributing included components.
 
 ---
 
 <p align="center">
-  Made with ☕ on Arch Linux · <a href="LICENSE">MIT License</a>
+  Made with ☕ on NixOS · <a href="LICENSE">MIT License</a>
 </p>

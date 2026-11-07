@@ -1,49 +1,41 @@
 # Guia de contribuição
 
-[English](CONTRIBUTING.en.md) · **Português (Brasil)**
+**Português (Brasil)** · [English](CONTRIBUTING.en.md)
 
-Obrigado por contribuir com o MONOLITH. Alterações claras, verificáveis e seguras ajudam a manter o instalador e as configurações úteis em outras máquinas.
+Obrigado por contribuir com o MONOLITH. Esta branch tem suporte **somente ao NixOS**; mudanças para Arch Linux /
+CachyOS vão para a `main`.
 
 ## Antes de abrir uma contribuição
 
-- Não inclua tokens, credenciais, chaves privadas, e-mails, nomes de usuário ou caminhos pessoais. Revise o diff inteiro antes de enviar.
-- Não declare testes que não executou. Informe o ambiente usado e quaisquer verificações pendentes.
-- Textos apresentados ao usuário devem existir em inglês e português do Brasil.
-- Preserve licenças e avisos de terceiros junto dos componentes aos quais se aplicam.
+- Não inclua tokens, credenciais, chaves privadas, endereços de e-mail, nomes de usuário ou caminhos pessoais. Revise todo o diff antes de enviar.
+- Não declare testes que você não executou. Informe o ambiente usado e as verificações que ficaram pendentes.
+- Textos voltados ao usuário devem existir em português do Brasil e em inglês.
+- Preserve as licenças e os avisos de terceiros junto aos componentes a que se aplicam.
 
 ## Convenções do projeto
 
-Scripts, comentários, nomes internos e logs técnicos usam inglês. Apenas mensagens voltadas ao usuário são traduzidas. As mensagens do instalador ficam em `scripts/lib/messages.sh`; mantenha os placeholders na mesma ordem nos dois idiomas.
+Código, comentários, nomes internos e logs técnicos usam inglês. Apenas mensagens voltadas ao usuário são
+traduzidas (`settings/Labels.qml` e `core/Strings.qml` do shell, os pares `t "pt" "en"` do instalador).
 
-A documentação também é bilíngue. Ao alterar um guia, atualize os dois arquivos correspondentes em `docs/` e mantenha comandos, caminhos, opções e identificadores técnicos iguais. Os pares usam os nomes `configuracao.md` e `config.md`, `dependencias.md` e `dependencies.md`, `instalacao.md` e `installation.md`, `problemas-conhecidos.md` e `troubleshooting.md`.
+A documentação é bilíngue: ao alterar um guia, atualize os dois arquivos e mantenha comandos, caminhos, opções e
+identificadores técnicos idênticos. Os pares são `README.md` / `README.pt-br.md`, `CONTRIBUTING.en.md` /
+`CONTRIBUTING.md` e os guias `docs/*.md` / `docs/*.pt-br.md`.
 
-Ao alterar dependências, atualize `packages.txt` e explique o motivo de cada pacote. Não transforme referências em comentários em dependências ativas sem confirmar o uso real.
+Pacotes ficam em `nix/packages.nix` (programas do usuário) ou nos módulos NixOS (`nix/modules/nixos/`,
+serviços); explique por que cada um é necessário.
 
 ## Verificações
 
-Execute os testes relevantes antes de enviar:
-
 ```bash
-bash tests/test-installer.sh
-bash tests/test-docs.sh
-for f in scripts/*.sh scripts/lib/*.sh tests/*.sh; do bash -n "$f"; done
+nix flake check                      # compila os pacotes e avalia uma máquina de exemplo
+bash tests/test-nixos-install.sh     # instalador guiado (nenhum disco é tocado)
+bash tests/test-docs.sh              # links, âncoras e pares bilíngues
+bash -n nix/install/monolith-install.sh
 ```
-
-Se tiver ShellCheck instalado, rode também:
-
-```bash
-shellcheck -x -S warning scripts/*.sh scripts/lib/*.sh
-```
-
-Os testes do instalador usam ambientes temporários. Se alterar o comportamento do instalador, acrescente uma cobertura correspondente em `tests/test-installer.sh`.
 
 ## Fluxo sugerido
 
-1. Crie um fork e um branch específico, como `fix/...`, `feat/...` ou `docs/...`.
-2. Faça alterações focadas e escreva mensagens de commit no imperativo.
-3. Teste o que mudou e descreva resultados reais.
-4. Abra uma [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) para relatar um problema ou uma contribuição no repositório para propor a alteração.
-
-## Capturas e prévias
-
-Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. Os READMEs usam `1.png`, `2.png` e `3.png`. As prévias do instalador são geradas por `tools/ansi2svg.py`.
+1. Faça um fork e crie uma branch focada, como `fix/...`, `feat/...` ou `docs/...`.
+2. Mantenha as mudanças focadas e escreva mensagens de commit no imperativo.
+3. Teste o que mudou (um `nixos-rebuild build` de uma configuração real quando os módulos mudarem) e informe os resultados reais.
+4. Abra uma [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) para relatar um problema ou um pull request para propor uma mudança.

@@ -87,7 +87,7 @@ in
     optionalPackages = mkOption {
       type = types.bool;
       default = true;
-      description = "Install the optional programs of packages.txt (RNNoise, cava, pavucontrol, btop, neovim...).";
+      description = "Install the optional programs of nix/packages.nix (RNNoise, cava, pavucontrol, btop, neovim...).";
     };
     extraPackages = mkOption {
       type = types.listOf types.package;

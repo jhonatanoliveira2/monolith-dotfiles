@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test-docs.sh - documentation consistency: links, anchors, script references, bilingual pairs, package coverage.
+# test-docs.sh - documentation consistency: links, anchors, script references, bilingual pairs, branch structure.
 # Usage: bash tests/test-docs.sh
 set -uo pipefail
 export LC_ALL=C.UTF-8
@@ -65,32 +65,22 @@ done < <(grep -rhoP '(?<![\w./-])(\./)?(scripts|tools|tests)/[A-Za-z0-9_./-]+\.(
 echo "== bilingual pairs"
 [[ -f README.md && -f README.pt-br.md ]] && ok || ko "missing README pair"
 [[ -f CONTRIBUTING.md && -f CONTRIBUTING.en.md ]] && ok || ko "missing CONTRIBUTING pair"
-for pair in instalacao.md:installation.md configuracao.md:config.md dependencias.md:dependencies.md \
-    problemas-conhecidos.md:troubleshooting.md nixos.pt-br.md:nixos.md nothing-theme.pt-br.md:nothing-theme.md; do
-    [[ -f docs/${pair%%:*} && -f docs/${pair#*:} ]] && ok || ko "missing docs pair: $pair"
+for f in docs/*.md; do
+    case $f in *.pt-br.md) other=${f%.pt-br.md}.md ;; *) other=${f%.md}.pt-br.md ;; esac
+    [[ -f $other ]] && ok || ko "missing docs pair: $f <-> $other"
 done
 
-echo "== packages.txt vs. documentation"
-source scripts/lib/common.sh
-source scripts/lib/packages.sh
-for sec in official:required official:optional aur:required aur:optional manual; do
-    while IFS= read -r pkg; do
-        for d in docs/dependencias.md docs/dependencies.md; do
-            grep -qF "$pkg" "$d" && ok || ko "$pkg ($sec) is not documented in $d"
-        done
-    done < <(pkg_list "$sec")
-done
-
-echo "== structure required by the project brief"
-for p in assets/logo assets/screenshots assets/previews \
-    configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty \
-    configs/.config/btop configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
-    configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \
-    scripts/install.sh scripts/backup.sh scripts/check-dependencies.sh \
-    docs/instalacao.md docs/installation.md docs/configuracao.md docs/config.md \
-    docs/problemas-conhecidos.md docs/troubleshooting.md \
-    .gitignore LICENSE packages.txt README.md README.pt-br.md CONTRIBUTING.md CONTRIBUTING.en.md; do
+echo "== structure of the NixOS branch"
+for p in flake.nix flake.lock nix/meta.nix nix/packages.nix nix/pkgs/default.nix nix/modules/home.nix \
+    nix/modules/nixos/default.nix nix/install/monolith-install.sh nix/checks templates/nixos/flake.nix \
+    templates/nixos/configuration.nix configs/.config/hypr configs/.config/quickshell branding/build.sh \
+    greeter/shell.qml wallpapers docs/nixos.md docs/nixos.pt-br.md \
+    .gitignore LICENSE README.md README.pt-br.md CONTRIBUTING.md CONTRIBUTING.en.md THIRD-PARTY-CREDITS.md; do
     [[ -e $p ]] && ok || ko "missing: $p"
+done
+# NixOS only: the Arch installer and its previews live on main
+for p in scripts packages.txt tools assets tests/test-installer.sh; do
+    [[ ! -e $p ]] && ok || ko "Arch-only path present on the NixOS branch: $p"
 done
 
 echo

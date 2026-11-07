@@ -1,15 +1,10 @@
 # configs/
 
-**EN** — This folder is the payload of the installer. `configs/.config/` mirrors `~/.config/` and
-`configs/.local/bin/` mirrors `~/.local/bin/`. The repository ships it **empty on purpose** (only
-`.gitkeep` placeholders): copy your own folders in, do not recreate them.
+**EN** — The desktop configuration. `configs/.config/` mirrors `~/.config/` and `configs/.local/bin/` mirrors
+`~/.local/bin/`. The Home Manager module (`nix/modules/home.nix`) links these files from the Nix store; the ones
+programs rewrite are copied once instead (`programs.monolith.mutableFiles`). See [docs/nixos.md](../docs/nixos.md).
 
-**PT-BR** — Esta pasta é a carga útil do instalador. `configs/.config/` espelha `~/.config/` e
-`configs/.local/bin/` espelha `~/.local/bin/`. O repositório a entrega **vazia de propósito** (apenas
-marcadores `.gitkeep`): copie suas próprias pastas, não as recrie.
-
-```bash
-./scripts/import-configs.sh --with-local-bin     # safe copy with the exclusions documented in docs/
-```
-
-Placeholders (`.gitkeep`) are never deployed. / Os marcadores `.gitkeep` nunca são instalados.
+**PT-BR** — A configuração do desktop. `configs/.config/` espelha `~/.config/` e `configs/.local/bin/` espelha
+`~/.local/bin/`. O módulo Home Manager (`nix/modules/home.nix`) liga esses arquivos da Nix store; os que os
+programas reescrevem são copiados uma vez (`programs.monolith.mutableFiles`). Veja
+[docs/nixos.pt-br.md](../docs/nixos.pt-br.md).

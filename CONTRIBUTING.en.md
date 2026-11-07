@@ -2,7 +2,8 @@
 
 [Português (Brasil)](CONTRIBUTING.md) · **English**
 
-Thank you for contributing to MONOLITH. Clear, verifiable and safe changes help keep the installer and configuration useful on other machines.
+Thank you for contributing to MONOLITH. This branch supports **NixOS only**; changes for Arch Linux / CachyOS go
+to `main`.
 
 ## Before opening a contribution
 
@@ -13,37 +14,28 @@ Thank you for contributing to MONOLITH. Clear, verifiable and safe changes help 
 
 ## Project conventions
 
-Scripts, comments, internal names and technical logs use English. Only user-facing messages are translated. Installer messages live in `scripts/lib/messages.sh`; keep placeholders in the same order in both languages.
+Code, comments, internal names and technical logs use English. Only user-facing messages are translated (the
+shell's `settings/Labels.qml` and `core/Strings.qml`, the installer's `t "pt" "en"` pairs).
 
-Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`.
+Documentation is bilingual: when changing a guide, update both files and keep commands, paths, options and
+technical identifiers identical. The pairs are `README.md` / `README.pt-br.md`, `CONTRIBUTING.en.md` /
+`CONTRIBUTING.md` and the `docs/*.md` / `docs/*.pt-br.md` guides.
 
-When changing dependencies, update `packages.txt` and explain why each package is needed. Do not promote commented references to active dependencies without confirming actual use.
+Packages go in `nix/packages.nix` (user programs) or the NixOS modules (`nix/modules/nixos/`, services); explain
+why each one is needed.
 
 ## Checks
 
-Run the relevant tests before submitting:
-
 ```bash
-bash tests/test-installer.sh
-bash tests/test-docs.sh
-for f in scripts/*.sh scripts/lib/*.sh tests/*.sh; do bash -n "$f"; done
+nix flake check                      # builds the packages and evaluates an example machine
+bash tests/test-nixos-install.sh     # guided installer (no disk is touched)
+bash tests/test-docs.sh              # links, anchors and bilingual pairs
+bash -n nix/install/monolith-install.sh
 ```
-
-If ShellCheck is available, also run:
-
-```bash
-shellcheck -x -S warning scripts/*.sh scripts/lib/*.sh
-```
-
-Installer tests use temporary environments. If you change installer behaviour, add corresponding coverage to `tests/test-installer.sh`.
 
 ## Suggested workflow
 
 1. Fork the project and create a focused branch such as `fix/...`, `feat/...` or `docs/...`.
 2. Keep changes focused and write imperative commit messages.
-3. Test what changed and report the actual results.
-4. Open an [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) to report a problem or a repository contribution to propose a change.
-
-## Screenshots and previews
-
-Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. The READMEs use `1.png`, `2.png` and `3.png`. Installer previews are generated with `tools/ansi2svg.py`.
+3. Test what changed (a `nixos-rebuild build` of a real configuration when modules change) and report the actual results.
+4. Open an [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) to report a problem or a pull request to propose a change.

@@ -2,13 +2,12 @@
 
 **Português (Brasil)** · [English](nixos.md)
 
-A branch `feature/nixos-support` entrega o MONOLITH Shell como um **flake Nix**: um módulo NixOS para o lado do
+A branch `feature/nothing-theme` entrega o MONOLITH Shell como um **flake Nix**: um módulo NixOS para o lado do
 sistema, um módulo Home Manager para cada usuário e, só no NixOS, uma experiência de inicialização (tema do GRUB,
 splash do Plymouth e um greeter em Quickshell) que leva a identidade do shell do momento em que o computador liga
 até a área de trabalho.
 
-O instalador do Arch Linux / CachyOS continua intacto e funciona a partir desta branch; no NixOS ele para e
-aponta para cá, porque copiar arquivos para o `$HOME` brigaria com o Home Manager.
+Nesta branch o MONOLITH tem suporte **somente ao NixOS** (a versão para Arch Linux / CachyOS fica na `main`).
 
 ## Conteúdo
 
@@ -16,12 +15,12 @@ aponta para cá, porque copiar arquivos para o `$HOME` brigaria com o Home Manag
 - [Instalação](#instalação)
 - [Opções](#opções)
 - [Boot, splash e login](#boot-splash-e-login)
-- [Diferenças em relação ao Arch](#diferenças-em-relação-ao-arch)
+- [Observações](#observações)
 - [Verificação e problemas](#verificação-e-problemas)
 
 ## Como é construído
 
-Uma única árvore de arquivos serve às duas distribuições; nada em `configs/` é duplicado para o Nix.
+Tudo em `configs/` é usado como está; nada é duplicado para o Nix.
 
 | Parte | Origem | No NixOS |
 |---|---|---|
@@ -30,7 +29,7 @@ Uma única árvore de arquivos serve às duas distribuições; nada em `configs/
 | Arquivos que os programas reescrevem (btop, micro, nvim, GTK, wpgtk, HyprMod) | idem | copiados uma vez, graváveis ("semeados") |
 | Utilitários de `~/.local/bin` | `configs/.local/bin/` | pacote `scripts` (ferramentas no `PATH`), ligados em `~/.local/bin` |
 | Início sem THP | `configs/.config/quickshell/scripts/start.sh` | `monolith-nothp` (poucas linhas de C, sem python3) |
-| Pacotes | `packages.txt` | `nix/packages.nix` (mesmos grupos) + serviços do NixOS |
+| Pacotes | `nix/packages.nix` | Home Manager (programas do usuário) + serviços do NixOS |
 | Identidade do boot | `branding/` | pacotes `branding`, `plymouth-theme`, `grub-theme` |
 | Greeter | `greeter/` + `Txt`, `Btn`, `Avatar` do shell | pacote `greeter`, executado pelo greetd |
 
@@ -38,7 +37,7 @@ Uma única árvore de arquivos serve às duas distribuições; nada em `configs/
 flake.nix
 nix/
   meta.nix              versão / revisão mostradas nas Configurações
-  packages.nix          o packages.txt do NixOS
+  packages.nix          programas do usuário, obrigatórios e opcionais
   pkgs/                 shell, scripts, nothp, branding, plymouth-theme, grub-theme, greeter
   modules/home.nix      programs.monolith (Home Manager)
   modules/nixos/        monolith.* (system.nix, boot.nix, greeter.nix)
@@ -48,11 +47,10 @@ greeter/                greeter em Quickshell (shell.qml, GreeterWindow.qml, cor
 templates/nixos/        configuração inicial (nix flake init -t)
 ```
 
-O shell só ganhou comportamentos neutros quanto à distribuição, então o Arch continua funcionando: ele reconhece
-o NixOS (logo e nome), encontra o plugin RNNoise nos perfis do Nix, oferece a coleta de lixo do Nix em
-Configurações > Armazenamento, guarda o limite de carga da bateria em `/var/lib/monolith` quando o `/etc` é
-somente leitura e lê `~/.config/monolith/nix.json` (escrito pelo módulo Home Manager) em Configurações > Sistema
-e Configurações > Atualização.
+O shell reconhece o NixOS (logo e nome), encontra o plugin RNNoise nos perfis do Nix, oferece a coleta de lixo
+do Nix em Configurações > Armazenamento, guarda o limite de carga da bateria em `/var/lib/monolith` (o `/etc` é
+somente leitura) e lê `~/.config/monolith/nix.json` (escrito pelo módulo Home Manager) em Configurações >
+Sistema e Configurações > Atualização.
 
 ## Instalação
 
@@ -62,7 +60,7 @@ Inicie a ISO de instalação do NixOS (a mínima basta), conecte-se à rede e ro
 
 ```bash
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support#install
+  run github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme#install
 ```
 
 Ele pergunta o idioma, o disco de destino, usuário, hostname, fuso, locale, teclado, criptografia do disco
@@ -102,7 +100,7 @@ nixos-generate-config --root /mnt
 
 # 3. o template do MONOLITH ao lado (substitui o configuration.nix gerado)
 cd /mnt/etc/nixos && rm configuration.nix
-nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nix flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme
 nano configuration.nix                     # usuário, hostname, fuso, teclado (e BIOS, veja o arquivo)
 
 # 4. instalar, definir a senha do usuário, reiniciar
@@ -118,7 +116,7 @@ Numa máquina BIOS use tabela msdos e só a partição raiz, e no `configuration
 
 ```bash
 mkdir ~/nixos && cd ~/nixos
-nix --extra-experimental-features "nix-command flakes" flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support
+nix --extra-experimental-features "nix-command flakes" flake init -t github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme
 cp /etc/nixos/hardware-configuration.nix .
 # edite configuration.nix: usuário, hostname, teclado, bootloader (mantenha o que você já usa)
 sudo nixos-rebuild switch --flake .#monolith-pc
@@ -130,7 +128,7 @@ Adicione a entrada e o módulo e ative as opções.
 
 ```nix
 inputs.monolith = {
-  url = "github:jhonatanoliveira2/monolith-dotfiles/feature/nixos-support";
+  url = "github:jhonatanoliveira2/monolith-dotfiles/feature/nothing-theme";
   inputs.nixpkgs.follows = "nixpkgs";
   inputs.home-manager.follows = "home-manager";
 };
@@ -188,7 +186,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | Opção | Padrão | O que faz |
 |---|---|---|
 | `enable` | `false` | configs, shell, utilitários e pacotes |
-| `optionalPackages` | `true` | o grupo opcional do `packages.txt` (RNNoise, cava, pavucontrol, btop, neovim...) |
+| `optionalPackages` | `true` | o grupo opcional do `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim...) |
 | `extraPackages` | `[ ]` | mais pacotes |
 | `apps` | `{ browser = "firefox"; }` | programas dos atalhos (`terminal`, `fileManager`, `ide`, `browser`, `lockScreen`) |
 | `browserPackage` | `pkgs.firefox` | pacote de `apps.browser` (`null` se instalado de outro jeito, ex.: Zen pelo flake dele) |
@@ -237,25 +235,20 @@ sessão ficam em `/var/lib/monolith-greeter`. As fotos de perfil vêm do Account
 Com LUKS nada mais é necessário: o initrd é sempre baseado em systemd (o stage 1 em script e as opções
 `boot.initrd.verbose` / `boot.initrd.systemd.enable` foram removidos do nixpkgs) e pede a senha pelo splash.
 
-Para ver o menu de boot sem reiniciar, `branding/preview-grub.sh` inicia o GRUB real com o tema no QEMU (uma
-janela, ou `--shot arquivo.png`; `--res` e `--lang` como nas opções).
-
 Os scripts e imagens do splash são gerados de `branding/` por `branding/build.sh`, que pode ser executado à mão
 para pré-visualizar (precisa de `rsvg-convert`, `magick`, `grub-mkfont` e do SVG do floco do `nixos-icons`).
 
-## Diferenças em relação ao Arch
+## Observações
 
-| Arch / CachyOS | NixOS |
-|---|---|
-| `scripts/install.sh` copia `configs/` e instala pacotes | o flake: o Home Manager liga os arquivos, o NixOS ativa os serviços |
-| Configurações > Atualização: `git pull` + instalador | compara a revisão fixada com o GitHub; "Atualizar agora" executa `programs.monolith.updateCommand` |
-| Configurações > Armazenamento: caches do pacman / paru / yay | coleta de lixo da Nix store (`nix-collect-garbage --delete-older-than 14d`, usuário + sistema), mantém gerações recentes |
-| limite de carga mantido por regra udev em `/etc` | guardado em `/var/lib/monolith/charge-limit`, aplicado no boot por `monolith-charge-limit.service` |
-| botão "Instalar" do RNNoise (pacman) | plugin instalado por `optionalPackages`; encontrado nos perfis do Nix |
-| `start.sh` usa python3 para o THP | `monolith-nothp` |
-| AUR: awww, mpvpaper, wpgtk, Material Icons | nixpkgs: `awww`, `mpvpaper`, `wpgtk`, `material-icons` |
-| `zen-browser-bin` | fora do nixpkgs: `apps.browser` (Firefox por padrão) |
-| boot e login sem mudanças | tema do GRUB, splash do Plymouth, greeter (`monolith.boot`, `monolith.greeter`) |
+- **Atualizações:** Configurações > Atualização compara a revisão fixada com o GitHub; "Atualizar agora"
+  executa `programs.monolith.updateCommand` num terminal (flake update + rebuild).
+- **Armazenamento:** Configurações > Armazenamento faz a coleta de lixo do Nix (`nix-collect-garbage
+  --delete-older-than 14d`, usuário + sistema) e mantém as gerações recentes.
+- **Bateria:** o limite de carga fica em `/var/lib/monolith/charge-limit` e é aplicado no boot por
+  `monolith-charge-limit.service`.
+- **Navegador:** `apps.browser` (Firefox por padrão; o Zen não está no nixpkgs, use o flake dele e
+  `browserPackage = null`).
+- **THP:** o shell inicia pelo `monolith-nothp` (sem python3).
 
 Editar um arquivo ligado não funciona (ele está na store, somente leitura): altere no seu fork do repositório ou
 coloque-o em `mutableFiles`. Tudo o que o app de Configurações escreve (`~/.config/hypr/generated/`,
@@ -263,9 +256,10 @@ coloque-o em `mutableFiles`. Tudo o que o app de Configurações escreve (`~/.co
 
 ## Tema Nothing
 
-A branch `feature/nothing-theme` acrescenta um visual opcional de matriz de pontos / LEDs (cinzas, fontes Doto
-/ Space, medidores de LEDs, brilho de borda, wallpapers em matriz de LEDs). Veja
-[`nothing-theme.pt-br.md`](nothing-theme.pt-br.md).
+Esta branch acrescenta o tema Nothing, um visual de matriz de pontos / LEDs (cinzas, fontes Doto / Space,
+medidores de LEDs, brilho de borda, wallpapers em matriz de LEDs), ativado por padrão (`monolith.nothingTheme`).
+Veja [`nothing-theme.pt-br.md`](nothing-theme.pt-br.md). Sem ele (`monolith.nothingTheme.enable = false;`) o
+shell é o da `feature/nixos-support`.
 
 ## Verificação e problemas
 
