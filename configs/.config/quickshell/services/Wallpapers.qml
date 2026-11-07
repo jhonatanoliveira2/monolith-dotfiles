@@ -27,8 +27,17 @@ Singleton {
         WALLPAPER_TRANSITION: Settings.wpTransition,
         WALLPAPER_TRANSITION_DURATION: String(Settings.wpDuration),
         WALLPAPER_LIVE_AUDIO: Settings.wpLiveAudio ? "1" : "0",
-        WALLPAPER_LIVE_PAUSE: Settings.wpLivePause ? "1" : "0"
+        WALLPAPER_LIVE_PAUSE: Settings.wpLivePause ? "1" : "0",
+        // Nothing theme: the look in effect (Nix defaults + Settings overrides), so a change applies at once
+        WALLPAPER_NOTHING: Nothing.available ? JSON.stringify(Nothing.effective) : null
     })
+    // the dot-matrix look changed (Settings > Themes > Nothing): show the current still wallpaper again
+    Connections {
+        target: Nothing
+        function onWallpaperChanged() {
+            if (root.currentKind === "image" && root.current) root.apply("static", root.current, root.currentOutputs || "ALL")
+        }
+    }
 
     // first run: apply the shipped default (copied to the static folder by install.sh) once, unless
     // wallpaper-menu already has a saved choice
