@@ -95,11 +95,32 @@ Item {
         }
     }
 
+    // no lyrics: the music's spectrum (cava style) with a small caption; only the caption while searching / idle
+    readonly property bool empty: shown.length === 0 && !swap.running
+    readonly property bool bars: empty && Media.player !== null && !Lyrics.loading
+    Spectrum {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: -caption.height / 2
+        width: Math.min(parent.width - 24, kl.fontSize * 22)
+        height: Math.min(parent.height * 0.55, kl.fontSize * 7)
+        gap: Math.max(2, Math.round(kl.fontSize / 5))
+        fps: kl.maxFps
+        active: kl.bars && Media.playing && kl.visible
+        opacity: kl.bars ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: Theme.dur(400) } }
+    }
     Txt {
-        anchors.centerIn: parent
+        id: caption
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: kl.bars ? Math.min(kl.height * 0.55, kl.fontSize * 7) / 2 + 8 : 0
+        Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: Theme.dur(400); easing.type: Easing.OutCubic } }
         width: parent.width; horizontalAlignment: Text.AlignHCenter
-        opacity: kl.shown.length === 0 && !swap.running ? 1 : 0
+        opacity: kl.empty ? (kl.bars ? 0.7 : 1) : 0
         Behavior on opacity { NumberAnimation { duration: Theme.dur(300) } }
+        font.pixelSize: kl.bars ? Math.round(kl.fontSize * 0.62) : Theme.fontSize
         text: Media.player === null ? Labels.pick(["Nada tocando", "Nothing playing"])
             : Lyrics.loading ? Labels.pick(["Procurando letra…", "Looking for lyrics…"]) : Labels.pick(["Letra não encontrada", "No lyrics found"])
         color: Theme.grayMid
