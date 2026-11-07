@@ -25,6 +25,8 @@ from PIL import Image
 
 SHAPES = ("circle", "square", "rounded")
 DITHERS = ("none", "floyd", "bayer")
+# version of the look: part of the cache key, so a change of the curve below renders every wallpaper again
+LOOK = "v2"
 BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
 
 
@@ -51,7 +53,7 @@ def resolution(text):
 
 def key(a):
     """Canonical description of the look; equal keys = identical output (the Nix module builds the same)."""
-    return "-".join([str(a.size), str(a.spacing), a.shape, a.dither, str(a.levels), "inv" if a.invert else "pos",
+    return "-".join([LOOK, str(a.size), str(a.spacing), a.shape, a.dither, str(a.levels), "inv" if a.invert else "pos",
                      "color" if a.color else "mono", a.lit, a.off, a.background])
 
 
@@ -121,6 +123,8 @@ def render(source, width, height, a):
     level = np.clip((cells.mean(axis=(1, 3)) - a.black) / (1.0 - a.black), 0.0, 1.0) ** a.gamma
     stars = np.clip((cells.max(axis=(1, 3)) - 0.55) / 0.45, 0.0, 1.0)
     level = np.maximum(level, 0.9 * stars)
+    # contrast around the middle (blacks blacker, whites whiter), then brightness
+    level = np.clip(np.clip(0.5 + (level - 0.5) * a.contrast, 0.0, 1.0) * a.brightness, 0.0, 1.0)
     if a.invert:
         level = 1.0 - level
     level = quantise(level, a.dither, a.levels)
@@ -177,8 +181,8 @@ def main():
     p.add_argument("--size", type=int, default=6, help="LED diameter in px (default 6)")
     p.add_argument("--spacing", type=int, default=3, help="gap between LEDs in px (default 3)")
     p.add_argument("--shape", choices=SHAPES, default="circle")
-    p.add_argument("--lit", type=colour, default="f2f2f2", help="colour of a fully lit LED")
-    p.add_argument("--off", type=colour, default="141414", help="colour of an unlit LED")
+    p.add_argument("--lit", type=colour, default="ffffff", help="colour of a fully lit LED")
+    p.add_argument("--off", type=colour, default="0e0e0e", help="colour of an unlit LED")
     p.add_argument("--background", type=colour, default="000000", help="colour between the LEDs")
     p.add_argument("--color", action="store_true", help="colour LEDs (the picture's hues) instead of monochrome")
     p.add_argument("--invert", action="store_true", help="light the dark parts")
@@ -186,7 +190,9 @@ def main():
                    "picture; floyd / bayer: whole LEDs at --levels brightness steps")
     p.add_argument("--levels", type=int, default=2, help="brightness steps with dithering (2 = on / off)")
     p.add_argument("--gamma", type=float, default=1.25)
-    p.add_argument("--black", type=float, default=0.10, help="black point (0..0.9): below it LEDs stay off")
+    p.add_argument("--black", type=float, default=0.12, help="black point (0..0.9): below it LEDs stay off")
+    p.add_argument("--contrast", type=float, default=1.35, help="contrast around the middle grey (1 = none)")
+    p.add_argument("--brightness", type=float, default=1.12, help="brightness of the lit LEDs (1 = none)")
     a = p.parse_args()
 
     if not 1 <= a.size <= 64 or not 0 <= a.spacing <= 64:
@@ -194,6 +200,8 @@ def main():
     if not 2 <= a.levels <= 16:
         p.error("--levels must be 2..16")
     a.black = min(max(a.black, 0.0), 0.9)
+    a.contrast = min(max(a.contrast, 0.2), 4.0)
+    a.brightness = min(max(a.brightness, 0.2), 3.0)
     if a.key:
         print(key(a))
         return 0

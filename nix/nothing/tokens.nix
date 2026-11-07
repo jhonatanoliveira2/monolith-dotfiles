@@ -28,5 +28,5 @@
     slow = 480;
   };
   # wallpaper LEDs that are off: dimmer than the interface's, so the picture stays readable
-  wallpaperOff = "141414";
+  wallpaperOff = "0e0e0e";
 }

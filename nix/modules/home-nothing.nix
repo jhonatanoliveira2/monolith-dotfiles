@@ -17,6 +17,7 @@ let
   colors = lib.mapAttrs (_: bare) w.colors;
   # the same string as `monolith-dotmatrix --key` (nix/nothing/dotmatrix.py): equal keys = identical output
   key = lib.concatStringsSep "-" [
+    "v2" # LOOK in dotmatrix.py
     (toString cfg.led.size)
     (toString cfg.led.spacing)
     cfg.led.shape

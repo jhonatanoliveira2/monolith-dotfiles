@@ -28,9 +28,15 @@ shell fica exatamente como o da `feature/nixos-support`.
 | Cores | cinzas do preto OLED a `#F2F2F2` (substituem Configurações › Temas enquanto `monochrome` estiver ligado); vermelho `#D71921` **só** em alertas críticos (borda e LED da notificação crítica, itens críticos da barra) |
 | Fontes | Space Mono na interface (monoespaçada, as larguras do layout se mantêm), Space Grotesk em títulos e no texto das notificações, Doto nos relógios (barra e widget); os ícones Nerd Font vêm da JetBrainsMono Nerd Font |
 | Medidores | o OSD (volume, brilho...), todos os sliders e os medidores circulares viram fileiras / anéis de LEDs; os interruptores viram pílulas com um LED |
+| Barra | estilo moldura: moldura preta OLED com uma linha de 1 px na borda interna e cantos de 20 px (a moldura do NIHIL Shell); na barra lateral o relógio fica em horas sobre minutos em Doto; os módulos da barra lateral mostram só ícones |
 | Superfícies | uma grade discreta de LEDs apagados atrás dos cards e dos widgets da área de trabalho; títulos das Configurações com marcador de LEDs |
 | Notificações | nome do app em maiúsculas com um LED, texto em Space Grotesk; **brilho de borda** opcional: um trecho de luz percorre a borda interna da tela a cada notificação, duas vezes e em vermelho nas críticas |
 | Wallpapers | wallpapers estáticos exibidos como matriz de LEDs na resolução nativa de cada monitor (os arquivos originais nunca são alterados); wallpapers animados (vídeo) ficam como estão |
+
+Os wallpapers ganham mais contraste e brilho (pretos mais pretos, brancos mais brancos; `monolith-dotmatrix
+--contrast` / `--brightness`). Para legibilidade, Configurações › Barra › **Sem transparência** deixa a barra,
+os menus, os widgets e todas as janelas opacos com um único botão (o Hyprland recarrega uma vez; funciona com ou
+sem o tema).
 
 As animações são curtas e desaceleradas, e seguem Configurações › Aparência › animações (desligadas = sem brilho e sem fades).
 
@@ -68,7 +74,7 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |
 | `wallpaper.levels` | `2` | na hora | níveis de brilho com pontilhado (`2` = aceso / apagado) |
 | `wallpaper.invert` | `false` | na hora | acende as partes escuras |
-| `wallpaper.colors.{lit,off,background}` | `f2f2f2`, `141414`, `000000` | rebuild | cores dos LEDs dos wallpapers |
+| `wallpaper.colors.{lit,off,background}` | `ffffff`, `0e0e0e`, `000000` | rebuild | cores dos LEDs dos wallpapers |
 | `wallpaper.outputs` | `{ }` | rebuild | monitores convertidos no build, `{ eDP-1 = { width = 1920; height = 1200; }; }` |
 | `wallpaper.dirs` | `[ <repo>/wallpapers/static ]` | rebuild | pastas cujas imagens estáticas são convertidas no build |
 
@@ -136,7 +142,7 @@ monolith-dotmatrix --key [opções]     # a chave de cache de um visual (o que o
 ```
 
 `--size` / `--spacing` em px, `--shape circle|rounded|square`, `--dither none|floyd|bayer`, `--levels 2..16`,
-`--color` mantém as cores da imagem, `--gamma` e `--black` ajustam a curva. Ele se recusa a gravar por cima da
+`--color` mantém as cores da imagem, `--gamma`, `--black`, `--contrast` (1.35) e `--brightness` (1.12) ajustam a curva. Ele se recusa a gravar por cima da
 origem e a converter imagens animadas (código de saída 2). O resultado é um PNG comum: aplique com
 `wallpaper-menu --set static saida.png` (com o estilo em `original`, senão ele seria convertido de novo).
 
