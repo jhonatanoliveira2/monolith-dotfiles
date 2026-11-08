@@ -70,7 +70,10 @@ in
   cava = mkOption {
     type = types.bool;
     default = true;
-    description = "cava (the terminal audio visualizer) in greys, thin bars. Requires a rebuild.";
+    description = ''
+      cava (the terminal audio visualizer) in the Nothing style: `cava` in fish opens monolith-cava, which draws
+      the bars as columns of LEDs (`command cava` runs the plain one, in greys). Requires a rebuild.
+    '';
   };
   edgeGlow = mkOption {
     type = types.bool;

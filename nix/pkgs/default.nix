@@ -25,4 +25,5 @@ rec {
   nothing-fonts = callPackage ./nothing-fonts.nix { };
   nothing-cursors = callPackage ./nothing-cursors.nix { };
   nothing-icons = callPackage ./nothing-icons.nix { };
+  nothing-cava = callPackage ./nothing-cava.nix { };
 }
