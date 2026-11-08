@@ -16,6 +16,7 @@ Nesta branch o MONOLITH tem suporte **somente ao NixOS** (a versão para Arch Li
 - [Opções](#opções)
 - [Boot, splash e login](#boot-splash-e-login)
 - [Observações](#observações)
+- [Modo de desenvolvimento](#modo-de-desenvolvimento)
 - [Verificação e problemas](#verificação-e-problemas)
 
 ## Como é construído
@@ -197,6 +198,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `fetch.shadingMode`, `extraConfig` | `"ascii"`, `""` | `ascii` (o relevo de `#`), `blocks` ou `sextants` (mais nítido, Ghostty / Kitty); linhas extras para `~/.config/fetch/config` (ex.: `"speed=1.2"`) |
 | `wallpapers` | `true` | copia `wallpapers/` para `~/Pictures/Wallpapers` e `~/Videos/wallpaper-live` |
 | `gtk` | `true` | `Materia-dark` e o esquema de cores escuro (dconf) |
+| `dev.enable`, `dev.source`, `dev.modules` | `false`, `null`, `null` | [modo de desenvolvimento](#modo-de-desenvolvimento): configuração ligada a um checkout editável |
 
 ## Boot, splash e login
 
@@ -260,6 +262,50 @@ Esta branch acrescenta o tema Nothing, um visual de matriz de pontos / LEDs (cin
 medidores de LEDs, brilho de borda, wallpapers em matriz de LEDs), ativado por padrão (`monolith.nothingTheme`).
 Veja [`nothing-theme.pt-br.md`](nothing-theme.pt-br.md). Sem ele (`monolith.nothingTheme.enable = false;`) o
 shell é o da `feature/nixos-support`.
+
+## Modo de desenvolvimento
+
+Normalmente o Home Manager liga cada arquivo de `configs/.config` a partir da Nix store: somente leitura, então
+cada mudança precisa de um rebuild. O **modo de desenvolvimento** liga os mesmos arquivos a um checkout do
+repositório, para você editar no lugar e ver o resultado na hora:
+
+```bash
+git clone -b feature/nothing-theme https://github.com/jhonatanoliveira2/monolith-dotfiles ~/monolith-dotfiles
+```
+
+```nix
+# configuration.nix, dentro de home-manager.users.<você>.programs.monolith
+dev = {
+  enable = true;
+  source = "/home/<você>/monolith-dotfiles";   # uma string (um caminho Nix seria copiado para a store)
+  # modules = [ "quickshell" "hypr" "fastfetch" ];   # só estes; null (padrão) = tudo
+};
+```
+
+`sudo nixos-rebuild switch --flake /etc/nixos` uma vez; a partir daí:
+
+| Você edita (no checkout) | Vale |
+|---|---|
+| `configs/.config/quickshell/...` | na hora (o Quickshell recarrega sozinho) |
+| `configs/.config/hypr/...` | `hyprctl reload` |
+| `configs/.config/fastfetch/...`, `fish/...`, `ghostty/...` | na próxima execução do programa |
+| um arquivo **novo** fora de `quickshell/` | depois de um rebuild (ele ganha o link) |
+
+- `~/.config/<arquivo>` vira um link para `<checkout>/configs/.config/<arquivo>` (`mkOutOfStoreSymlink`); os
+  arquivos são ligados um a um, então o que os programas escrevem ao lado deles (`fish_variables`,
+  `hypr/generated/`) fica em `~/.config`, nunca no repositório. A pasta do Quickshell é ligada inteira.
+- Todo o resto continua declarativo: pacotes, serviços, arquivos gerados (`monolith/nix.json`,
+  `monolith/programs.lua`) e as cópias graváveis de `mutableFiles`.
+- Um rebuild nunca escreve no checkout nem substitui os arquivos dele. Nenhuma permissão é alterada: o checkout
+  é uma pasta sua.
+- `dev.enable = false` e um rebuild trazem de volta os links da store. A ativação diz qual modo está valendo e
+  avisa quando `source` não é um checkout.
+- Mantenha o checkout na branch da qual o sistema é construído; faça commit e push dele normalmente, e
+  Configurações > Atualização (ou `nix flake update monolith`) traz a versão publicada de volta para a store.
+- Nesta branch os arquivos próprios do tema Nothing também seguem: `nix/nothing/fastfetch.jsonc`,
+  `fastfetch-logo.txt` (módulo `fastfetch`) e `cava.conf` (módulo `cava`).
+- Outros módulos seguem a mesma chave com `config.programs.monolith.dev.link { module; path; store; }`
+  (`nix/modules/dev.nix`): a fonte da store normalmente, o arquivo do checkout no modo de desenvolvimento.
 
 ## Verificação e problemas
 

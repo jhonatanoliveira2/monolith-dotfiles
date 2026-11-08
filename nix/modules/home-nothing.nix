@@ -10,6 +10,10 @@
 }:
 let
   cfg = config.programs.monolith.nothingTheme;
+  # the store file, or the checkout's in development mode (dev.nix)
+  devLink =
+    module: path: store:
+    config.programs.monolith.dev.link { inherit module path store; };
   mpkgs = import ../pkgs { inherit pkgs; };
   tokens = import ../nothing/tokens.nix;
   w = cfg.wallpaper;
@@ -94,9 +98,14 @@ in
       }
       // lib.optionalAttrs cfg.icons { icon-theme = "Monolith-Dots-Icons"; };
     # fastfetch: replaces the shell's plain config (configs/.config/fastfetch) while the theme is on
-    xdg.configFile."fastfetch/config.jsonc" = lib.mkIf cfg.fastfetch { source = lib.mkForce ../nothing/fastfetch.jsonc; };
-    xdg.configFile."fastfetch/nothing-logo.txt" = lib.mkIf cfg.fastfetch { source = ../nothing/fastfetch-logo.txt; };
-    xdg.configFile."cava/config" = lib.mkIf cfg.cava { source = ../nothing/cava.conf; };
+    # (dev mode, programs.monolith.dev: these come from nix/nothing/ in the checkout, editable in place)
+    xdg.configFile."fastfetch/config.jsonc" = lib.mkIf cfg.fastfetch {
+      source = lib.mkForce (devLink "fastfetch" "nix/nothing/fastfetch.jsonc" ../nothing/fastfetch.jsonc);
+    };
+    xdg.configFile."fastfetch/nothing-logo.txt" = lib.mkIf cfg.fastfetch {
+      source = devLink "fastfetch" "nix/nothing/fastfetch-logo.txt" ../nothing/fastfetch-logo.txt;
+    };
+    xdg.configFile."cava/config" = lib.mkIf cfg.cava { source = devLink "cava" "nix/nothing/cava.conf" ../nothing/cava.conf; };
     # `cava` with no arguments in a terminal opens the LED version; with arguments (or `command cava`) the
     # plain one, which uses the grey config above
     xdg.configFile."fish/functions/cava.fish" = lib.mkIf cfg.cava {
