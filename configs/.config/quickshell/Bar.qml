@@ -4,6 +4,7 @@ import QtQuick.Effects
 import Qt.labs.qmlmodels
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "core"
 import "services"
 import "components"
@@ -30,8 +31,12 @@ PanelWindow {
     exclusiveZone: Theme.barThickness
     mask: Region { x: strip.x; y: strip.y; width: strip.width; height: strip.height }
     color: "transparent"
-    // frame style: above BarFrame (top layer), which draws this bar's background together with the border
-    WlrLayershell.layer: Theme.barStyle === "frame" ? WlrLayer.Overlay : WlrLayer.Top
+    // frame style: above BarFrame (top layer), which draws this bar's background together with the border.
+    // While a window is fullscreen on this monitor the bar goes down to the top layer like the frame, so the
+    // video / app covers both (on the overlay layer its icons stayed on top of it).
+    readonly property var hyprMonitor: Hyprland.monitorFor(modelData)
+    readonly property bool fullscreenHere: hyprMonitor !== null && hyprMonitor.activeWorkspace !== null && hyprMonitor.activeWorkspace.hasFullscreen
+    WlrLayershell.layer: Theme.barStyle === "frame" && !fullscreenHere ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.namespace: "qs-bar"
 
     // "keep awake" switch of the settings menu

@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "../core"
 
 // Side bar: resting the pointer on the middle of the screen's top edge opens the center menu there (as NIHIL
@@ -16,6 +17,9 @@ PanelWindow {
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-center-hot"
+    // not over a fullscreen video / app
+    readonly property var hyprMonitor: screen ? Hyprland.monitorFor(screen) : null
+    visible: !(hyprMonitor && hyprMonitor.activeWorkspace && hyprMonitor.activeWorkspace.hasFullscreen)
 
     Item {
         id: hot
