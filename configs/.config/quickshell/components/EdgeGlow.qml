@@ -58,19 +58,24 @@ Scope {
             Shape {
                 id: ring
                 anchors.fill: parent
-                readonly property real inset: 3 + Theme.frameEdge
+                // inside the frame on every side: on the bar's side the inner edge is the bar's, not the frame's
+                // width (the light used to run behind the bar there); 3 px in, so the line sits on that edge
+                readonly property string barEdge: Settings.barPosition
+                function side(e) { return 3 + (barEdge === e ? Theme.barThickness : Theme.frameEdge) }
+                readonly property real l: side("left")
+                readonly property real t: side("top")
                 readonly property real rad: Theme.frameEdge > 0 ? Theme.frameRadius : 14
-                readonly property real w: width - 2 * inset
-                readonly property real h: height - 2 * inset
+                readonly property real w: width - l - side("right")
+                readonly property real h: height - t - side("bottom")
                 readonly property real perimeter: 2 * (w + h) - 8 * rad + 2 * Math.PI * rad
                 readonly property real segment: Math.min(320, perimeter / 6)
                 readonly property real head: (scope.progress % 1) * perimeter
                 // clockwise from the middle of the top edge
                 readonly property string path: {
-                    const i = inset, r = rad, x1 = i + w, y1 = i + h, cx = i + w / 2
-                    return `M ${cx} ${i} L ${x1 - r} ${i} A ${r} ${r} 0 0 1 ${x1} ${i + r} L ${x1} ${y1 - r} `
-                         + `A ${r} ${r} 0 0 1 ${x1 - r} ${y1} L ${i + r} ${y1} A ${r} ${r} 0 0 1 ${i} ${y1 - r} `
-                         + `L ${i} ${i + r} A ${r} ${r} 0 0 1 ${i + r} ${i} Z`
+                    const x0 = l, y0 = t, r = rad, x1 = l + w, y1 = t + h, cx = l + w / 2
+                    return `M ${cx} ${y0} L ${x1 - r} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y0 + r} L ${x1} ${y1 - r} `
+                         + `A ${r} ${r} 0 0 1 ${x1 - r} ${y1} L ${x0 + r} ${y1} A ${r} ${r} 0 0 1 ${x0} ${y1 - r} `
+                         + `L ${x0} ${y0 + r} A ${r} ${r} 0 0 1 ${x0 + r} ${y0} Z`
                 }
                 readonly property color tint: scope.critical ? Nothing.alert : Nothing.ink
                 // the segment ends at the head; dash units are multiples of the stroke width
