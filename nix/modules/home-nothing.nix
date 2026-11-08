@@ -95,6 +95,7 @@ in
     # fastfetch: replaces the shell's plain config (configs/.config/fastfetch) while the theme is on
     xdg.configFile."fastfetch/config.jsonc" = lib.mkIf cfg.fastfetch { source = lib.mkForce ../nothing/fastfetch.jsonc; };
     xdg.configFile."fastfetch/nothing-logo.txt" = lib.mkIf cfg.fastfetch { source = ../nothing/fastfetch-logo.txt; };
+    xdg.configFile."cava/config" = lib.mkIf cfg.cava { source = ../nothing/cava.conf; };
     xdg.configFile."monolith/cursor" = lib.mkIf cfg.cursor.enable {
       text = "Monolith-Dots ${toString cfg.cursor.size}\n";
     };

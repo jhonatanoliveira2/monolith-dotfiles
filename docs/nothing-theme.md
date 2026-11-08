@@ -31,6 +31,7 @@ the `feature/nixos-support` one.
 | Center menu | Doto clock, LED tab markers, calendar with an outlined day, LED columns for CPU / GPU / RAM, LED rows for every progress, usage and temperature bar; with a side bar it opens at the top centre when the pointer rests on the middle of the top edge (or on a click on the clock), as a drawer of the frame (frame style: same black, concave joints, the frame line running around it) |
 | Launcher, wallpaper picker | pill search fields with a breathing LED, upper-case labels, an outlined row with a lit LED as the selection, app icons in greys, result count |
 | Player | bar: LED equalizer and a dotted progress; media menu: the cover as it is, LED progress and volume, a solid white play button and thin rings for the others |
+| Lock screen, boot | hyprlock: Doto clock, Space Mono, upper-case labels, a pill password field, a darker backdrop, red only for a failed password; Plymouth: the boot progress as a row of 24 LEDs (a light sweeps them at reboot / power off); cava in greys |
 | Battery | the charge as LEDs (a row; eight in a column on a side bar), red when low, a light scanning up while charging |
 | Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; every widget, saved or temporary, shows only on the workspace it was added on; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
 | Cursor | **MONOLITH Dots**: a "+" of LEDs as the pointer and LED shapes for links, text, waiting (animated), moving and resizing; white LEDs with a dark rim and shadow, visible on light and dark backgrounds (Hyprland, GTK, Qt) |
@@ -77,7 +78,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
 | `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
-| `icons`, `fastfetch` | `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons) and the Nothing fastfetch config |
+| `icons`, `fastfetch`, `cava` | `true`, `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons), the Nothing fastfetch config and cava in greys |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |

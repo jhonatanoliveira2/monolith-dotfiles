@@ -67,6 +67,11 @@ in
     default = true;
     description = "fastfetch in the Nothing style: the NixOS snowflake as LEDs, LED bars for memory and disk. Requires a rebuild.";
   };
+  cava = mkOption {
+    type = types.bool;
+    default = true;
+    description = "cava (the terminal audio visualizer) in greys, thin bars. Requires a rebuild.";
+  };
   edgeGlow = mkOption {
     type = types.bool;
     default = true;

@@ -32,6 +32,7 @@ shell fica exatamente como o da `feature/nixos-support`.
 | Menu central | relógio em Doto, abas com LED, calendário com o dia contornado, colunas de LEDs para CPU / GPU / RAM e fileiras de LEDs em toda barra de progresso, uso e temperatura; com a barra na lateral, ele abre no topo central quando o mouse para no meio da borda de cima (ou com um clique no relógio), como uma gaveta da moldura (estilo moldura: mesmo preto, junções côncavas, a linha da moldura contornando) |
 | Lançador, seletor de wallpaper | buscas em pílula com um LED que respira, rótulos em maiúsculas, seleção contornada com um LED aceso, ícones dos apps em cinza, contagem de resultados |
 | Player | barra: equalizador de LEDs e progresso pontilhado; menu: a capa como ela é, progresso e volume em LEDs, botão de play branco sólido e anéis finos nos outros |
+| Bloqueio, boot | hyprlock: relógio em Doto, Space Mono, textos em maiúsculas, campo de senha em pílula, fundo mais escuro, vermelho só para senha errada; Plymouth: o progresso do boot como uma fileira de 24 LEDs (uma luz percorre a fileira ao reiniciar / desligar); cava em cinzas |
 | Bateria | a carga em LEDs (uma fileira; oito em coluna na barra lateral), vermelhos com carga baixa, uma luz subindo enquanto carrega |
 | Widgets | todos os widgets de um tamanho têm a mesma largura (pequeno 256, médio 320, grande 416 px), o relógio centralizado no card; cada widget, fixo ou temporário, aparece só no workspace em que foi adicionado; o espectro de áudio (cava) do widget de letra é desenhado em colunas de LEDs |
 | Cursor | **MONOLITH Dots**: um "+" de LEDs como ponteiro e formas de LEDs para links, texto, espera (animada), mover e redimensionar; LEDs brancos com contorno escuro e sombra, visíveis em fundo claro e escuro (Hyprland, GTK, Qt) |
@@ -78,7 +79,7 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `led.shape` | `"circle"` | na hora | `circle`, `rounded` ou `square` (wallpapers e LEDs da interface) |
 | `monochrome` | `true` | na hora | paleta cinza no shell e LEDs cinza nos wallpapers; desligado: o tema de cores fica e os LEDs pegam as cores da imagem |
 | `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
-| `icons`, `fastfetch` | `true`, `true` | rebuild | o tema de ícones de LEDs (Monolith-Dots-Icons) e a config Nothing do fastfetch |
+| `icons`, `fastfetch`, `cava` | `true`, `true`, `true` | rebuild | o tema de ícones de LEDs (Monolith-Dots-Icons), a config Nothing do fastfetch e o cava em cinzas |
 | `edgeGlow` | `true` | na hora | luz na borda da tela nas notificações |
 | `wallpaper.style` | `"dotmatrix"` | na hora | `dotmatrix` ou `original` |
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |
