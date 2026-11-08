@@ -6,7 +6,8 @@ import "../core"
 import "../services"
 
 // Nothing theme, "edge glow" (Settings > Themes > Nothing): a segment of light runs once around the inside of
-// the screen edge when a notification arrives, twice and red when it is critical, like the light strips on
+// the screen edge when the shell starts (login, restart) and when a notification arrives, twice and red when it
+// is critical, like the light strips on
 // the back of a Nothing phone (the idea of NIHIL Shell's GlyphLight, MIT, redrawn here). The window exists
 // only while the light runs, ignores the pointer and reserves no space.
 Scope {
@@ -21,6 +22,16 @@ Scope {
         critical = crit
         laps = crit ? 2 : 1
         run.restart()
+    }
+    // the shell starting (login, or a restart of the shell): one lap of light, once the settings and the
+    // theme are known (up to ~15 s after start)
+    Timer {
+        interval: 1200; repeat: true; running: true
+        property int tries: 0
+        onTriggered: {
+            if (Settings.loaded && Nothing.available) { stop(); scope.start(false) }
+            else if (++tries > 12) stop()
+        }
     }
     Connections {
         target: Notifs
