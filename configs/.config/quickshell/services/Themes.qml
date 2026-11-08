@@ -179,6 +179,12 @@ Singleton {
         target: Palettes
         function onActiveChanged() { fishSoon.restart() }
     }
+    Connections {   // the lock screen follows the Nothing theme (on / off, monochrome, fonts)
+        target: Nothing
+        function onActiveChanged() { fishSoon.restart() }
+        function onMonochromeChanged() { fishSoon.restart() }
+        function onHasDotChanged() { fishSoon.restart() }
+    }
     Connections {
         target: Settings
         function onLanguageChanged() { fishSoon.restart() }
@@ -193,7 +199,7 @@ Singleton {
     readonly property string lockFile: Quickshell.env("HOME") + "/.config/hypr/generated/lock-theme.conf"
     property string lockWritten: ""
     function lockBody() {
-        const a = Palettes.active, c = a.ansi
+        const a = Theme.p, c = a.ansi        // (the Nothing theme's greys while it is on, else the colour theme)
         const col = (h, al) => "rgba(" + String(h).replace("#", "") + ("0" + Math.round((al === undefined ? 1 : al) * 255).toString(16)).slice(-2) + ")"
         const en = Settings.language === "en"
         const v = {
@@ -202,6 +208,16 @@ Singleton {
             lock_fail: col(c ? c[1] : "#e06c75"), lock_caps: col(c ? c[3] : "#e5c07b"),
             lock_txt_password: en ? "Password" : "Senha", lock_txt_caps: en ? "Caps Lock is on" : "Caps Lock ativado"
         }
+        // Nothing theme: Doto clock, Space Mono, upper-case labels, a pill field, a darker backdrop; red only
+        // for a failed password (Caps Lock is a notice, white)
+        if (Theme.nothing) Object.assign(v, {
+            lock_font_ui: Nothing.fontMono,
+            lock_font_time: Nothing.fontDot, lock_time_size: Nothing.hasDot ? "120" : "72",
+            lock_rounding: "-1", lock_bg_brightness: "0.45", lock_date_case: "tr '[:lower:]' '[:upper:]'",
+            lock_inner: col("#000000", 0.55), lock_line: col("#ffffff", 0.22), lock_check: col("#ffffff"),
+            lock_fail: col(Nothing.alert), lock_caps: col("#f2f2f2"),
+            lock_txt_password: en ? "PASSWORD" : "SENHA", lock_txt_caps: en ? "CAPS LOCK IS ON" : "CAPS LOCK ATIVADO"
+        })
         let out = "# Monolith Shell lock screen theme, written by services/Themes.qml. Do not edit.\n"
         for (const k in v) out += "$" + k + " = " + v[k] + "\n"
         return out
