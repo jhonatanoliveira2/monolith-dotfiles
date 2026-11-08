@@ -24,4 +24,5 @@ rec {
   dotmatrix = callPackage ./dotmatrix.nix { };
   nothing-fonts = callPackage ./nothing-fonts.nix { };
   nothing-cursors = callPackage ./nothing-cursors.nix { };
+  nothing-icons = callPackage ./nothing-icons.nix { };
 }

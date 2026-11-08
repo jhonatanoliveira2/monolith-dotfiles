@@ -13,6 +13,7 @@ Partes do conteúdo em `configs/` e suas dependências podem ter licenças próp
 | `branding/` (NixOS) | Logo do NixOS (floco de neve), lido do pacote `nixos-icons` do nixpkgs no build; não é copiado para o repositório | NixOS artwork, CC-BY 4.0; a marca NixOS pertence à NixOS Foundation |
 | `nix/nothing/dotmatrix.py` (tema Nothing) | Conversor de wallpapers em matriz de LEDs, adaptado do `theme/dotmatrix.py` do [NIHIL Shell](https://github.com/poligle/Nihil-Shell), de poligle (Pol Iglesias) | MIT; aviso mantido em `nix/nothing/LICENSE.NIHIL` |
 | `nix/nothing/tokens.nix`, `components/EdgeGlow.qml`, `DotMeter.qml`, `LedRing.qml` (tema Nothing) | Paleta em cinzas, as três vozes tipográficas, medidores de LEDs e a luz que percorre a borda: ideias do NIHIL Shell, reescritas para o Monolith (nenhum arquivo QML copiado) | NIHIL Shell: MIT |
+| `nix/nothing/fastfetch-logo.txt` (tema Nothing) | O floco de neve do NixOS reduzido a uma matriz de 19 × 17 LEDs | NixOS artwork, CC-BY 4.0; a marca NixOS pertence à NixOS Foundation |
 | fontes do tema Nothing (`nix/pkgs/nothing-fonts.nix`) | [Doto](https://github.com/oliverlalan/Doto), [Space Grotesk](https://github.com/floriankarsten/space-grotesk) e [Space Mono](https://github.com/googlefonts/spacemono), baixadas do repositório google/fonts no build; não estão no repositório | SIL Open Font License 1.1 (textos instalados com as fontes) |
 
 ### Programas usados pelo shell (não distribuídos aqui)
@@ -36,6 +37,7 @@ Parts of the content in `configs/` and its dependencies may carry their own lice
 | `branding/` (NixOS) | NixOS logo (snowflake), read from nixpkgs' `nixos-icons` package at build time; not copied into the repository | NixOS artwork, CC-BY 4.0; the NixOS mark belongs to the NixOS Foundation |
 | `nix/nothing/dotmatrix.py` (Nothing theme) | LED-matrix wallpaper converter, adapted from `theme/dotmatrix.py` of [NIHIL Shell](https://github.com/poligle/Nihil-Shell) by poligle (Pol Iglesias) | MIT; notice kept in `nix/nothing/LICENSE.NIHIL` |
 | `nix/nothing/tokens.nix`, `components/EdgeGlow.qml`, `DotMeter.qml`, `LedRing.qml` (Nothing theme) | Grey palette, the three type voices, LED meters and the light running along the edge: ideas from NIHIL Shell, rewritten for Monolith (no QML file copied) | NIHIL Shell: MIT |
+| `nix/nothing/fastfetch-logo.txt` (Nothing theme) | The NixOS snowflake reduced to a 19 × 17 matrix of LEDs | NixOS artwork, CC-BY 4.0; the NixOS mark belongs to the NixOS Foundation |
 | Nothing theme fonts (`nix/pkgs/nothing-fonts.nix`) | [Doto](https://github.com/oliverlalan/Doto), [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and [Space Mono](https://github.com/googlefonts/spacemono), downloaded from the google/fonts repository at build time; not in the repository | SIL Open Font License 1.1 (texts installed with the fonts) |
 
 ### Programs the shell uses (not distributed here)

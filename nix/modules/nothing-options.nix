@@ -57,6 +57,16 @@ in
       description = "Cursor size in px (24 / 28 / 32 / 48 / 64 / 96 are drawn; others are scaled).";
     };
   };
+  icons = mkOption {
+    type = types.bool;
+    default = true;
+    description = "MONOLITH Dots Icons: folders, files and devices as LED matrices (Nautilus, GTK apps). Requires a rebuild.";
+  };
+  fastfetch = mkOption {
+    type = types.bool;
+    default = true;
+    description = "fastfetch in the Nothing style: the NixOS snowflake as LEDs, LED bars for memory and disk. Requires a rebuild.";
+  };
   edgeGlow = mkOption {
     type = types.bool;
     default = true;

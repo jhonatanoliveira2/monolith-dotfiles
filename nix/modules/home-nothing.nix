@@ -72,7 +72,8 @@ in
       mpkgs.dotmatrix
       mpkgs.nothing-fonts
     ]
-    ++ lib.optional cfg.cursor.enable mpkgs.nothing-cursors;
+    ++ lib.optional cfg.cursor.enable mpkgs.nothing-cursors
+    ++ lib.optional cfg.icons mpkgs.nothing-icons;
     # cursor theme: Hyprland reads ~/.config/monolith/cursor (hypr/modules/environment.lua); GTK's "default"
     # theme (settings.ini) inherits it; GNOME-style settings and Qt follow the same name and size
     home.file = lib.mkIf cfg.cursor.enable {
@@ -83,12 +84,17 @@ in
       XCURSOR_THEME = "Monolith-Dots";
       XCURSOR_SIZE = toString cfg.cursor.size;
     };
-    dconf.settings = lib.mkIf cfg.cursor.enable {
-      "org/gnome/desktop/interface" = {
+    # GTK (Nautilus included) takes the cursor and icon themes from these settings, through the settings
+    # portal; they win over settings.ini, which keeps Adwaita for when the theme is off
+    dconf.settings."org/gnome/desktop/interface" =
+      lib.optionalAttrs cfg.cursor.enable {
         cursor-theme = "Monolith-Dots";
         cursor-size = cfg.cursor.size;
-      };
-    };
+      }
+      // lib.optionalAttrs cfg.icons { icon-theme = "Monolith-Dots-Icons"; };
+    # fastfetch: replaces the shell's plain config (configs/.config/fastfetch) while the theme is on
+    xdg.configFile."fastfetch/config.jsonc" = lib.mkIf cfg.fastfetch { source = lib.mkForce ../nothing/fastfetch.jsonc; };
+    xdg.configFile."fastfetch/nothing-logo.txt" = lib.mkIf cfg.fastfetch { source = ../nothing/fastfetch-logo.txt; };
     xdg.configFile."monolith/cursor" = lib.mkIf cfg.cursor.enable {
       text = "Monolith-Dots ${toString cfg.cursor.size}\n";
     };
