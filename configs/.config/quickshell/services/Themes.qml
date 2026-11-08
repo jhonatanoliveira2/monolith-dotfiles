@@ -213,6 +213,8 @@ Singleton {
         if (Theme.nothing) Object.assign(v, {
             lock_font_ui: Nothing.fontMono,
             lock_font_time: Nothing.fontDot, lock_time_size: Nothing.hasDot ? "120" : "72",
+            // the date sits below the clock: 120 px of Doto (about 150 px tall) from 130 px down -> 330 px
+            lock_date_y: Nothing.hasDot ? "-330" : "-270",
             lock_rounding: "-1", lock_bg_brightness: "0.45", lock_date_case: "tr '[:lower:]' '[:upper:]'",
             lock_inner: col("#000000", 0.55), lock_line: col("#ffffff", 0.22), lock_check: col("#ffffff"),
             lock_fail: col(Nothing.alert), lock_caps: col("#f2f2f2"),
