@@ -27,7 +27,7 @@ the `feature/nixos-support` one.
 | Colours | greys from OLED black to `#F2F2F2` (replaces Settings > Themes while `monochrome` is on); red `#D71921` **only** for critical alerts (critical toast border and LED, critical bar items) |
 | Type | Space Mono for the interface (monospaced, so layouts keep their widths), Space Grotesk for headings and notification text, Doto for the clocks (bar and widget); Nerd Font glyphs fall back to JetBrainsMono Nerd Font |
 | Meters | the OSD (volume, brightness...), every slider and the circular gauges become rows / rings of LEDs; switches are pills with an LED knob |
-| Bar | frame style: OLED-black frame with a 1 px line along its inner edge and 20 px corners (NIHIL Shell's frame); on a side bar the clock is hours over minutes in Doto; side-bar modules show icons only |
+| Bar | by default on the left, in frame style (Settings > Bar changes it); frame style: OLED-black frame with a 1 px line along its inner edge and 20 px corners (NIHIL Shell's frame); on a side bar the clock is hours over minutes in Doto; side-bar modules show icons only |
 | Center menu | Doto clock, LED tab markers, calendar with an outlined day, LED columns for CPU / GPU / RAM, LED rows for every progress, usage and temperature bar; with a side bar it opens at the top centre when the pointer rests on the middle of the top edge (or on a click on the clock), as a drawer of the frame (frame style: same black, concave joints, the frame line running around it) |
 | Battery | the charge as LEDs (a row; eight in a column on a side bar), red when low, a light scanning up while charging |
 | Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; every widget, saved or temporary, shows only on the workspace it was added on; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
@@ -35,7 +35,7 @@ the `feature/nixos-support` one.
 | Icons | **MONOLITH Dots Icons**: folders (with an emblem per kind: documents, downloads, music, pictures, videos, desktop, home...), file types, trash and devices as monochrome LED matrices, for Nautilus and every GTK app; the rest comes from Adwaita |
 | fastfetch | the NixOS snowflake as a matrix of LEDs, upper-case grey labels, dotted rules, memory and disk as rows of LEDs |
 | Surfaces | a faint grid of unlit LEDs behind cards and desktop widgets; Settings headings with an LED marker |
-| Notifications | app name as an upper-case label with an LED, Space Grotesk text; optional **edge glow**: a segment of light runs around the inside of the screen edge on each toast, twice and red for critical ones |
+| Notifications | app name as an upper-case label with an LED, Space Grotesk text; optional **edge glow**: a segment of light runs around the inside of the screen edge when the shell starts (login, restart) and on each toast, twice and red for critical ones |
 | Wallpapers | still wallpapers shown as LED matrices at each monitor's native resolution (the original files are never changed); live (video) wallpapers are left alone |
 
 Contrast and brightness of the wallpapers can be raised by hand (`monolith-dotmatrix --contrast` /

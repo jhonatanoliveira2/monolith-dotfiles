@@ -208,7 +208,7 @@ Singleton {
             property bool profileOnLock: true
             property bool profileAsLogo: false
             // bar: edge of the screen and the modules of each zone (services/BarLayout.qml)
-            property string barPosition: "top"     // top | bottom | left | right
+            property string barPosition: "left"    // top | bottom | left | right (Nothing branch: left, in a frame)
             property var barModules: null          // { start: [ids], center: [ids], end: [ids] } — null = defaults
             property int barGapStart: 5            // px between the modules of each zone
             property int barGapCenter: 2
@@ -221,7 +221,7 @@ Singleton {
             property int centerTab: 0              // its last open tab
             property var centerHistory: []         // its command line history (latest last)
             property string weatherLocation: ""    // wttr.in place ("" = by IP)
-            property string barStyle: "capsule"    // flat | capsule | frame (core/Theme.qml)
+            property string barStyle: "frame"      // flat | capsule | frame (core/Theme.qml)
             property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
             property bool barShadow: true          // capsule / frame styles
             property int barShadowStrength: 80     // %
