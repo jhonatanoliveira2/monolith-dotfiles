@@ -31,7 +31,7 @@ let
     inherit (cfg.grub) resolution;
     inherit (config.monolith) language;
   };
-  plymouthTheme = mpkgs.plymouth-theme;
+  plymouthTheme = mpkgs.plymouth-theme.override { nothing = config.monolith.nothingTheme.enable; };
   # minimum splash time: the value set in Settings (digits only, at most 30), else the option
   readSplashMin = pkgs.writeShellScript "monolith-splash-min" ''
     n=$(${pkgs.coreutils}/bin/head -c 8 /var/lib/monolith/splash-min-seconds 2>/dev/null | ${pkgs.coreutils}/bin/tr -cd 0-9)

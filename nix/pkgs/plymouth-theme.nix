@@ -6,6 +6,8 @@
   bash,
   jetbrains-mono,
   branding,
+  # Nothing theme: a row of LEDs for the progress (monolith.nothingTheme.enable)
+  nothing ? false,
 }:
 stdenvNoCC.mkDerivation {
   pname = "plymouth-theme-monolith";
@@ -15,7 +17,7 @@ stdenvNoCC.mkDerivation {
   installPhase = ''
     runHook preInstall
     dir=$out/share/plymouth/themes/monolith
-    bash ${branding}/share/monolith/branding-src/build.sh plymouth ${branding}/${branding.dir} $dir $dir
+    NOTHING=${if nothing then "1" else "0"} bash ${branding}/share/monolith/branding-src/build.sh plymouth ${branding}/${branding.dir} $dir $dir
     # the font Plymouth renders prompts and messages with (boot.plymouth.font in the NixOS module)
     font=$(find ${jetbrains-mono}/share/fonts -iname 'JetBrainsMono-Regular.ttf' | head -n1)
     [ -n "$font" ] || font=$(find ${jetbrains-mono}/share/fonts -iname '*.ttf' | sort | head -n1)

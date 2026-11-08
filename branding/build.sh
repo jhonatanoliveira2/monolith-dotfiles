@@ -101,6 +101,8 @@ branding() {
     echo "$FRAMES" >"$out/frames"
     rgba 1x1 white "$out/pixel.png"
     magick -size 48x48 xc:none -fill white -draw "circle 24,24 24,6" "PNG32:$out/bullet.png"
+    # one LED of the Nothing theme's progress row (Plymouth)
+    magick -size 64x64 xc:none -fill white -draw "circle 32,32 32,4" "PNG32:$out/led.png"
     cp "$svg" "$out/snowflake.svg"
     cp "$here/stage.svg" "$here/band.svg" "$here/wordmark.svg" "$out/"
 }
@@ -110,11 +112,12 @@ plymouth() {
     mkdir -p "$out"
     cp "$b/logo-512.png" "$out/logo.png"
     cp "$b/wordmark-128.png" "$out/wordmark.png"
-    cp "$b/pixel.png" "$b/bullet.png" "$b/line-glow.png" "$out/"
+    cp "$b/pixel.png" "$b/bullet.png" "$b/line-glow.png" "$b/led.png" "$out/"
     cp "$b/mark-glow-512.png" "$out/glow.png"
     cp "$b/wordmark-glow-128.png" "$out/wordmark-glow.png"
     for ((i = 0; i < $(cat "$b/frames"); i++)); do cp "$b/sweep-$i.png" "$out/"; done
-    sed "s|@FRAMES@|$(cat "$b/frames")|g" "$here/plymouth/monolith.script" >"$out/monolith.script"
+    # NOTHING=1 (Nothing theme): the progress is a row of LEDs
+    sed -e "s|@FRAMES@|$(cat "$b/frames")|g" -e "s|@NOTHING@|${NOTHING:-0}|g" "$here/plymouth/monolith.script" >"$out/monolith.script"
     sed "s|@DIR@|$dest|g" "$here/plymouth/monolith.plymouth" >"$out/monolith.plymouth"
 }
 

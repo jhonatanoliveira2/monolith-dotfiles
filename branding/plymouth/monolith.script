@@ -74,6 +74,26 @@ fillGlow = Sprite(lineGlow.Scale(2 * glowPad, glowLineH));
 fillGlow.SetPosition(barX - glowPad, barY + 1 - Math.Int(glowLineH / 2), 10);
 fillGlow.SetOpacity(0);
 
+// ── Nothing theme (@NOTHING@ = 1): the progress is a row of LEDs instead of the line ──
+NOTHING = @NOTHING@;
+LEDN = 24;
+ledS = Math.Int(Math.Max(6, logoH * 0.032));
+ledGap = ledS;
+ledW = LEDN * ledS + (LEDN - 1) * ledGap;
+ledX = X0 + Math.Int((W - ledW) / 2);
+ledY = barY - Math.Int(ledS / 2);
+if (NOTHING == 1) {
+    led_image = Image("led.png").Scale(ledS, ledS);
+    for (i = 0; i < LEDN; i++) {
+        ledOff[i] = Sprite(led_image);
+        ledOff[i].SetPosition(ledX + i * (ledS + ledGap), ledY, 10);
+        ledOff[i].SetOpacity(0);
+        ledOn[i] = Sprite(led_image);
+        ledOn[i].SetPosition(ledX + i * (ledS + ledGap), ledY, 11);
+        ledOn[i].SetOpacity(0);
+    }
+}
+
 // ── state ──
 tick = 0;
 shown = 0;          // fade-in 0 -> 1
@@ -86,7 +106,41 @@ nextSweep = 14;     // the first sweep follows the fade-in at once
 if (booting == 0) nextSweep = 1;
 prompting = 0;
 
+fun draw_leds() {
+    if (prompting == 1) {
+        for (i = 0; i < LEDN; i++) { ledOff[i].SetOpacity(0); ledOn[i].SetOpacity(0); }
+        return;
+    }
+    // boot: the LEDs light up with the progress (the edge one partly) and a light runs over the unlit ones;
+    // shutdown / reboot: a light sweeps back and forth over the row
+    head = Math.Int(tick / 2) % LEDN;
+    if (booting == 0) {
+        p = Math.Int(tick / 2) % (2 * LEDN - 2);
+        if (p >= LEDN) p = 2 * LEDN - 2 - p;
+        head = p;
+    }
+    lit = progress * LEDN;
+    for (i = 0; i < LEDN; i++) {
+        ledOff[i].SetOpacity(0.16 * shown);
+        on = 0;
+        if (booting == 1) {
+            if (i < Math.Int(lit)) on = 1;
+            else if (i == Math.Int(lit)) on = lit - Math.Int(lit);
+        }
+        d = Math.Abs(i - head);
+        if (d < 3) on = Math.Max(on, (0.6 - d * 0.2) * (1 - on));
+        ledOn[i].SetOpacity(0.95 * shown * Math.Min(1, on));
+    }
+}
+
 fun draw_bar() {
+    if (NOTHING == 1) {
+        track.SetOpacity(0);
+        fill.SetOpacity(0);
+        fillGlow.SetOpacity(0);
+        draw_leds();
+        return;
+    }
     if (booting == 0 || prompting == 1) {
         track.SetOpacity(0);
         fill.SetOpacity(0);
