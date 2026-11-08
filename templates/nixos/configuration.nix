@@ -57,6 +57,8 @@ in
         apps.browser = "firefox";
         # the flake lives in /etc/nixos after an install from the ISO (use ~/nixos if you keep it there)
         updateCommand = "sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos";
+        # development mode (docs/nixos.md): edit the configuration in a checkout, no rebuild per change
+        # dev = { enable = true; source = "/home/${user}/monolith-dotfiles"; };
       };
     };
   };

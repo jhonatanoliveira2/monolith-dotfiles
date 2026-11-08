@@ -15,6 +15,7 @@ MONOLITH on this branch supports **NixOS only** (the Arch Linux / CachyOS versio
 - [Options](#options)
 - [Boot, splash and login](#boot-splash-and-login)
 - [Notes](#notes)
+- [Development mode](#development-mode)
 - [Checking and troubleshooting](#checking-and-troubleshooting)
 
 ## How it is built
@@ -196,6 +197,7 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `fetch.shadingMode`, `extraConfig` | `"ascii"`, `""` | `ascii` (the `#` relief), `blocks`, or `sextants` (sharpest, Ghostty / Kitty); extra lines for `~/.config/fetch/config` (e.g. `"speed=1.2"`) |
 | `wallpapers` | `true` | copy `wallpapers/` into `~/Pictures/Wallpapers` and `~/Videos/wallpaper-live` |
 | `gtk` | `true` | `Materia-dark` and the dark colour scheme (dconf) |
+| `dev.enable`, `dev.source`, `dev.modules` | `false`, `null`, `null` | [development mode](#development-mode): configuration linked to an editable checkout |
 
 ## Boot, splash and login
 
@@ -250,6 +252,48 @@ preview them (needs `rsvg-convert`, `magick`, `grub-mkfont` and the snowflake SV
 Editing a linked file does not work (it is in the read-only store): change it in your fork of the repository, or
 add it to `mutableFiles`. Everything the Settings app writes (`~/.config/hypr/generated/`,
 `~/.local/state/quickshell-monolith/`) stays writable.
+## Development mode
+
+Normally Home Manager links every file of `configs/.config` from the Nix store: read-only, so each change needs
+a rebuild. **Development mode** links the same files to a checkout of the repository instead, so you edit them
+in place and see the result at once:
+
+```bash
+git clone -b feature/nixos-support https://github.com/jhonatanoliveira2/monolith-dotfiles ~/monolith-dotfiles
+```
+
+```nix
+# configuration.nix, inside home-manager.users.<you>.programs.monolith
+dev = {
+  enable = true;
+  source = "/home/<you>/monolith-dotfiles";   # a string (a Nix path would be copied into the store)
+  # modules = [ "quickshell" "hypr" "fastfetch" ];   # only these; null (default) = everything
+};
+```
+
+`sudo nixos-rebuild switch --flake /etc/nixos` once; from then on:
+
+| You edit (in the checkout) | Takes effect |
+|---|---|
+| `configs/.config/quickshell/...` | at once (Quickshell reloads itself) |
+| `configs/.config/hypr/...` | `hyprctl reload` |
+| `configs/.config/fastfetch/...`, `fish/...`, `ghostty/...` | next run of the program |
+| a **new** file outside `quickshell/` | after one rebuild (it gets its link) |
+
+- `~/.config/<file>` becomes a link to `<checkout>/configs/.config/<file>` (`mkOutOfStoreSymlink`); files are
+  linked one by one, so what programs write next to them (`fish_variables`, `hypr/generated/`) stays in
+  `~/.config`, never in the repository. Quickshell's folder is linked whole.
+- Everything else stays declarative: packages, services, generated files (`monolith/nix.json`,
+  `monolith/programs.lua`) and the writable copies of `mutableFiles`.
+- A rebuild never writes into the checkout or replaces its files. No permissions are changed: the checkout is
+  your own folder.
+- `dev.enable = false` and a rebuild put the store links back. The activation says which mode is in effect
+  and warns when `source` is not a checkout.
+- Keep the checkout on the branch the system is built from; commit and push from it as usual, and
+  Settings > Update (or `nix flake update monolith`) brings the published version back to the store.
+- Modules can follow the same switch with `config.programs.monolith.dev.link { module; path; store; }`
+  (`nix/modules/dev.nix`): the store source normally, the checkout's file in dev mode.
+
 ## Checking and troubleshooting
 
 ```bash
