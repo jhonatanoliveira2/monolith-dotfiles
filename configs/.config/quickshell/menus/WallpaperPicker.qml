@@ -159,13 +159,6 @@ Overlay {
                         asynchronous: true
                         sourceSize: Qt.size(480, 270)
                     }
-                    // Nothing theme, LED-matrix wallpapers: the preview seen through the dots it will become
-                    DotMask {
-                        anchors { fill: parent; margins: 2 }
-                        visible: Theme.nothing && Nothing.wallpaperStyle === "dotmatrix" && win.kind === "image" && !!cell.modelData.thumb
-                        pitch: Math.max(3, Math.round(width / 60))
-                        color: "#000000"
-                    }
                     Txt { visible: !cell.modelData.thumb; anchors.centerIn: parent; text: String.fromCodePoint(win.kind === "video" ? 0xf03d : 0xf03e); color: Theme.grayMid; font.pixelSize: 26 }
                     Rectangle {
                         anchors { right: parent.right; top: parent.top; margins: 8 }

@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import "../core"
 
 // Album art with a crossfade between covers: the new image loads in the back layer and fades in once ready.
@@ -35,13 +34,6 @@ Item {
         }
     }
 
-    // Nothing theme: the art in greys (monochrome) and, on large covers, seen through a matrix of LEDs
-    property bool dots: Theme.nothing && width >= 48
-    Item {
-        id: art
-        anchors.fill: parent
-        layer.enabled: Theme.nothing && Nothing.monochrome
-        layer.effect: MultiEffect { saturation: -1; contrast: 0.1 }
     Image {
         id: a
         anchors.fill: parent
@@ -65,13 +57,6 @@ Item {
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Theme.dur(320); easing.type: Easing.InOutQuad } }
         onStatusChanged: root.settled(b)
-    }
-    }
-    DotMask {
-        anchors.fill: parent
-        visible: root.dots && root.hasArt
-        pitch: Math.max(3, Math.round(root.width / 28))
-        color: Theme.p.panel
     }
 
     Rectangle {   // hairline frame on top of the art
