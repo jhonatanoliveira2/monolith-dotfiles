@@ -53,7 +53,7 @@ in
     };
     size = mkOption {
       type = types.ints.between 16 96;
-      default = 28;
+      default = 24;
       description = "Cursor size in px (24 / 28 / 32 / 48 / 64 / 96 are drawn; others are scaled).";
     };
   };

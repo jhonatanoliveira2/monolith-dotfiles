@@ -72,7 +72,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.spacing` | `3` | runtime | gap between LEDs in px |
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
-| `cursor.enable`, `cursor.size` | `true`, `28` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
+| `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |

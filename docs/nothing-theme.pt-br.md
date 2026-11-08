@@ -73,7 +73,7 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `led.spacing` | `3` | na hora | espaço entre LEDs em px |
 | `led.shape` | `"circle"` | na hora | `circle`, `rounded` ou `square` (wallpapers e LEDs da interface) |
 | `monochrome` | `true` | na hora | paleta cinza no shell e LEDs cinza nos wallpapers; desligado: o tema de cores fica e os LEDs pegam as cores da imagem |
-| `cursor.enable`, `cursor.size` | `true`, `28` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
+| `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
 | `edgeGlow` | `true` | na hora | luz na borda da tela nas notificações |
 | `wallpaper.style` | `"dotmatrix"` | na hora | `dotmatrix` ou `original` |
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |
