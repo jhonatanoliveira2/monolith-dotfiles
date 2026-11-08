@@ -224,7 +224,9 @@ FloatingWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: clock.time
                 color: "white"
-                font.family: Theme.font; font.pixelSize: Math.round(win.screenH * 0.065); font.weight: Font.Light
+                // (Nothing theme: the dot-matrix face, larger)
+                font.family: Theme.fontDot; font.pixelSize: Math.round(win.screenH * (Theme.dotClock ? 0.11 : 0.065))
+                font.weight: Theme.dotClock ? Font.Black : Font.Light
             }
             Text {
                 id: dateText
@@ -303,7 +305,9 @@ FloatingWindow {
                     horizontalAlignment: TextInput.AlignHCenter; verticalAlignment: TextInput.AlignVCenter
                     echoMode: win.greeter.awaiting && win.greeter.promptEcho ? TextInput.Normal : TextInput.Password
                     passwordCharacter: "•"
-                    color: Theme.white; font.family: Theme.font; font.pixelSize: Theme.fontSize + 3; font.letterSpacing: 4
+                    // Nothing theme: the typed characters are not drawn, the LED row below counts them
+                    color: Theme.nothing && echoMode === TextInput.Password ? "transparent" : Theme.white
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize + 3; font.letterSpacing: 4
                     clip: true
                     enabled: !win.greeter.busy || win.greeter.awaiting
                     onAccepted: { const t = text; text = ""; win.greeter.submit(t) }
@@ -317,7 +321,7 @@ FloatingWindow {
                     Text {
                         anchors.centerIn: parent
                         visible: !parent.text
-                        text: win.greeter.awaiting ? win.greeter.prompt : win.greeter.busy ? "…" : win.greeter.tr("senha", "password")
+                        text: { const t = win.greeter.awaiting ? win.greeter.prompt : win.greeter.busy ? "…" : win.greeter.tr("senha", "password"); return Theme.nothing ? t.toUpperCase() : t }
                         color: Theme.grayDark
                         font.family: Theme.font; font.pixelSize: Theme.small; font.letterSpacing: 3
                     }
@@ -326,11 +330,34 @@ FloatingWindow {
                     anchors.horizontalCenter: line.horizontalCenter; anchors.verticalCenter: line.verticalCenter
                     width: line.width * 1.12; height: 26
                     source: win.art + "/line-glow.png"
-                    opacity: field.activeFocus ? (win.greeter.messageError ? 0.9 : 0.55) : 0
+                    opacity: Theme.nothing ? 0 : field.activeFocus ? (win.greeter.messageError ? 0.9 : 0.55) : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.dur(220) } }
+                }
+                // Nothing theme: a row of LEDs instead of the line, one lit per typed character (red on a failed
+                    // login), the unlit ones brighter while the field has the focus
+                Row {
+                    id: leds
+                    visible: Theme.nothing
+                    readonly property int count: 24
+                    readonly property int typed: Math.min(count, field.text.length)
+                    anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 6
+                    Repeater {
+                        model: leds.count
+                        delegate: Rectangle {
+                            required property int index
+                            width: 6; height: 6; radius: 3
+                            readonly property bool lit: index < leds.typed
+                            color: lit ? Theme.white : win.greeter.messageError && field.text === "" ? Theme.alert : Theme.grayDark
+                            opacity: lit ? 1 : field.activeFocus ? 0.75 : 0.35
+                            Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
+                            Behavior on opacity { NumberAnimation { duration: Theme.dur(200) } }
+                        }
+                    }
                 }
                 Rectangle {
                     id: line
+                    visible: !Theme.nothing
                     anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
                     width: field.activeFocus ? parent.width : parent.width * 0.6; height: 1
                     color: "white"
@@ -345,8 +372,9 @@ FloatingWindow {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap
                 font.family: Theme.font; font.pixelSize: Theme.small; font.bold: win.greeter.messageError
-                color: win.greeter.messageError ? Theme.white : Theme.grayMid
-                text: (win.greeter.message || "") + (win.greeter.capsLock ? (win.greeter.message ? "  ·  " : "") + "CAPS LOCK" : "")
+                color: win.greeter.messageError ? (Theme.nothing ? Theme.alert : Theme.white) : Theme.grayMid
+                font.letterSpacing: Theme.nothing ? 1.5 : 0
+                text: { const t = (win.greeter.message || "") + (win.greeter.capsLock ? (win.greeter.message ? "  ·  " : "") + "CAPS LOCK" : ""); return Theme.nothing ? t.toUpperCase() : t }
                 opacity: text ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.dur(150) } }
             }

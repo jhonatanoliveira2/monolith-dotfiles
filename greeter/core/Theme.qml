@@ -20,7 +20,15 @@ Singleton {
     readonly property color selected: Qt.rgba(1, 1, 1, 0.12)
     readonly property color critical: Qt.rgba(1, 1, 1, 0.14)
 
-    readonly property string font: "JetBrainsMono Nerd Font"
+    // Nothing theme (monolith.nothingTheme, from the greeter config): Space Mono, Doto for the clock, red only
+    // for a failed login; each font falls back when it is not installed
+    property bool nothing: false
+    readonly property var families: Qt.fontFamilies()
+    function has(f) { return families.some(x => x === f || x.indexOf(f + " [") === 0) }
+    readonly property string font: nothing && has("Space Mono") ? "Space Mono" : "JetBrainsMono Nerd Font"
+    readonly property string fontDot: nothing && has("Doto") ? "Doto" : font
+    readonly property bool dotClock: nothing && has("Doto")
+    readonly property color alert: "#d71921"
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int radius: 6

@@ -48,6 +48,7 @@ ShellRoot {
 
     Component.onCompleted: {
         Theme.animations = cfg.animations !== false
+        Theme.nothing = cfg.nothing === true
         const u = saved.user || cfg.defaultUser || ""
         const i = users.findIndex(x => x.name === u)
         if (i >= 0) userIndex = i

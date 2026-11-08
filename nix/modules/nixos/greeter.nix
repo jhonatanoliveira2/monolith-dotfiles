@@ -53,6 +53,8 @@ let
     sweepFrames = 36;
     statePath = "/var/lib/monolith-greeter/state.json";
     keyboard = keyboard;
+    # Nothing theme (monolith.nothingTheme): Doto / Space Mono, LED password row; the fonts are system-wide
+    nothing = config.monolith.nothingTheme.enable;
   };
   settingsFile = pkgs.writeText "monolith-greeter.json" (builtins.toJSON settings);
 
