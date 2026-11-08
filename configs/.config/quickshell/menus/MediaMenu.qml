@@ -62,6 +62,7 @@ MenuWindow {
                 spacing: 4
                 Txt {   // size follows the title length: short titles stand out, long ones still fit in two lines
                     width: parent.width; text: Media.title; color: Theme.white; maximumLineCount: 2; wrapMode: Text.Wrap
+                    font.family: Theme.fontSans
                     font.pixelSize: text.length <= 18 ? 18 : text.length <= 32 ? 16 : text.length <= 56 ? 14 : 12
                 }
                 Txt { width: parent.width; visible: text !== ""; text: Media.artist; color: Theme.grayLight; font.bold: false }
@@ -106,13 +107,16 @@ MenuWindow {
                 signal hit()
                 width: big ? 46 : 34; height: width; radius: width / 2
                 opacity: usable ? 1 : 0.35
-                color: m.pressed ? Theme.pressed : big ? Theme.tint(m.containsMouse ? 0.2 : 0.12) : m.containsMouse ? Theme.hover : "transparent"
-                border.width: on ? 1 : 0
-                border.color: Theme.grayLight
+                // Nothing theme: play / pause is a solid white disc, the others thin rings (lit when on)
+                color: Theme.nothing && big ? (m.pressed ? Theme.grayLight : Theme.white)
+                     : m.pressed ? Theme.pressed : big ? Theme.tint(m.containsMouse ? 0.2 : 0.12) : m.containsMouse ? Theme.hover : "transparent"
+                border.width: on || (Theme.nothing && !big) ? 1 : 0
+                border.color: Theme.nothing && !on ? Nothing.line : Theme.grayLight
                 scale: m.pressed ? 0.92 : 1
                 Behavior on scale { NumberAnimation { duration: Theme.dur(90) } }
                 Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
-                Txt { anchors.centerIn: parent; text: c.g; font.pixelSize: c.big ? 18 : 13; color: c.on || m.containsMouse || c.big ? Theme.white : Theme.grayLight }
+                Txt { anchors.centerIn: parent; text: c.g; font.pixelSize: c.big ? 18 : 13
+                      color: Theme.nothing && c.big ? Theme.onAccent : c.on || m.containsMouse || c.big ? Theme.white : Theme.grayLight }
                 MouseArea { id: m; anchors.fill: parent; hoverEnabled: true; enabled: c.usable; onClicked: c.hit() }
             }
             Ctl { anchors.verticalCenter: parent.verticalCenter; g: Theme.glyph.shuffle; usable: Media.canShuffle; on: Media.shuffle; onHit: Media.setShuffle(!Media.shuffle) }
@@ -163,10 +167,11 @@ MenuWindow {
 
         // ── search ──────────────────────────────────────────────────────
         Rectangle {
-            width: parent.width; height: 32; radius: Theme.radius
+            width: parent.width; height: 32; radius: Theme.nothing ? height / 2 : Theme.radius
             color: "transparent"; border.width: 1; border.color: q.activeFocus ? Theme.grayLight : Theme.line
             Behavior on border.color { ColorAnimation { duration: Theme.dur(120) } }
-            Txt { id: mag; x: 10; width: 16; height: parent.height; text: Theme.glyph.search; color: Theme.grayMid }
+            Txt { id: mag; x: 10; width: 16; height: parent.height; text: Theme.glyph.search; color: Theme.grayMid; visible: !Theme.nothing }
+            PulseLed { visible: Theme.nothing; x: 14; anchors.verticalCenter: parent.verticalCenter; active: q.activeFocus }
             TextInput {
                 id: q
                 anchors { left: mag.right; leftMargin: 6; right: parent.right; rightMargin: 10; top: parent.top; bottom: parent.bottom }
@@ -177,7 +182,8 @@ MenuWindow {
                 onTextChanged: col.query = text
                 Keys.onReturnPressed: { Media.searchProvider(text); Popups.close() }
                 Keys.onEscapePressed: { if (text !== "") text = ""; else Popups.close() }
-                Txt { visible: q.text === ""; anchors.fill: parent; text: Strings.t("searchTracks"); color: Theme.grayMid; font.bold: false }
+                Txt { visible: q.text === ""; anchors.fill: parent; text: Theme.nothing ? Strings.t("searchTracks").toUpperCase() : Strings.t("searchTracks")
+                      color: Theme.grayMid; font.bold: false; font.letterSpacing: Theme.nothing ? 1.5 : 0 }
             }
         }
         Section { width: parent.width; text: col.query ? Strings.t("results") : Strings.t("recent"); visible: col.results.length > 0 }
