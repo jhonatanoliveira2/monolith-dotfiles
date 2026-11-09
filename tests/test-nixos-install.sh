@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# test-nixos-install.sh - the NixOS installer fills templates/nixos correctly (UEFI, BIOS, swap, LUKS).
+# test-nixos-install.sh - the NixOS installer fills templates/nixos correctly (UEFI, BIOS, swap, LUKS,
+# existing partitions).
 # Only the template step runs (--customize-only): no disk, no root, no Nix needed.
 # Usage: bash tests/test-nixos-install.sh
 set -uo pipefail
@@ -44,6 +45,18 @@ check "language en" has bios 'language = "en";'
 check "extra lines right after stateVersion" bash -c "grep -A2 'system.stateVersion' '$TMP/bios/configuration.nix' | grep -q swapDevices"
 
 fresh gpu
+fresh parts
+check "existing-partitions run succeeds" env MI_ESPMNT=/boot/efi MI_OSPROBER=1 bash "$INST" --customize-only "$TMP/parts"
+check "shared ESP mounted at /boot/efi" has parts 'boot.loader.efi.efiSysMountPoint = "/boot/efi";'
+check "os-prober on" has parts 'useOSProber = true;'
+check "UEFI kept with a shared ESP" has parts 'efiSupport = true;'
+fresh parts-bios
+check "existing partitions on BIOS" env MI_BOOT=bios MI_DISK=/dev/sdb MI_OSPROBER=1 bash "$INST" --customize-only "$TMP/parts-bios"
+check "BIOS: GRUB on the root's disk" has parts-bios 'device = "/dev/sdb";'
+check "BIOS: os-prober on" has parts-bios 'useOSProber = true;'
+check "whole disk: ESP stays at /boot" bash -c "! grep -q efiSysMountPoint '$TMP/uefi/configuration.nix'"
+check "whole disk: no os-prober" bash -c "! grep -q useOSProber '$TMP/uefi/configuration.nix'"
+
 check "GPU modules run succeeds" env MI_GPU="amdgpu i915" bash "$INST" --customize-only "$TMP/gpu"
 check "early KMS modules written" has gpu '    boot.gpuModules = [ "amdgpu" "i915" ];'
 check "early KMS inside the monolith block" bash -c "grep -A1 'boot.enable = true;' '$TMP/gpu/configuration.nix' | grep -q gpuModules"
