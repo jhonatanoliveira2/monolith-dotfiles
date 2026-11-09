@@ -33,7 +33,7 @@ TARGET=disk ESPMNT=/boot OSPROBER=0 ROOTPART="" ESPPART="" ESPNEW=0   # TARGET=p
 # Look: "monolith" (greys, the block wordmark, numbered steps) or "nothing" (LED dots: a dot-matrix wordmark,
 # a row of LEDs for the progress). Monochrome either way; red only for errors. No colour without a terminal
 # (or with NO_COLOR).
-THEME=${MONOLITH_INSTALL_THEME:-monolith}
+THEME=${MONOLITH_INSTALL_THEME:-nothing}   # this branch: LED dots
 if [[ -t 1 && -z ${NO_COLOR-} ]]; then
     B=$'\e[1m' D=$'\e[38;5;244m' R=$'\e[38;5;160m' N=$'\e[0m'
     W=$'\e[38;5;255m' L=$'\e[38;5;250m' M=$'\e[38;5;245m' K=$'\e[38;5;238m'
