@@ -68,6 +68,13 @@ and swap, shows a summary and only erases the disk after its name is typed back.
 (GPT + 1 GiB EFI partition on UEFI, MBR on BIOS), formats ext4, runs `nixos-generate-config`, fills the
 template with the answers, installs, sets the user's password (root stays locked: use `sudo`) and reboots.
 
+- **Where to install**: *a whole disk* (erased, as above) or *existing partitions*, next to another system
+  (Windows, another Linux). In the second mode only the partition chosen for NixOS (20 GiB or more) is
+  formatted (ext4); on UEFI an existing EFI partition is kept as it is, NixOS is added to it and it is mounted
+  at `/boot/efi` (the kernels stay on the ext4 root, so even Windows' 100 MiB ESP is enough); without one, a
+  partition you choose becomes the ESP. GRUB lists the other systems (`useOSProber`). The partition name is
+  typed back to confirm, and a partition that holds data is pointed out. No LUKS in this mode; create the
+  partition beforehand (gparted, cfdisk, or shrink Windows' from Windows itself).
 - Safety: the ISO stick, mounted disks, disks in use (swap, LUKS, LVM, RAID) and disks under 20 GiB are never
   offered; `-- --dry-run` shows every command without changing anything.
 - If the install stops after the disk was prepared (network, an error fixed on the branch), run the same command

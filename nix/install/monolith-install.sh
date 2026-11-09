@@ -8,12 +8,17 @@
 #           --lang pt|en     language of the questions (asked otherwise)
 #           -h | --help
 #
-# Steps: checks (root, live ISO, network) -> disk choice -> questions -> summary -> confirmation (type the
-# disk name) -> partition (GPT + ESP on UEFI, msdos on BIOS), optional LUKS, ext4 -> nixos-generate-config ->
-# MONOLITH template filled with the answers -> nixos-install -> user password -> reboot.
+# Steps: checks (root, live ISO, network) -> target -> questions -> summary -> confirmation (type the disk or
+# partition name) -> partitions, ext4 -> nixos-generate-config -> MONOLITH template filled with the answers ->
+# nixos-install -> user password -> reboot. Two targets:
+#   * a whole disk, erased: GPT + ESP on UEFI (msdos on BIOS), optional LUKS;
+#   * existing partitions (next to another system): only the partition chosen for NixOS is formatted (ext4);
+#     on UEFI an existing ESP (Windows', another Linux's) is kept and mounted at /boot/efi (the kernels stay on
+#     the ext4 root, so a small ESP is enough), or a chosen partition becomes a new one; GRUB lists the other
+#     systems (os-prober). No LUKS in this mode (GRUB cannot read a /boot inside LUKS2).
 #
-# Safety: only whole disks that are not the live medium, not mounted, not in use (swap, LUKS, LVM) and at least
-# 20 GiB are offered; nothing is written before the disk name is typed back. If the install stops after the
+# Safety: the live medium is never offered; disks / partitions that are mounted, in use (swap, LUKS, LVM, RAID)
+# or under 20 GiB are refused; nothing is written before the disk or partition name is typed back. If the install stops after the
 # disk was prepared (network, an evaluation error fixed upstream), running it again offers to resume.
 set -euo pipefail
 
@@ -22,6 +27,7 @@ TEMPLATE_DIR=${MONOLITH_TEMPLATE:-}      # set by the Nix package (templates/nix
 MNT=/mnt
 MIN_GIB=20
 DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS=""
+TARGET=disk ESPMNT=/boot OSPROBER=0 ROOTPART="" ESPPART="" ESPNEW=0   # TARGET=parts: existing partitions
 
 # ── output / input ────────────────────────────────────────────────────────────────────────────────────────
 if [[ -t 1 ]]; then B=$'\e[1m' D=$'\e[2m' R=$'\e[31m' Y=$'\e[33m' G=$'\e[32m' N=$'\e[0m'; else B="" D="" R="" Y="" G="" N=""; fi
@@ -84,6 +90,16 @@ customize() {
         sed -i -e "s|device = \"nodev\";|device = \"$DISK\";|" -e 's|efiSupport = true;|efiSupport = false;|' \
             -e '/boot.loader.efi.canTouchEfiVariables = true;/d' "$c"
     fi
+    if [[ $ESPMNT != /boot ]]; then   # existing partitions: shared ESP at /boot/efi, kernels on the root's /boot
+        sed -i "/boot.loader.efi.canTouchEfiVariables = true;/a\\
+  boot.loader.efi.efiSysMountPoint = \"$ESPMNT\"; # the ESP is shared with another system: kernels stay on /" "$c"
+        grep -qF "efiSysMountPoint = \"$ESPMNT\";" "$c" || die "template: ESP mount point not set"
+    fi
+    if ((OSPROBER)); then   # other systems on the disk(s) in the GRUB menu
+        sed -i "/    efiSupport = /a\\
+    useOSProber = true; # the other systems on the disk(s) in the boot menu" "$c"
+        grep -qF "useOSProber = true;" "$c" || die "template: os-prober not set"
+    fi
     if [[ -n $GPUMODS ]]; then   # early KMS: the splash starts on the real display (monolith.boot.gpuModules)
         local list="" m
         for m in $GPUMODS; do list+="\"$m\" "; done
@@ -111,6 +127,7 @@ ${extra%\\n}" "$c"
 if [[ -n $CUSTOMIZE_ONLY ]]; then
     : "${MI_LANG:=pt}" "${MI_BOOT:=uefi}" "${MI_DISK:=/dev/vda}" "${MI_SWAP:=0}" "${MI_LUKS:=0}"
     LANGX=$MI_LANG BOOTMODE=$MI_BOOT DISK=$MI_DISK SWAP_GIB=$MI_SWAP LUKS=$MI_LUKS
+    ESPMNT=${MI_ESPMNT:-/boot} OSPROBER=${MI_OSPROBER:-0}
     USERNAME=${MI_USER:-maria} FULLNAME=${MI_NAME:-Maria Silva} HOST=${MI_HOST:-estacao} TZONE=${MI_TZ:-Europe/Lisbon}
     LOCALE=${MI_LOCALE:-pt_PT.UTF-8} XKB=${MI_XKB:-pt} KEYMAP=${MI_KEYMAP:-pt-latin1} STATEVER=${MI_STATE:-26.05} GPUMODS=${MI_GPU-}
     customize "$CUSTOMIZE_ONLY"
@@ -181,8 +198,15 @@ if findmnt -n "$MNT" >/dev/null 2>&1 && [[ -f $MNT/etc/nixos/flake.nix && -f $MN
 fi
 
 if ((!RESUME)); then
-    # ── disk ──────────────────────────────────────────────────────────────────────────────────────────────
-    step "$(t "Disco de destino (será APAGADO por inteiro)" "Target disk (will be ERASED entirely)")"
+    # ── target ────────────────────────────────────────────────────────────────────────────────────────────
+    step "$(t "Onde instalar" "Where to install")"
+    printf '  %s1)%s %s\n' "$B" "$N" "$(t "Um disco inteiro (APAGA tudo nele)" "A whole disk (ERASES everything on it)")"
+    printf '  %s2)%s %s\n' "$B" "$N" "$(t "Partições existentes (ao lado de outro sistema: só a partição escolhida é formatada)" "Existing partitions (next to another system: only the chosen partition is formatted)")"
+    ask TPICK "$(t "Opção" "Choice")" "1" '^[12]$'
+    [[ $TPICK == 2 ]] && TARGET=parts
+
+    # ── disks (not the live medium) ───────────────────────────────────────────────────────────────────────
+    if [[ $TARGET == disk ]]; then step "$(t "Disco de destino (será APAGADO por inteiro)" "Target disk (will be ERASED entirely)")"; fi
     mapfile -t ALL < <(lsblk -dnpo NAME,TYPE,RO | awk '$2 == "disk" && $3 == "0" { print $1 }')
     DISKS=()
     for d in "${ALL[@]}"; do
@@ -192,6 +216,7 @@ if ((!RESUME)); then
         DISKS+=("$d")
     done
     ((${#DISKS[@]})) || die "$(t "Nenhum disco disponível (o pendrive da ISO não é oferecido)." "No disk available (the ISO stick is never offered).")"
+  if [[ $TARGET == disk ]]; then
     i=0
     for d in "${DISKS[@]}"; do
         i=$((i + 1))
@@ -222,7 +247,76 @@ if ((!RESUME)); then
     fi
     bytes=$(lsblk -bdno SIZE "$DISK")
     ((bytes >= MIN_GIB * 1024 * 1024 * 1024)) || die "$(t "Disco pequeno demais (mínimo ${MIN_GIB} GiB)." "Disk too small (at least ${MIN_GIB} GiB).")"
-
+  else
+    # ── existing partitions ───────────────────────────────────────────────────────────────────────────────
+    ESP_GUID=c12a7328-f81f-11d2-ba4b-00a0c93ec93b
+    swaps=$(swapon --noheadings --show=NAME 2>/dev/null || true)
+    # free_part <dev>: not mounted, nothing open on it (LUKS / LVM / RAID), not an active swap
+    free_part() {
+        local m kids
+        m=$(lsblk -nro MOUNTPOINTS "$1" 2>/dev/null || lsblk -nro MOUNTPOINT "$1" 2>/dev/null || true)
+        kids=$(lsblk -nlo NAME "$1" 2>/dev/null | wc -l)
+        [[ -z ${m//[[:space:]]/} && $kids -le 1 && $'\n'$swaps != *$'\n'"$1"$'\n'* && $'\n'$swaps$'\n' != *$'\n'"$1"$'\n'* ]]
+    }
+    show_part() { # show_part <n> <dev>
+        local size fs label ptn
+        size=$(lsblk -dno SIZE "$2" | tr -d ' ') fs=$(lsblk -dno FSTYPE "$2" | tr -d ' ')
+        label=$(lsblk -dno LABEL "$2" | sed 's/ *$//') ptn=$(lsblk -dno PARTTYPENAME "$2" 2>/dev/null | sed 's/ *$//')
+        printf '  %s%d)%s %-16s %8s  %s%s %s\n' "$B" "$1" "$N" "$2" "$size" "${fs:-$(t "sem sistema de arquivos" "no file system")}" \
+            "${label:+ \"$label\"}" "${ptn:+($ptn)}"
+    }
+    mapfile -t PALL < <(lsblk -lnpo NAME,TYPE "${DISKS[@]}" | awk '$2 == "part" { print $1 }')
+    ESPS=() ROOTS=()
+    for p in "${PALL[@]}"; do
+        free_part "$p" || continue
+        ptype=$(lsblk -dno PARTTYPE "$p" 2>/dev/null | tr -d ' ' | tr 'A-F' 'a-f')
+        if [[ $ptype == "$ESP_GUID" ]]; then ESPS+=("$p"); continue; fi
+        (($(lsblk -bdno SIZE "$p") >= MIN_GIB * 1024 * 1024 * 1024)) && ROOTS+=("$p")
+    done
+    step "$(t "Partição do sistema (será FORMATADA em ext4)" "System partition (will be FORMATTED as ext4)")"
+    ((${#ROOTS[@]})) || die "$(t "Nenhuma partição livre com pelo menos ${MIN_GIB} GiB. Crie uma (gparted, cfdisk) e rode de novo." \
+        "No free partition of at least ${MIN_GIB} GiB. Create one (gparted, cfdisk) and run again.")"
+    i=0; for p in "${ROOTS[@]}"; do i=$((i + 1)); show_part "$i" "$p"; done
+    ask PICK "$(t "Número da partição" "Partition number")" "" '^[0-9]+$'
+    ((PICK >= 1 && PICK <= ${#ROOTS[@]})) || die "$(t "Opção inválida" "Invalid choice")"
+    ROOTPART=${ROOTS[PICK - 1]}
+    rootfs_now=$(lsblk -dno FSTYPE "$ROOTPART" | tr -d ' ') rootlabel=$(lsblk -dno LABEL "$ROOTPART" | sed 's/ *$//')
+    if [[ -n $rootfs_now ]]; then
+        warn "$(t "$ROOTPART contém dados ($rootfs_now${rootlabel:+, \"$rootlabel\"}): TUDO nela será apagado." \
+            "$ROOTPART holds data ($rootfs_now${rootlabel:+, \"$rootlabel\"}): EVERYTHING on it will be erased.")"
+    fi
+    DISK=/dev/$(lsblk -no PKNAME "$ROOTPART" | head -n1)
+    OSPROBER=1
+    if [[ $BOOTMODE == uefi ]]; then
+        step "$(t "Partição EFI (ESP)" "EFI partition (ESP)")"
+        if ((${#ESPS[@]})); then
+            printf '  %s\n' "$(t "Partições EFI encontradas (mantidas, NÃO formatadas; o NixOS é acrescentado a ela):" "EFI partitions found (kept, NOT formatted; NixOS is added to it):")"
+            i=0; for p in "${ESPS[@]}"; do i=$((i + 1)); show_part "$i" "$p"; done
+            ask PICK "$(t "Número da ESP" "ESP number")" "1" '^[0-9]+$'
+            ((PICK >= 1 && PICK <= ${#ESPS[@]})) || die "$(t "Opção inválida" "Invalid choice")"
+            ESPPART=${ESPS[PICK - 1]}
+            [[ $(lsblk -dno FSTYPE "$ESPPART" | tr -d ' ') == vfat ]] || die "$(t "$ESPPART não é FAT: não dá para reaproveitar como ESP." "$ESPPART is not FAT: it cannot be reused as the ESP.")"
+        else
+            warn "$(t "Nenhuma partição EFI encontrada: escolha uma partição (256 MiB ou mais) para virar a ESP; ela será FORMATADA (FAT32)." \
+                "No EFI partition found: choose a partition (256 MiB or more) to become the ESP; it will be FORMATTED (FAT32).")"
+            CANDS=()
+            for p in "${PALL[@]}"; do
+                [[ $p == "$ROOTPART" ]] && continue
+                free_part "$p" && (($(lsblk -bdno SIZE "$p") >= 256 * 1024 * 1024)) && CANDS+=("$p")
+            done
+            ((${#CANDS[@]})) || die "$(t "Nenhuma partição livre para a ESP. Crie uma de 512 MiB (gparted, cfdisk) e rode de novo." \
+                "No free partition for the ESP. Create one of 512 MiB (gparted, cfdisk) and run again.")"
+            i=0; for p in "${CANDS[@]}"; do i=$((i + 1)); show_part "$i" "$p"; done
+            ask PICK "$(t "Número da partição para a ESP" "Partition number for the ESP")" "" '^[0-9]+$'
+            ((PICK >= 1 && PICK <= ${#CANDS[@]})) || die "$(t "Opção inválida" "Invalid choice")"
+            ESPPART=${CANDS[PICK - 1]} ESPNEW=1
+        fi
+        ESPMNT=/boot/efi
+    elif [[ $(lsblk -dno PTTYPE "$DISK" | tr -d ' ') == gpt ]] && ! lsblk -lnpo PARTTYPE "$DISK" | grep -qi 21686148-6449-6e6f-744e-656564454649; then
+        die "$(t "BIOS com disco GPT sem partição \"BIOS boot\": o GRUB não tem onde ficar. Crie uma de 1 MiB (tipo BIOS boot) ou use o modo de disco inteiro." \
+            "BIOS with a GPT disk without a \"BIOS boot\" partition: GRUB has nowhere to go. Create one of 1 MiB (BIOS boot type) or use the whole-disk mode.")"
+    fi
+  fi
     # ── questions ─────────────────────────────────────────────────────────────────────────────────────────
     step "$(t "Sistema" "System")"
     if [[ $LANGX == en ]]; then dTZ=UTC dLOC=en_US.UTF-8 dXKB=us dKM=us; else dTZ=America/Sao_Paulo dLOC=pt_BR.UTF-8 dXKB=br dKM=br-abnt2; fi
@@ -238,14 +332,21 @@ if ((!RESUME)); then
     ask XKB "$(t "Layout do teclado (gráfico)" "Keyboard layout (graphical)")" "$dXKB" '^[a-z0-9_,]+$'
     ask KEYMAP "$(t "Layout do teclado (console)" "Keyboard layout (console)")" "$dKM" '^[a-zA-Z0-9_-]+$'
     LUKS=0
-    yes_no "$(t "Criptografar o disco (LUKS, senha pedida no boot)?" "Encrypt the disk (LUKS, password asked at boot)?")" n && LUKS=1
+    if [[ $TARGET == disk ]]; then
+        yes_no "$(t "Criptografar o disco (LUKS, senha pedida no boot)?" "Encrypt the disk (LUKS, password asked at boot)?")" n && LUKS=1
+    fi
     ram_gib=$(awk '/^MemTotal/ { printf "%d", ($2 + 1048575) / 1048576 }' /proc/meminfo)
     ask SWAP_GIB "$(t "Swap em GiB (arquivo; 0 = nenhuma)" "Swap in GiB (file; 0 = none)")" "$((ram_gib < 8 ? ram_gib : 8))" '^[0-9]{1,3}$'
 
     # ── summary + confirmation ────────────────────────────────────────────────────────────────────────────
     step "$(t "Resumo" "Summary")"
     lsblk -o NAME,SIZE,FSTYPE,LABEL,MODEL "$DISK" | sed 's/^/  /'
-    if [[ $BOOTMODE == uefi ]]; then layout="GPT: 1 GiB EFI (FAT32) + ext4"
+    if [[ $TARGET == parts ]]; then
+        layout="$ROOTPART -> ext4 (/)"
+        [[ -n $ESPPART ]] && layout+=", ESP $ESPPART -> /boot/efi ($( ((ESPNEW)) && t "FORMATADA" "FORMATTED" || t "mantida" "kept"))"
+        [[ $BOOTMODE == bios ]] && layout+=", GRUB -> $DISK"
+        layout+=", $(t "outros sistemas no menu de boot" "other systems in the boot menu")"
+    elif [[ $BOOTMODE == uefi ]]; then layout="GPT: 1 GiB EFI (FAT32) + ext4"
     elif ((LUKS)); then layout="MBR: 1 GiB /boot (ext4) + ext4, GRUB"
     else layout="MBR: ext4 + GRUB"; fi
     cat <<EOF
@@ -259,10 +360,46 @@ if ((!RESUME)); then
   NixOS:          $STATEVER, MONOLITH ($FLAKE_REF)
 
 EOF
-    printf '  %s%s%s\n' "$R$B" "$(t "TODOS OS DADOS DE $DISK SERÃO APAGADOS." "ALL DATA ON $DISK WILL BE ERASED.")" "$N"
-    read -r -p "  $(t "Para confirmar, digite o nome do disco" "To confirm, type the disk name") ($(basename "$DISK")): " typed </dev/tty || typed=""
-    [[ $typed == "$(basename "$DISK")" || $typed == "$DISK" ]] || die "$(t "Cancelado: nada foi alterado." "Cancelled: nothing was changed.")"
+    if [[ $TARGET == parts ]]; then
+        printf '  %s%s%s\n' "$R$B" "$(t "OS DADOS DE $ROOTPART SERÃO APAGADOS" "ALL DATA ON $ROOTPART WILL BE ERASED")$( ((ESPNEW)) && printf ' (+ %s)' "$ESPPART"). $(t "As outras partições ficam como estão." "The other partitions stay as they are.")" "$N"
+        CONFIRM=$ROOTPART
+    else
+        printf '  %s%s%s\n' "$R$B" "$(t "TODOS OS DADOS DE $DISK SERÃO APAGADOS." "ALL DATA ON $DISK WILL BE ERASED.")" "$N"
+        CONFIRM=$DISK
+    fi
+    read -r -p "  $(t "Para confirmar, digite o nome" "To confirm, type the name") ($(basename "$CONFIRM")): " typed </dev/tty || typed=""
+    [[ $typed == "$(basename "$CONFIRM")" || $typed == "$CONFIRM" ]] || die "$(t "Cancelado: nada foi alterado." "Cancelled: nothing was changed.")"
 
+    # fs_is <device> <type>: what is really on the device now (blkid -p reads it, no cache)
+    fs_is() {
+        ((DRY)) && return 0
+        udevadm settle
+        [[ $(blkid -p -s TYPE -o value "$1" 2>/dev/null) == "$2" ]]
+    }
+  if [[ $TARGET == parts ]]; then
+    # ── existing partitions: format only the chosen ones, mount ───────────────────────────────────────────
+    step "$(t "Preparando as partições" "Preparing the partitions")"
+    run udevadm settle
+    run wipefs -af "$ROOTPART"
+    run mkfs.ext4 -F -q -L nixos "$ROOTPART"
+    fs_is "$ROOTPART" ext4 || die "$(t "ext4 não encontrado em $ROOTPART depois do mkfs." "No ext4 on $ROOTPART after mkfs.")"
+    run mount -t ext4 "$ROOTPART" "$MNT"
+    ROOTFS=$ROOTPART BOOTP=$ESPPART
+    if [[ -n $ESPPART ]]; then
+        if ((ESPNEW)); then
+            run wipefs -af "$ESPPART"
+            run mkfs.fat -F 32 -n BOOT "$ESPPART"
+            # mark it as an ESP so the firmware looks there
+            espdisk=/dev/$(lsblk -no PKNAME "$ESPPART" | head -n1) espnum=$(lsblk -dno PARTN "$ESPPART" | tr -d ' ')
+            if [[ $(lsblk -dno PTTYPE "$espdisk" | tr -d ' ') == gpt ]]; then run parted -s "$espdisk" set "$espnum" esp on
+            else run parted -s "$espdisk" set "$espnum" boot on; fi
+        fi
+        fs_is "$ESPPART" vfat || die "$(t "FAT32 não encontrado em $ESPPART." "No FAT32 on $ESPPART.")"
+        run mkdir -p "$MNT$ESPMNT"
+        run mount -t vfat -o umask=077 "$ESPPART" "$MNT$ESPMNT"
+    fi
+    ok "$(t "Partições prontas" "Partitions ready"): $ROOTPART$( [[ -n $ESPPART ]] && printf ' + %s (%s)' "$ESPPART" "$ESPMNT")"
+  else
     # ── partition, format, mount ──────────────────────────────────────────────────────────────────────────
     step "$(t "Preparando o disco" "Preparing the disk")"
     # 1. clear the old layout (partitions first, then the tables) and let udev finish with the disk
@@ -308,13 +445,6 @@ EOF
     fi
     if [[ $BOOTMODE == bios && $LUKS == 0 ]]; then BOOTP="" ROOTP=${PARTS[0]}; else BOOTP=${PARTS[0]} ROOTP=${PARTS[1]}; fi
     for p in "${PARTS[@]}"; do run wipefs -af "$p"; done
-
-    # fs_is <device> <type>: what is really on the device now (blkid -p reads it, no cache)
-    fs_is() {
-        ((DRY)) && return 0
-        udevadm settle
-        [[ $(blkid -p -s TYPE -o value "$1" 2>/dev/null) == "$2" ]]
-    }
     ROOTFS=$ROOTP
     if ((LUKS)); then
         printf '  %s\n' "$(t "Escolha a senha do disco (pedida a cada boot):" "Choose the disk password (asked at every boot):")"
@@ -338,6 +468,7 @@ EOF
         run mount -t ext4 "$BOOTP" "$MNT/boot"
     fi
     ok "$(t "Disco pronto" "Disk ready"): $ROOTFS$( [[ -n $BOOTP ]] && printf ' + %s' "$BOOTP")"
+  fi
 
     # ── configuration ─────────────────────────────────────────────────────────────────────────────────────
     step "$(t "Configuração" "Configuration")"
