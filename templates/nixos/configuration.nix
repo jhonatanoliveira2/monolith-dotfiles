@@ -50,6 +50,9 @@ in
     # nothingTheme.wallpaper.outputs.eDP-1 = { width = 1920; height = 1200; }; # rendered at build time
   };
 
+  # unfree programs (vscode, discord, steam...) are refused until listed here by name
+  # nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname or pkg.name) [ "vscode" ];
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
@@ -58,6 +61,8 @@ in
       home.stateVersion = "25.11";
       programs.monolith = {
         apps.browser = "firefox";
+        # more programs (names: https://search.nixos.org/packages), then: sudo nixos-rebuild switch --flake /etc/nixos
+        extraPackages = with pkgs; [ ];
         # the flake lives in /etc/nixos after an install from the ISO (use ~/nixos if you keep it there)
         updateCommand = "sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos";
         # development mode (docs/nixos.md): edit the configuration in a checkout, no rebuild per change
