@@ -107,6 +107,7 @@ apaga o disco depois que o nome dele é digitado de volta. Num NixOS já instala
 | `SUPER + ←/→/↑/↓` | Focar Janela | Move o foco na direção indicada |
 | `SUPER + ALT + ←/→/↑/↓` | Redimensionar Janela | Redimensiona a janela ativa (passos de 40px, com repetição) |
 | `SUPER + Clique Esquerdo` | Arrastar Janela | Move/arrasta a janela com o mouse |
+| Touchpad: deslizar com 4 dedos | Mover Janela | Leva a janela sob o ponteiro, em qualquer direção (sem tecla, sem clique) |
 | `SUPER + Clique Direito` | Redimensionar Janela | Redimensiona a janela com o mouse |
 | `SUPER + J` | Alternar Divisão | Alterna a direção da divisão do dwindle |
 | `SUPER + G` | Grupo | Cria/desfaz um grupo de janelas (abas) |

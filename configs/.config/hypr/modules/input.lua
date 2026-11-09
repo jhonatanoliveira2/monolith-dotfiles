@@ -18,3 +18,11 @@ hl.gesture({
     direction = "horizontal",
     action = "workspace",
 })
+
+-- Touchpad: four fingers moving in any direction carry the window under them (no key, no click),
+-- the easy way to rearrange windows without a mouse (SUPER + click-drag still works)
+hl.gesture({
+    fingers = 4,
+    direction = "swipe",
+    action = "move",
+})

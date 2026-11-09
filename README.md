@@ -107,6 +107,7 @@ erases the disk after its name is typed back. On an installed NixOS, or in an ex
 | `SUPER + ←/→/↑/↓` | Focus Window | Moves focus in the given direction |
 | `SUPER + ALT + ←/→/↑/↓` | Resize Window | Resizes the active window (40px steps, repeating) |
 | `SUPER + Left Click` | Drag Window | Moves/drags the window with the mouse |
+| Touchpad: 4-finger swipe | Move Window | Carries the window under the pointer, in any direction (no key, no click) |
 | `SUPER + Right Click` | Resize Window | Resizes the window with the mouse |
 | `SUPER + J` | Toggle Split | Toggles the dwindle split direction |
 | `SUPER + G` | Group | Toggles a window group (tabs) |
