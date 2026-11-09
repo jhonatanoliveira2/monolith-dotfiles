@@ -69,6 +69,8 @@ Ele pergunta o idioma, o disco de destino, usuário, hostname, fuso, locale, tec
 (GPT + partição EFI de 1 GiB no UEFI, MBR no BIOS), formata em ext4, executa `nixos-generate-config`, preenche o
 template com as respostas, instala, define a senha do usuário (o root fica bloqueado: use `sudo`) e reinicia.
 
+- O visual segue a branch (`MONOLITH_INSTALL_THEME=monolith|nothing` muda); sem cores fora de um terminal ou
+  com `NO_COLOR`.
 - **Onde instalar**: *um disco inteiro* (apagado, como acima) ou *partições existentes*, ao lado de outro
   sistema (Windows, outro Linux). No segundo modo só a partição escolhida para o NixOS (20 GiB ou mais) é
   formatada (ext4); no UEFI uma partição EFI existente é mantida como está, o NixOS é acrescentado a ela e ela é
