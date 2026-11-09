@@ -68,6 +68,8 @@ and swap, shows a summary and only erases the disk after its name is typed back.
 (GPT + 1 GiB EFI partition on UEFI, MBR on BIOS), formats ext4, runs `nixos-generate-config`, fills the
 template with the answers, installs, sets the user's password (root stays locked: use `sudo`) and reboots.
 
+- Its look follows the branch (`MONOLITH_INSTALL_THEME=monolith|nothing` changes it); no colours without a
+  terminal or with `NO_COLOR`.
 - **Where to install**: *a whole disk* (erased, as above) or *existing partitions*, next to another system
   (Windows, another Linux). In the second mode only the partition chosen for NixOS (20 GiB or more) is
   formatted (ext4); on UEFI an existing EFI partition is kept as it is, NixOS is added to it and it is mounted

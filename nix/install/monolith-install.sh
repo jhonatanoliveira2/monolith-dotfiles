@@ -30,19 +30,80 @@ DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS=""
 TARGET=disk ESPMNT=/boot OSPROBER=0 ROOTPART="" ESPPART="" ESPNEW=0   # TARGET=parts: existing partitions
 
 # ── output / input ────────────────────────────────────────────────────────────────────────────────────────
-if [[ -t 1 ]]; then B=$'\e[1m' D=$'\e[2m' R=$'\e[31m' Y=$'\e[33m' G=$'\e[32m' N=$'\e[0m'; else B="" D="" R="" Y="" G="" N=""; fi
+# Look: "monolith" (greys, the block wordmark, numbered steps) or "nothing" (LED dots: a dot-matrix wordmark,
+# a row of LEDs for the progress). Monochrome either way; red only for errors. No colour without a terminal
+# (or with NO_COLOR).
+THEME=${MONOLITH_INSTALL_THEME:-monolith}
+if [[ -t 1 && -z ${NO_COLOR-} ]]; then
+    B=$'\e[1m' D=$'\e[38;5;244m' R=$'\e[38;5;160m' N=$'\e[0m'
+    W=$'\e[38;5;255m' L=$'\e[38;5;250m' M=$'\e[38;5;245m' K=$'\e[38;5;238m'
+else B="" D="" R="" N="" W="" L="" M="" K=""; fi
+Y=$B G=$W                                 # (warnings in bold, done in white: no colours but red)
 t() { if [[ $LANGX == en ]]; then printf '%s' "$2"; else printf '%s' "$1"; fi; }
-step() { printf '\n%s==> %s%s\n' "$B" "$*" "$N"; }
-ok() { printf '%s  ✓ %s%s\n' "$G" "$*" "$N"; }
-warn() { printf '%s  ! %s%s\n' "$Y" "$*" "$N" >&2; }
-die() { printf '%s  ✗ %s%s\n' "$R" "$*" "$N" >&2; exit 1; }
+STEP=0 STEPS=10                          # steps of a typical run, for the progress
+step() {
+    STEP=$((STEP + 1))
+    local n=$((STEP > STEPS ? STEPS : STEP)) i bar=""
+    if [[ $THEME == nothing ]]; then
+        for ((i = 1; i <= STEPS; i++)); do
+            if ((i <= n)); then bar+="$W●"; else bar+="$K●"; fi
+            ((i < STEPS)) && bar+=" "
+        done
+        printf '\n  %s%s  %s%s%s\n' "$bar" "$N" "$B$W" "$(printf '%s' "$*" | tr '[:lower:]' '[:upper:]')" "$N"
+    else
+        printf '\n  %s━━%s %s%02d%s  %s%s%s\n' "$K" "$N" "$M" "$STEP" "$N" "$B$W" "$*" "$N"
+    fi
+}
+if [[ $THEME == nothing ]]; then MK_OK="●" MK_WARN="○" MK_ERR="●" MK_ASK="◦"; else MK_OK="✓" MK_WARN="!" MK_ERR="✗" MK_ASK="›"; fi
+ok() { printf '  %s%s%s %s%s\n' "$W" "$MK_OK" "$L" "$*" "$N"; }
+warn() { printf '  %s%s %s%s\n' "$B$W" "$MK_WARN" "$*" "$N" >&2; }
+die() { printf '  %s%s %s%s\n' "$R$B" "$MK_ERR" "$*" "$N" >&2; exit 1; }
+# frame: the summary, set off from the rest (a rule on the left; dots in the Nothing look)
+frame() {
+    local mark=$([[ $THEME == nothing ]] && printf '·' || printf '│') line
+    while IFS= read -r line; do printf '  %s%s%s %s\n' "$K" "$mark" "$N" "${line#  }"; done
+}
+banner() {
+    local LC_ALL=C.UTF-8          # (string lengths in characters: the dots are multibyte)
+    printf '\n'
+    if [[ $THEME == nothing ]]; then
+        # MONOLITH as a 5-row dot matrix; two cells per LED when the terminal is wide enough
+        local -A F=(
+            [M]="●···● ●●·●● ●·●·● ●···● ●···●" [O]="·●●●· ●···● ●···● ●···● ·●●●·"
+            [N]="●···● ●●··● ●·●·● ●··●● ●···●" [L]="●···· ●···· ●···· ●···· ●●●●●"
+            [I]="●●● ·●· ·●· ·●· ●●●" [T]="●●●●● ··●·· ··●·· ··●·· ··●··" [H]="●···● ●···● ●●●●● ●···● ●···●")
+        local wide=0 r c ch row out word=MONOLITH
+        (($(tput cols 2>/dev/null || echo 80) >= 96)) && wide=1
+        for r in 0 1 2 3 4; do
+            out="  "
+            for ((c = 0; c < ${#word}; c++)); do
+                read -r -a row <<<"${F[${word:c:1}]}"
+                local cell=${row[r]} k
+                for ((k = 0; k < ${#cell}; k++)); do
+                    ch=${cell:k:1}
+                    if [[ $ch == "●" ]]; then out+="$W●"; else out+="$K·"; fi
+                    ((wide)) && out+=" "
+                done
+                out+=" "
+            done
+            printf '%s%s\n' "$out" "$N"
+        done
+        printf '\n  %sN I X O S   ·   %s%s\n' "$M" "$(t "I N S T A L A D O R" "I N S T A L L E R")" "$N"
+    else
+        printf '  %s█▄ ▄█ ▄▀▀▀▄ █▄  █ ▄▀▀▀▄ █     ▀█▀ ▀▀█▀▀ █   █%s\n' "$W" "$N"
+        printf '  %s█ ▀ █ █   █ █ ▀▄█ █   █ █      █    █   █▀▀▀█%s\n' "$L" "$N"
+        printf '  %s▀   ▀  ▀▀▀  ▀   ▀  ▀▀▀  ▀▀▀▀▀ ▀▀▀   ▀   ▀   ▀%s\n' "$M" "$N"
+        printf '\n  %sNixOS  ·  %s%s\n' "$M" "$(t "instalador" "installer")" "$N"
+        printf '  %s──────────────────────────────────────────────%s\n' "$K" "$N"
+    fi
+}
 run() {
     if ((DRY)); then printf '%s  [dry-run]%s' "$D" "$N"; printf ' %q' "$@"; printf '\n'; else "$@"; fi
 }
 ask() { # ask <var> <prompt> <default> [regex]
     local v
     while :; do
-        read -r -p "  $2 [$3]: " v </dev/tty || v=""
+        read -r -p "  $MK_ASK $2 [$3]: " v </dev/tty || v=""
         v=${v:-$3}
         if [[ -z ${4-} || $v =~ $4 ]]; then printf -v "$1" '%s' "$v"; return; fi
         warn "$(t "Valor inválido" "Invalid value"): $v"
@@ -51,7 +112,7 @@ ask() { # ask <var> <prompt> <default> [regex]
 yes_no() { # yes_no <prompt> <y|n>
     local a hint="y/N"
     [[ $2 == y ]] && hint="Y/n"
-    read -r -p "  $1 [$hint]: " a </dev/tty || a=""
+    read -r -p "  $MK_ASK $1 [$hint]: " a </dev/tty || a=""
     a=${a:-$2}
     [[ ${a,,} == y* || ${a,,} == s* ]]
 }
@@ -135,9 +196,10 @@ if [[ -n $CUSTOMIZE_ONLY ]]; then
 fi
 
 # ── language ──────────────────────────────────────────────────────────────────────────────────────────────
+banner
 if [[ -z $LANGX ]]; then
-    printf '\n%sMONOLITH · NixOS%s\n' "$B" "$N"
-    read -r -p "  Idioma / Language [pt/en] (pt): " LANGX </dev/tty || LANGX=""
+    printf '\n'
+    read -r -p "  $MK_ASK Idioma / Language [pt/en] (pt): " LANGX </dev/tty || LANGX=""
 fi
 [[ $LANGX == en ]] || LANGX=pt
 ((DRY)) && warn "$(t "Modo de teste: nenhum disco ou arquivo será alterado." "Dry run: no disk or file will be changed.")"
@@ -349,7 +411,7 @@ if ((!RESUME)); then
     elif [[ $BOOTMODE == uefi ]]; then layout="GPT: 1 GiB EFI (FAT32) + ext4"
     elif ((LUKS)); then layout="MBR: 1 GiB /boot (ext4) + ext4, GRUB"
     else layout="MBR: ext4 + GRUB"; fi
-    cat <<EOF
+    frame <<EOF
 
   $(t "Disco" "Disk"):          $DISK  ->  $layout$( ((LUKS)) && printf ' (LUKS2)')
   $(t "Usuário" "User"):        $USERNAME ($FULLNAME)
@@ -367,7 +429,7 @@ EOF
         printf '  %s%s%s\n' "$R$B" "$(t "TODOS OS DADOS DE $DISK SERÃO APAGADOS." "ALL DATA ON $DISK WILL BE ERASED.")" "$N"
         CONFIRM=$DISK
     fi
-    read -r -p "  $(t "Para confirmar, digite o nome" "To confirm, type the name") ($(basename "$CONFIRM")): " typed </dev/tty || typed=""
+    read -r -p "  $MK_ASK $(t "Para confirmar, digite o nome" "To confirm, type the name") ($(basename "$CONFIRM")): " typed </dev/tty || typed=""
     [[ $typed == "$(basename "$CONFIRM")" || $typed == "$CONFIRM" ]] || die "$(t "Cancelado: nada foi alterado." "Cancelled: nothing was changed.")"
 
     # fs_is <device> <type>: what is really on the device now (blkid -p reads it, no cache)
