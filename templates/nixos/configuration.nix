@@ -62,7 +62,22 @@ in
       programs.monolith = {
         apps.browser = "firefox";
         # more programs (names: https://search.nixos.org/packages), then: sudo nixos-rebuild switch --flake /etc/nixos
-        extraPackages = with pkgs; [ ];
+        # (git, curl and glib come with MONOLITH; gcc, neovim, ripgrep and fd too, with optionalPackages)
+        extraPackages = with pkgs; [
+          # programming
+          gcc
+          gnumake
+          cmake
+          pkg-config
+          gdb
+          gh
+          python3
+          # downloads and archives
+          wget
+          unzip
+          zip
+          tree
+        ];
         # the flake lives in /etc/nixos after an install from the ISO (use ~/nixos if you keep it there)
         updateCommand = "sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos";
         # development mode (docs/nixos.md): edit the configuration in a checkout, no rebuild per change
