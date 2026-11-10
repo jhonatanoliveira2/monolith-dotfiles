@@ -44,3 +44,12 @@ jobs:
       # needs quickshell: skipped (exit 0) where it is not installed, as on this runner
       - name: Shell (headless QML harnesses)
         run: bash tests/test-shell.sh
+
+  # the NixOS side: evaluates the flake (packages, modules, the example machine) without building it
+  nix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+      - name: Evaluate the flake
+        run: nix flake check --no-build

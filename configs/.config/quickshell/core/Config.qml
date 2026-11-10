@@ -21,6 +21,9 @@ Singleton {
     property string settingsMode: Settings.settingsMode   // "window" | "overlay"
     property int toastTimeout: Settings.toastTimeout   // ms (critical notifications stay until dismissed, see Settings.criticalSticky)
 
+    // terminal for everything the shell opens in one (Settings > Launcher)
+    readonly property string terminal: String(Settings.launcherTerminal || "").trim() || "ghostty"
+
     // Commands used by the settings menu
     property var lockCommand: ["hyprlock"]
     // by full path: the session PATH Quickshell inherits from Hyprland usually lacks ~/.local/bin

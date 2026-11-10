@@ -172,12 +172,13 @@ Singleton {
         else if (nm && Networking.canCheckConnectivity) Networking.checkConnectivity()
     }
     function advanced() {
-        // a GUI that keeps running: started detached, but a missing program is still reported
+        // a GUI that keeps running: started detached, but a missing program is still reported; text tools open in
+        // the terminal chosen in Settings ($T), like everything else the shell runs in one
         const cmd = nm ? "exec nm-connection-editor"
-            : iwd ? "command -v iwgtk >/dev/null && exec iwgtk || exec ${TERMINAL:-ghostty} -e iwctl"
-            : "exec ${TERMINAL:-ghostty} -e sh -c 'networkctl status; exec ${SHELL:-sh}'"
+            : iwd ? "command -v iwgtk >/dev/null && exec iwgtk || exec \"$T\" -e iwctl"
+            : "exec \"$T\" -e sh -c 'networkctl status; exec ${SHELL:-sh}'"
         const needs = nm ? "nm-connection-editor" : iwd ? "iwctl" : "networkctl"
-        exec(["sh", "-c", 'command -v "$2" >/dev/null || { echo "$2 is not installed" >&2; exit 127; }; setsid -f sh -c "$1" >/dev/null 2>&1', "sh", cmd, needs])
+        exec(["sh", "-c", 'command -v "$2" >/dev/null || { echo "$2 is not installed" >&2; exit 127; }; T="$3" setsid -f sh -c "$1" >/dev/null 2>&1', "sh", cmd, needs, Config.terminal])
     }
 
     Timer { id: scanStop; interval: 30000; onTriggered: if (root.wifiDev) root.wifiDev.scannerEnabled = false }

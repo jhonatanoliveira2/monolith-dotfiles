@@ -50,7 +50,7 @@ MenuWindow {
             input.text = ""
             if (inTerminal) {
                 Popups.close()
-                Quickshell.execDetached([Settings.launcherTerminal || "ghostty", "-e", "sh", "-c", cmd + "; printf '\\n[enter] '; read _"])
+                Quickshell.execDetached([Config.terminal, "-e", "sh", "-c", cmd + "; printf '\\n[enter] '; read _"])
                 return
             }
             if (proc.running) proc.running = false

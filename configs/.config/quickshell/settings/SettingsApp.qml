@@ -26,8 +26,8 @@ Rectangle {
                   appearance: "PageAppearance", themes: "PageThemes", profile: "PageProfile", bar: "PageBar", input: "PageInput", widgets: "PageWidgets" })[p]
     }
     // a page that is not available here (e.g. Power on a desktop) falls back to System
-    onPageChanged: { if (!Registry.pages.some(x => x.id === page)) page = "system"; flick.contentY = 0 }
-    onSearchingChanged: flick.contentY = 0
+    onPageChanged: { if (!Registry.pages.some(x => x.id === page)) page = "system"; pageFlick.contentY = 0 }
+    onSearchingChanged: pageFlick.contentY = 0
 
     Rectangle {
         id: side
@@ -107,14 +107,14 @@ Rectangle {
         }
 
         Flickable {
-            id: flick
+            id: pageFlick
             anchors { left: parent.left; right: parent.right; top: head.bottom; bottom: parent.bottom; margins: 16 }
             contentHeight: content.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             Column {
                 id: content
-                width: flick.width - 8
+                width: pageFlick.width - 8
                 spacing: 8
 
                 // search results
@@ -141,6 +141,6 @@ Rectangle {
                 EntryList { visible: !app.searching && !app.pageFile(app.page); page: app.page }
             }
         }
-        HoverScrollBar { flick: flick; anchors.rightMargin: -12 }
+        HoverScrollBar { flick: pageFlick; anchors.rightMargin: -12 }
     }
 }

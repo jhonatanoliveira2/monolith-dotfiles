@@ -94,6 +94,7 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.loading = false
+                if (text.trim() === "") return          // the request failed: onExited reports it
                 try {
                     const lines = text.trim().split("\n")
                     const loc = lines[0].split("\t"), j = JSON.parse(lines[1]), a = JSON.parse(lines[2] || "{}")

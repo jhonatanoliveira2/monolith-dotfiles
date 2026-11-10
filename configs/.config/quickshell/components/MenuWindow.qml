@@ -155,7 +155,7 @@ PanelWindow {
         ]
 
         Flickable {
-            id: flick
+            id: bodyFlick
             anchors.fill: parent
             anchors.margins: win.pad
             contentWidth: width
@@ -175,19 +175,19 @@ PanelWindow {
         }
         HoverScrollBar {   // sits in the panel padding, not over the content
             visible: win.hoverScroll
-            flick: flick
+            flick: bodyFlick
             anchors.right: parent.right
             anchors.rightMargin: 1
         }
         Rectangle {   // scroll indicator, only for long menus
-            visible: !win.hoverScroll && flick.interactive
+            visible: !win.hoverScroll && bodyFlick.interactive
             anchors.right: parent.right
             anchors.rightMargin: 3
-            y: win.pad + flick.visibleArea.yPosition * flick.height
+            y: win.pad + bodyFlick.visibleArea.yPosition * bodyFlick.height
             width: 2; radius: 1
-            height: flick.visibleArea.heightRatio * flick.height
+            height: bodyFlick.visibleArea.heightRatio * bodyFlick.height
             color: Theme.grayMid
-            opacity: flick.moving ? 0.9 : 0.35
+            opacity: bodyFlick.moving ? 0.9 : 0.35
             Behavior on opacity { NumberAnimation { duration: Theme.dur(200) } }
         }
     }

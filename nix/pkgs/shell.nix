@@ -14,7 +14,6 @@ stdenvNoCC.mkDerivation {
     runHook preInstall
     mkdir -p $out/share/monolith
     cp -r . $out/share/monolith/quickshell
-    rm -f $out/share/monolith/quickshell/qmldir.backup
     patchShebangs --host $out/share/monolith/quickshell/scripts
     runHook postInstall
   '';

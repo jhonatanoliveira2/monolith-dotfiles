@@ -30,7 +30,7 @@ Column {
     }
     function update() {
         if (nix) {
-            if (nixCmd) Quickshell.execDetached([Settings.launcherTerminal, "-e", "sh", "-c", nixCmd + "; echo; read -p 'Enter...' x"])
+            if (nixCmd) Quickshell.execDetached([Config.terminal, "-e", "sh", "-c", nixCmd + "; echo; read -p 'Enter...' x"])
             return
         }
         upState = "updating"; log = ""

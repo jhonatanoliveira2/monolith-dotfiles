@@ -55,8 +55,8 @@ MenuWindow {
                 }
                 Txt {
                     anchors { right: parent.right; top: parent.top; rightMargin: 8; topMargin: 6 }
-                    text: Theme.glyph.close; color: x.containsMouse ? Theme.white : Theme.grayMid
-                    MouseArea { id: x; anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; onClicked: Notifs.dismiss(modelData) }
+                    text: Theme.glyph.close; color: closeArea.containsMouse ? Theme.white : Theme.grayMid
+                    MouseArea { id: closeArea; anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; onClicked: Notifs.dismiss(modelData) }
                 }
             }
         }

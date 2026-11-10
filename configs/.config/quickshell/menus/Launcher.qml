@@ -77,7 +77,7 @@ Overlay {
             const a = r.app, u = Object.assign({}, Settings.launcherUsage || {})
             u[a.id] = (u[a.id] || 0) + 1
             Settings.launcherUsage = u
-            if (a.runInTerminal) Quickshell.execDetached([Settings.launcherTerminal || "ghostty", "-e"].concat(Array.from(a.command)))
+            if (a.runInTerminal) Quickshell.execDetached([Config.terminal, "-e"].concat(Array.from(a.command)))
             else a.execute()
         }
         Popups.closeOverlay()
@@ -165,7 +165,7 @@ Overlay {
                 x: Theme.nothing ? 26 : 10; width: 30; height: parent.height
                 IconImage {
                     id: appIcon
-                    visible: row.modelData.kind === "app" && Settings.launcherIcons && source != ""
+                    visible: row.modelData.kind === "app" && Settings.launcherIcons && String(source) !== ""
                     anchors.centerIn: parent; implicitSize: 28
                     // Nothing theme (monochrome): app icons in greys
                     layer.enabled: Theme.nothing && Nothing.monochrome

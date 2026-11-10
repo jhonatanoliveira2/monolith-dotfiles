@@ -32,7 +32,7 @@ Item {
         radius: Theme.menuRadius
         color: Palettes.alpha(Theme.p.panel, Config.widgetOpacity)
         border.width: 1
-        border.color: drag.drag.active ? Theme.accent : host.editing ? Theme.grayMid : Theme.line
+        border.color: dragArea.drag.active ? Theme.accent : host.editing ? Theme.grayMid : Theme.line
         Behavior on border.color { ColorAnimation { duration: Theme.dur(120) } }
         DotGrid { anchors.fill: parent; anchors.margins: parent.radius / 2; strength: 0.06 }
     }
@@ -46,11 +46,11 @@ Item {
 
     // ── edit mode ──
     MouseArea {
-        id: drag
+        id: dragArea
         anchors.fill: parent
         enabled: host.editing
         visible: host.editing
-        cursorShape: drag.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+        cursorShape: dragArea.drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
         drag.target: host
         drag.minimumX: 0; drag.minimumY: 0
         drag.maximumX: host.parent ? host.parent.width - host.width : 0

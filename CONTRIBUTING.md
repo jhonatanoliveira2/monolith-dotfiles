@@ -32,6 +32,7 @@ bash tests/test-installer.sh         # instalador do Arch (ambientes temporário
 bash tests/test-nixos-install.sh     # instalador guiado do NixOS (nenhum disco é tocado)
 bash tests/test-scripts.sh           # scripts auxiliares do shell (curl falso, sem rede)
 bash tests/test-shell.sh             # singletons do shell sem compositor (precisa do quickshell)
+bash tests/smoke-shell.sh            # o shell inteiro num Hyprland aninhado (abre uma janela por ~40 s; --nothing = com o tema)
 nix flake check                      # só com Nix: constrói os pacotes e avalia uma máquina de exemplo
 ```
 

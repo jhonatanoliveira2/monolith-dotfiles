@@ -204,7 +204,7 @@ Singleton {
         sld("mic", "micNoise", "micNoiseLevel", ["Intensidade da supressão", "Suppression strength"], "mic ruído noise vad limiar threshold", 0, 95, 5, "%",
             () => Settings.micNoiseLevel, v => { Settings.micNoiseLevel = v; MicFx.schedule() }, { when: () => MicFx.hasRnnoise && Settings.micNoise }),
         btn("mic", "micNoise", "micNoiseInstall", ["Instalar supressão de ruído (noise-suppression-for-voice)", "Install noise suppression (noise-suppression-for-voice)"], "mic ruído noise rnnoise instalar install",
-            () => root.run([Settings.launcherTerminal, "-e", "sh", "-c", "sudo pacman -S --needed noise-suppression-for-voice; echo; read -p 'Enter...' x"]), { when: () => !MicFx.hasRnnoise && !Distro.nixos }),
+            () => root.run([Config.terminal, "-e", "sh", "-c", "sudo pacman -S --needed noise-suppression-for-voice; echo; read -p 'Enter...' x"]), { when: () => !MicFx.hasRnnoise && Distro.archBased }),
         tog("mic", "micEq", "micEq", ["Equalizador do microfone", "Microphone equalizer"], "mic eq equalizador equalizer graves agudos bass treble preset voz voice",
             () => Settings.micEq, v => { Settings.micEq = v; MicFx.schedule() }),
 
