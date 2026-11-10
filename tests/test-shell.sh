@@ -91,7 +91,23 @@ echo "== singletons (core/ and services/)"
 new_home
 run_harness services
 check "every singleton loads without QML errors" no_qml_errors
-[[ $(result singletons) == 32/32 ]] && ok "all 32 singletons are instantiated" || ko "all 32 singletons are instantiated ($(result singletons))"
+n=$(( $(grep -c "^singleton " "$SHELL_DIR/core/qmldir") + $(grep -c "^singleton " "$SHELL_DIR/services/qmldir") ))
+[[ $(result singletons) == "$n/$n" ]] && ok "all $n singletons are instantiated" || ko "all $n singletons are instantiated ($(result singletons))"
+
+echo "== Nothing theme is optional (same configs/ on Arch and NixOS)"
+[[ $(result nothing) == "false/false bar=top/capsule lookDone=false" ]] && ok "without nothing.json: theme unavailable, the standard bar (top, capsule)" || ko "without nothing.json: theme unavailable, the standard bar (top, capsule) [$(result nothing)]"
+new_home
+mkdir -p "$HOME_DIR/.config/monolith"
+printf '{ "defaults": { "enabled": true }, "palette": {} }\n' >"$HOME_DIR/.config/monolith/nothing.json"
+run_harness services
+check "with nothing.json: loads without QML errors" no_qml_errors
+[[ $(result nothing) == "true/true bar=left/frame lookDone=true" ]] && ok "with nothing.json: theme active, its bar look applied" || ko "with nothing.json: theme active, its bar look applied [$(result nothing)]"
+jq '.barPosition = "bottom"' "$STATE/settings.json" >"$TMP/s.json" && cp "$TMP/s.json" "$STATE/settings.json"
+run_harness services
+[[ $(result nothing) == "true/true bar=bottom/frame lookDone=true" ]] && ok "the look is applied once: a later choice in Settings stays" || ko "the look is applied once: a later choice in Settings stays [$(result nothing)]"
+printf '{ "defaults": { "enabled": false } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
+run_harness services
+[[ $(result nothing) == true/false* ]] && ok "theme present but disabled: not active" || ko "theme present but disabled: not active [$(result nothing)]"
 
 echo "== YouTube Music token"
 if command -v python3 >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then

@@ -53,7 +53,8 @@ Overlay {
         Row {
             id: head
             width: parent.width; spacing: 6
-            Txt { text: String.fromCodePoint(0xf03e) + "   " + Strings.t("wallpaper"); color: Theme.white; font.pixelSize: 16; height: 32 }
+            Txt { text: Theme.nothing ? Strings.t("wallpaper").toUpperCase() : String.fromCodePoint(0xf03e) + "   " + Strings.t("wallpaper")
+                  color: Theme.white; font.pixelSize: 16; height: 32; font.family: Theme.fontSans; font.letterSpacing: Theme.nothing ? 2 : 0 }
             Item { width: 14; height: 1 }
             Btn { compact: true; text: Strings.t("wpStatic") + "  " + Wallpapers.images.length; active: win.kind === "image"; onActivated: { win.kind = "image"; grid.currentIndex = 0 } }
             Btn { compact: true; text: Strings.t("wpLive") + "  " + Wallpapers.videos.length; active: win.kind === "video"; onActivated: { win.kind = "video"; grid.currentIndex = 0 } }
@@ -67,8 +68,10 @@ Overlay {
         Rectangle {
             id: box
             anchors { top: head.bottom; topMargin: 12; left: parent.left; right: parent.right }
-            height: 34; color: "transparent"; border.width: 1; border.color: search.activeFocus ? Theme.white : Theme.line; radius: 4
-            Txt { id: mag; x: 10; height: parent.height; text: String.fromCodePoint(0xf002); color: Theme.grayMid }
+            height: 34; color: "transparent"; border.width: 1; border.color: search.activeFocus ? Theme.white : Theme.line; radius: Theme.nothing ? height / 2 : 4
+            Txt { id: mag; x: 10; height: parent.height; text: Theme.nothing ? "" : String.fromCodePoint(0xf002); color: Theme.grayMid
+                  width: Theme.nothing ? 14 : implicitWidth
+                  PulseLed { visible: Theme.nothing; x: 6; anchors.verticalCenter: parent.verticalCenter; active: search.activeFocus } }
             TextInput {
                 id: search
                 anchors { left: mag.right; leftMargin: 10; right: parent.right; rightMargin: 10; top: parent.top; bottom: parent.bottom }
@@ -84,7 +87,8 @@ Overlay {
                     else if (e.key === Qt.Key_Tab) { win.kind = win.kind === "image" ? "video" : "image"; grid.currentIndex = 0; e.accepted = true }
                     else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { win.choose(win.visibleList[grid.currentIndex]); e.accepted = true }
                 }
-                Txt { visible: search.text === ""; anchors.fill: parent; text: Strings.t("wpSearch"); color: Theme.grayMid; font.bold: false }
+                Txt { visible: search.text === ""; anchors.fill: parent; text: Theme.nothing ? Strings.t("wpSearch").toUpperCase() : Strings.t("wpSearch")
+                      color: Theme.grayMid; font.bold: false; font.letterSpacing: Theme.nothing ? 1.5 : 0 }
             }
         }
 
@@ -166,7 +170,8 @@ Overlay {
                     }
                 }
                 Txt { anchors { top: frame.bottom; topMargin: 6; left: frame.left; right: frame.right } horizontalAlignment: Text.AlignHCenter
-                      text: cell.modelData.name; color: cell.isCurrent ? Theme.white : Theme.grayLight; font.pixelSize: Theme.small; font.bold: cell.isCurrent }
+                      text: Theme.nothing ? cell.modelData.name.toUpperCase() : cell.modelData.name; color: cell.isCurrent ? Theme.white : Theme.grayLight
+                      font.pixelSize: Theme.small; font.bold: cell.isCurrent; font.letterSpacing: Theme.nothing ? 1 : 0 }
                 MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; onClicked: { grid.currentIndex = cell.index; pulse.restart(); win.choose(cell.modelData) } }
             }
             Txt {

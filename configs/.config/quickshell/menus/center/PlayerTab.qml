@@ -65,9 +65,12 @@ Column {
                     readonly property real shown: drag.pressed ? drag.f : Media.progress
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width; height: drag.containsMouse || drag.pressed ? 6 : 4; radius: height / 2; color: Theme.grayDark
+                        width: parent.width; height: drag.containsMouse || drag.pressed ? 6 : 4; radius: height / 2
+                        color: Theme.nothing ? "transparent" : Theme.grayDark
                         Behavior on height { NumberAnimation { duration: Theme.dur(120) } }
+                        DotMeter { visible: Theme.nothing; anchors.fill: parent; dot: 5; value: seek.shown }
                         Rectangle {
+                            visible: !Theme.nothing
                             width: parent.width * seek.shown; height: parent.height; radius: parent.radius
                             gradient: Gradient {
                                 orientation: Gradient.Horizontal

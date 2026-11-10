@@ -38,11 +38,12 @@ PanelWindow {
         width: Math.min(win.cardWidth, parent.width - 40)
         height: Math.min(win.cardHeight, parent.height - 40)
         Behavior on height { enabled: win.entered; NumberAnimation { duration: Theme.dur(180); easing.type: Easing.OutCubic } }
-        radius: Theme.menuRadius
+        radius: Theme.nothing ? 20 : Theme.menuRadius
         color: Theme.panelBg
         border.width: 1
-        border.color: Theme.line
+        border.color: Theme.nothing ? Nothing.line : Theme.line
         clip: true
+        DotGrid { anchors.fill: parent; anchors.margins: 10; strength: 0.05; z: -1 }
         opacity: win.shown ? 1 : 0
         scale: win.shown ? 1 : 0.94
         Behavior on opacity { NumberAnimation { duration: Theme.dur(win.shown ? 220 : 160); easing.type: Easing.OutCubic } }

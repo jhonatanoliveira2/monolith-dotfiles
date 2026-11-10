@@ -11,6 +11,7 @@ Singleton {
     readonly property bool dnd: Settings.dnd
     readonly property var history: server.item ? server.item.trackedNotifications.values : []
     readonly property int count: history.length
+    signal arrived(bool critical)         // a toast is shown (Nothing theme: components/EdgeGlow.qml)
     property var popups: []              // Notification objects currently shown as toasts
     property var internal: []            // simple {id, title, body, image} toasts raised by IPC (e.g. screenshots)
     property var expiry: ({})            // id -> ms timestamp (0 = until dismissed)
@@ -33,6 +34,7 @@ Singleton {
     function receive(n) {
         n.tracked = true
         if (Settings.dnd && n.urgency !== NotificationUrgency.Critical) return
+        root.arrived(n.urgency === NotificationUrgency.Critical)
         const t = n.urgency === NotificationUrgency.Critical && Settings.criticalSticky ? 0
             : (n.expireTimeout > 0 ? n.expireTimeout * 1000 : Config.toastTimeout)
         expiry[n.id] = t > 0 ? Date.now() + t : 0

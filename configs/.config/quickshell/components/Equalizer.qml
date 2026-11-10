@@ -11,7 +11,7 @@ Item {
     property int bars: 4
     property int barWidth: 2
     property color color: Theme.grayLight
-    implicitWidth: bars * barWidth + (bars - 1) * 2
+    implicitWidth: Theme.nothing ? bars * (barWidth + 1) + (bars - 1) : bars * barWidth + (bars - 1) * 2
     implicitHeight: 12
 
     property real t: 0
@@ -22,11 +22,40 @@ Item {
         onTriggered: root.t += 1
     }
 
+    // Nothing theme: each bar is a column of LEDs
+    readonly property real ledSize: root.barWidth + 1
+    readonly property int leds: Math.max(2, Math.floor((root.height + 1) / (ledSize + 1)))
     Row {
+        visible: Theme.nothing
+        anchors.bottom: parent.bottom
+        spacing: 1
+        Repeater {
+            model: Theme.nothing ? root.bars : 0
+            delegate: Column {
+                required property int index
+                readonly property real wobble: 0.55 + 0.45 * Math.abs(Math.sin(root.t * (0.9 + index * 0.37) + index * 1.7))
+                readonly property real lvl: root.running ? Math.max(0.18, root.level > 0.02 ? root.level * wobble : 0.2 + 0.6 * wobble) : 0.15
+                readonly property int lit: Math.max(1, Math.round(root.leds * Math.min(1, lvl)))
+                spacing: 1
+                Repeater {
+                    model: root.leds
+                    delegate: Led {
+                        required property int index
+                        width: root.ledSize; height: root.ledSize
+                        lit: root.leds - 1 - index < parent.lit
+                        litColor: root.color
+                        offColor: Qt.alpha(root.color, 0.18)
+                    }
+                }
+            }
+        }
+    }
+    Row {
+        visible: !Theme.nothing
         anchors.bottom: parent.bottom
         spacing: 2
         Repeater {
-            model: root.bars
+            model: Theme.nothing ? 0 : root.bars
             delegate: Rectangle {
                 required property int index
                 readonly property real wobble: 0.55 + 0.45 * Math.abs(Math.sin(root.t * (0.9 + index * 0.37) + index * 1.7))

@@ -17,6 +17,7 @@ Rectangle {
     // depth: shadow below, a hairline of light along the top edge
     Rectangle { z: -1; x: 1; y: 3; width: parent.width - 2; height: parent.height; radius: parent.radius; color: "#000000"; opacity: 0.16 }
     Rectangle { x: parent.radius; y: 1; width: parent.width - 2 * parent.radius; height: 1; color: Theme.tint(0.12) }
+    DotGrid { anchors.fill: parent; anchors.margins: 1 }
 
     opacity: 0
     property real lift: 10

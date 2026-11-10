@@ -7,7 +7,9 @@ import Quickshell
 Singleton {
     // Colours come from the active theme (core/Palettes.qml, Settings > Themes); the default theme is the
     // original palette below, unchanged: #111111 / #eeeeee / #ffffff / #cccccc / #888888 / #444444.
-    readonly property var p: Palettes.active
+    // The Nothing theme (core/Nothing.qml, monochrome) replaces the colour theme with its greys.
+    readonly property var p: Nothing.monochrome ? Nothing.palette : Palettes.active
+    readonly property bool nothing: Nothing.active
     readonly property color background: p.background
     readonly property color foreground: p.foreground
     readonly property color white: p.white
@@ -25,11 +27,16 @@ Singleton {
     readonly property color pressed: tint(0.16)
     readonly property color selected: Palettes.alpha(p.accent, 0.12)
     readonly property color selectedBorder: grayLight
-    readonly property color critical: tint(0.14)
+    readonly property color critical: nothing ? Palettes.alpha(Nothing.alert, 0.22) : tint(0.14)
+    readonly property color alert: Nothing.alert                 // red: critical alerts only (Nothing theme)
     // translucent light overlay (white on the default theme)
     function tint(a) { return Palettes.alpha(p.tint, a) }
 
-    readonly property string font: "JetBrainsMono Nerd Font"
+    // Nothing theme: Space Mono for the interface (monospaced like the default, so layouts keep their widths),
+    // Space Grotesk for headings and notification text, Doto for large numbers; glyphs fall back to the Nerd Font
+    readonly property string font: nothing ? Nothing.fontMono : "JetBrainsMono Nerd Font"
+    readonly property string fontSans: nothing ? Nothing.fontSans : font
+    readonly property string fontDot: nothing ? Nothing.fontDot : font
     readonly property int fontSize: 13
     readonly property int small: 11
     readonly property int barHeight: 32
@@ -42,12 +49,13 @@ Singleton {
     readonly property int barSideGap: barStyle === "capsule" ? 18 : 0       // capsule: screen sides -> bar ends
     // frame style: opaque, from black (0 %) to the theme's tint colour (100 %; white on a black-and-white theme),
     // Settings > Bar > frame tone. (The palettes' `panel` is almost black: it is meant to be seen through.)
-    readonly property string barSolidHex: Palettes.mix("#000000", p.tint, Math.max(0, Math.min(100, Settings.frameTone)) / 100)
+    // (Nothing theme: OLED black, like NIHIL Shell's frame)
+    readonly property string barSolidHex: nothing ? "#000000" : Palettes.mix("#000000", p.tint, Math.max(0, Math.min(100, Settings.frameTone)) / 100)
     readonly property color barSolid: Palettes.alpha(barSolidHex, 1)
     readonly property int barFillet: 14                                     // capsule: concave curve into the screen edge
     readonly property int barThickness: barSize + barEdgeGap                // space the bar takes from the screen
     readonly property int frameWidth: 8                                     // frame: the other three edges
-    readonly property int frameRadius: 16                                   // frame: inner corners
+    readonly property int frameRadius: nothing ? 20 : 16                    // frame: inner corners
     readonly property int frameEdge: barStyle === "frame" ? frameWidth : 0
     readonly property int barIcon: Settings.barVertical ? 17 : fontSize     // module glyphs (larger on a side bar, which has no text)
     readonly property int menuRadius: 12

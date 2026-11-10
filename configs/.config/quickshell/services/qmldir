@@ -24,3 +24,4 @@ singleton AudioFx 1.0 AudioFx.qml
 FxChain 1.0 FxChain.qml
 singleton Jobs 1.0 Jobs.qml
 EventStream 1.0 EventStream.qml
+singleton Splash 1.0 Splash.qml

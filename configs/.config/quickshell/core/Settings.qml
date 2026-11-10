@@ -81,6 +81,7 @@ Singleton {
     property alias widgetOpacity: adapter.widgetOpacity
     property alias weatherLocation: adapter.weatherLocation
     property alias shellBlur: adapter.shellBlur
+    property alias opaque: adapter.opaque
     property alias launcherIcons: adapter.launcherIcons
     property alias launcherComments: adapter.launcherComments
     property alias launcherSort: adapter.launcherSort
@@ -101,6 +102,8 @@ Singleton {
     property alias themePreset: adapter.themePreset
     property alias themePalette: adapter.themePalette
     property alias themeFollow: adapter.themeFollow
+    property alias nothing: adapter.nothing
+    property alias nothingLookDone: adapter.nothingLookDone
     property alias themeVscode: adapter.themeVscode
     property alias micNoise: adapter.micNoise
     property alias micNoiseLevel: adapter.micNoiseLevel
@@ -285,6 +288,7 @@ Singleton {
             property bool barShadow: true          // capsule / frame styles
             property int barShadowStrength: 80     // %
             property string menuStyle: "auto"      // auto (attached on the sides / bottom) | attached | floating
+            property bool opaque: false            // no transparency in the shell: bar, menus, widgets (apps keep theirs)
             property bool shellBlur: true          // compositor blur behind the bar, menus, toasts and OSD
             // app launcher (menus/Launcher.qml)
             property bool launcherIcons: true
@@ -309,6 +313,8 @@ Singleton {
             property string themePreset: "nord"    // core/Palettes.qml presets
             property var themePalette: null        // last valid wpgtk palette + the wallpaper / monitor it came from
             property bool themeVscode: true        // workbench.colorCustomizations of VS Code follow the theme
+            property var nothing: ({})             // Nothing theme: runtime overrides of the Nix defaults (core/Nothing.qml)
+            property bool nothingLookDone: false   // the theme's bar look (left, frame) was applied once (core/Nothing.qml)
             property bool themeFollow: true        // dynamic theme regenerates on every wallpaper change (off: only on request)
             // microphone effects (Settings > Microphone, services/MicFx.qml)
             property bool micNoise: false          // RNNoise noise suppression

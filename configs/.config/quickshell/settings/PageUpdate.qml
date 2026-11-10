@@ -5,7 +5,9 @@ import "../core"
 import "../components"
 
 // Checks the local clone against its real remote / branch (scripts/update-check.sh), shows every failure as is,
-// then `git pull --ff-only` + the installer (configs only, no packages).
+// then `git pull --ff-only` + the installer (configs only, no packages). Installed by Nix (Distro.nixManaged), there
+// is no clone: the pinned flake revision is compared with the branch on GitHub and "Update now" runs the
+// Home Manager option programs.monolith.updateCommand in a terminal (flake update + rebuild).
 Column {
     id: root
     spacing: 8
@@ -14,13 +16,22 @@ Column {
     property var info: ({})
     property string log: ""
     readonly property int behind: info.behind !== undefined ? Number(info.behind) : -1
+    readonly property bool nix: Distro.nixManaged
+    readonly property string nixRev: String(Distro.nix.shortRev || "").slice(0, 7)
+    readonly property string nixCmd: String(Distro.nix.updateCommand || "")
+    readonly property bool nixNewer: nix && !!info.apihead && info.apihead !== nixRev
 
     function check() {
         upState = "checking"; info = ({})
-        checkProc.command = ["bash", Quickshell.shellPath("scripts/update-check.sh"), path, Registry.repoUrl]
+        checkProc.command = nix ? ["bash", Quickshell.shellPath("scripts/update-check.sh"), "", Distro.nix.repo || Registry.repoUrl, Distro.nix.branch || "main"]
+                                : ["bash", Quickshell.shellPath("scripts/update-check.sh"), path, Registry.repoUrl]
         checkProc.running = true
     }
     function update() {
+        if (nix) {
+            if (nixCmd) Quickshell.execDetached([Settings.launcherTerminal, "-e", "sh", "-c", nixCmd + "; echo; read -p 'Enter...' x"])
+            return
+        }
         upState = "updating"; log = ""
         const b = info.branch && info.branch !== "(detached)" ? info.branch : "main"
         updProc.command = ["sh", "-c", "set -e; export GIT_TERMINAL_PROMPT=0; if [ -d \"$1/.git\" ]; then git -C \"$1\" pull --ff-only origin \"$3\"; else git clone --branch \"$3\" \"$2\" \"$1\"; fi; " +
@@ -36,7 +47,7 @@ Column {
                 const o = {}
                 for (const line of text.split("\n")) { const i = line.indexOf("="); if (i > 0) o[line.slice(0, i)] = line.slice(i + 1) }
                 root.info = o
-                root.upState = o.error || (o.clone === "0" && o.api !== "200") ? "failed" : "idle"
+                root.upState = o.error || (o.clone === "0" && o.api !== "200" && !root.nix) ? "failed" : "idle"
             }
         }
         stderr: StdioCollector { onStreamFinished: if (text.trim()) root.log = text.trim().split("\n").slice(-4).join("\n") }
@@ -52,6 +63,9 @@ Column {
         if (upState === "checking") return Labels.t("checking")
         if (upState === "updating") return Labels.t("updating")
         if (info.error) return Labels.t("failed") + ": " + info.error
+        if (nix) return Labels.t("upNix") + "  ·  " + Labels.t("upNixRev") + " " + (nixRev || "?")
+                        + (Distro.nix.lastModified ? " (" + Distro.nix.lastModified + ")" : "")
+                        + (nixNewer ? "  ·  " + Labels.t("upNixNew") + " " + info.apihead : info.apihead ? "  ·  " + Labels.t("upToDate") : "")
         if (info.clone === "0") return Labels.t("notCloned") + (info.apihead ? "  ·  " + Labels.t("upLatest") + " " + info.apihead : "")
         if (upState === "done") return Labels.t("done")
         if (behind > 0) return behind + " " + Labels.t("behind")
@@ -80,15 +94,22 @@ Column {
                 spacing: 6; topPadding: 4
                 Btn { compact: true; icon: Theme.glyph.refresh; text: Labels.t("check"); onActivated: root.check() }
                 Btn {
-                    compact: true; active: root.behind > 0 || root.info.clone === "0"; confirm: Number(root.info.dirty) > 0
-                    text: root.info.clone === "0" ? Labels.t("clone") : Labels.t("updateNow")
+                    visible: !root.nix || root.nixCmd !== ""
+                    compact: true; active: root.nix ? root.nixNewer : root.behind > 0 || root.info.clone === "0"; confirm: Number(root.info.dirty) > 0
+                    text: root.info.clone === "0" && !root.nix ? Labels.t("clone") : Labels.t("updateNow")
                     onActivated: root.update()
                 }
             }
         }
     }
 
+    Txt {
+        visible: root.nix; width: parent.width; wrapMode: Text.Wrap; elide: Text.ElideNone; font.pixelSize: Theme.small; font.bold: false; color: Theme.grayMid
+        text: Labels.t("upNixHint") + (root.nixCmd ? "\n" + root.nixCmd
+              : "\n" + Labels.t("upNixNoCmd") + "\n  nix flake update monolith --flake <flake>\n  sudo nixos-rebuild switch --flake <flake>")
+    }
     Rectangle {
+        visible: !root.nix
         width: parent.width; height: 32; color: "transparent"; border.width: 1; border.color: Theme.line; radius: Theme.radius
         Txt { id: pl; x: 12; width: 110; height: parent.height; text: Labels.t("path"); color: Theme.grayMid }
         TextInput {

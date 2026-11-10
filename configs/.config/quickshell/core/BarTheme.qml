@@ -37,7 +37,7 @@ Singleton {
     function tint(a) { return light ? Palettes.alpha(Palettes.mix(base, "#000000", 0.3), a * 1.2) : Theme.tint(a) }
     readonly property color hover: tint(0.08)
     readonly property color pressed: tint(0.16)
-    readonly property color critical: tint(0.14)
+    readonly property color critical: Theme.nothing ? Theme.critical : tint(0.14)
     readonly property color selected: Palettes.alpha(light ? shade(p.accent, 3.2) : p.accent, light ? 0.18 : 0.12)
     readonly property color line: light ? Palettes.alpha(base, 0.35) : Theme.line
 }

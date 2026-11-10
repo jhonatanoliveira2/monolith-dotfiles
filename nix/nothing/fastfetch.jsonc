@@ -1,0 +1,43 @@
+// MONOLITH fastfetch, Nothing theme: the NixOS snowflake as a matrix of LEDs (nothing-logo.txt: $1 lit,
+// $2 half lit, $3 off), upper-case grey labels, dotted rules, memory and disk as rows of LEDs. Monochrome.
+// Written by the Home Manager module (programs.monolith.nothingTheme.fastfetch); the plain config of the
+// shell is used when the theme is off.
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "type": "file",
+        "source": "~/.config/fastfetch/nothing-logo.txt",
+        "color": { "1": "97", "2": "38;5;245", "3": "38;5;237" },
+        "padding": { "left": 2, "top": 1, "right": 4 }
+    },
+    "display": {
+        "separator": "  ",
+        "color": { "keys": "38;5;245", "title": "97", "output": "97" },
+        "key": { "width": 9 },
+        "constants": ["\u001b[38;5;238m· · · · · · · · · · · · · · · · · · · · · · · ·\u001b[0m"]
+    },
+    "modules": [
+        { "type": "custom", "format": "\u001b[97;1mM O N O L I T H\u001b[0m  \u001b[38;5;245m·  N I X O S\u001b[0m" },
+        { "type": "custom", "format": "{$1}" },
+        { "type": "os", "key": "OS", "format": "{pretty-name}" },
+        { "type": "kernel", "key": "KERNEL", "format": "{release}" },
+        { "type": "uptime", "key": "UPTIME" },
+        { "type": "packages", "key": "PKGS" },
+        { "type": "wm", "key": "WM", "format": "{pretty-name}" },
+        { "type": "shell", "key": "SHELL", "format": "{pretty-name}" },
+        { "type": "terminal", "key": "TERM", "format": "{pretty-name}" },
+        { "type": "custom", "format": "{$1}" },
+        { "type": "cpu", "key": "CPU", "format": "{name}" },
+        { "type": "gpu", "key": "GPU", "format": "{name}" },
+        {
+            "type": "command", "key": "MEMORY",
+            "text": "free -b | awk 'NR==2{n=12;l=int($3/$2*n+0.5);s=\"\";for(i=0;i<n;i++)s=s (i<l?\"\\033[97m●\":\"\\033[38;5;238m●\");printf \"%s\\033[0m  %.1f / %.1f GiB\", s, $3/2^30, $2/2^30}'"
+        },
+        {
+            "type": "command", "key": "DISK",
+            "text": "df -B1 / | awk 'NR==2{n=12;l=int($3/$2*n+0.5);s=\"\";for(i=0;i<n;i++)s=s (i<l?\"\\033[97m●\":\"\\033[38;5;238m●\");printf \"%s\\033[0m  %.0f / %.0f GiB\", s, $3/2^30, $2/2^30}'"
+        },
+        { "type": "custom", "format": "{$1}" },
+        { "type": "custom", "format": "\u001b[97m●  \u001b[38;5;250m●  \u001b[38;5;245m●  \u001b[38;5;240m●  \u001b[38;5;236m●  \u001b[38;2;215;25;33m●\u001b[0m" }
+    ]
+}

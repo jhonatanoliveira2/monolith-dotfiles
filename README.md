@@ -51,7 +51,9 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 - **Monolith Settings app** — searchable pages for display (drag-and-drop monitor layout with snapping and auto-revert), audio, network, Bluetooth, power, storage cleanup, input and updates. Changes apply live through the Hyprland Lua API.
 - **Media menu** — cover crossfade, seekable progress, volume, player switcher and a searchable history of recently played tracks that plays again with one click.
 - **Hyprland in Lua** — modular `hyprland.lua` with separate files for keybindings, layout, rules and autostart.
-- **Safe installer** — dependency checks, automatic backups, rollback on failure and a dry-run restore.
+- **Safe installer (Arch Linux, CachyOS)** — dependency checks, automatic backups, rollback on failure and a dry-run restore.
+- **Declarative install (NixOS)** — a Nix flake: NixOS + Home Manager modules, a guided installer for the NixOS ISO, pinned versions, GRUB theme, Plymouth splash and a Quickshell greeter with the same look.
+- **Nothing theme (optional, NixOS)** — greys, Doto / Space Grotesk / Space Mono, LED meters, an edge glow on notifications and still wallpapers rendered as LED matrices per monitor (`monolith-dotmatrix`). Not affiliated with Nothing Technology Limited.
 - **Bilingual** — shell strings and documentation in English and Brazilian Portuguese.
 
 ## What's inside
@@ -66,6 +68,10 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 | 🎨 Appearance | GTK settings, wallpaper-derived palettes and cursor shaders |
 
 ## Quick start
+
+One repository, two ways in: the shell installer on **Arch Linux / CachyOS** and the Nix flake on **NixOS**. The desktop configuration in `configs/` is the same for both.
+
+### Arch Linux and CachyOS
 
 > [!CAUTION]
 > Some options are hardware-specific (monitors, input, language). Review [`docs/config.md`](docs/config.md) before installing.
@@ -172,15 +178,36 @@ cd monolith-dotfiles
 | `SUPER + Numpad +` | Zoom In | Increases cursor zoom factor by 0.3 |
 </details>
 
+### NixOS
+
+From the NixOS installer ISO (the minimal one is enough), connected to the network:
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles#install
+```
+
+The guided installer asks for the disk, user, hostname, locale, keyboard, LUKS and swap, shows a summary and only
+erases the disk after its name is typed back. On an installed NixOS, or in an existing flake, see
+[docs/nixos.md](docs/nixos.md#installing). Updates: Settings > Update, or
+`sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos`.
+The optional Nothing theme is one line in the configuration (`monolith.nothingTheme.enable = true;`,
+[docs/nothing-theme.md](docs/nothing-theme.md)).
+
 ## Repository map
 
 ```text
-configs/                 Desktop configuration payload copied into your home
-scripts/                 Installer, backup, restore, checks and import utility
+configs/                 Desktop configuration payload (copied into your home on Arch, linked by Home Manager on NixOS)
+scripts/                 Arch installer, backup, restore, checks and import utility
+flake.nix, flake.lock    The flake (packages, NixOS / Home Manager modules, installer, template)
+nix/                     NixOS: modules, packages, guided installer, checks, Nothing theme tools
+branding/                NixOS: GRUB theme, Plymouth splash and boot artwork sources
+greeter/                 NixOS: Quickshell greeter for greetd
+templates/nixos/         NixOS: starting configuration (nix flake init -t)
 docs/                    Paired English and Brazilian Portuguese guides
 assets/                  Brand artwork, installer previews and screenshots
 wallpapers/              Bundled static and live wallpapers
-tests/                   Installer and documentation checks
+tests/                   Lint, installer, shell (headless QML) and documentation checks
 tools/                   Utility for rendering terminal previews
 packages.txt             Required, optional and AUR package manifest
 LICENSE                  MIT
@@ -190,7 +217,9 @@ LICENSE                  MIT
 
 | Guide | English | Português (Brasil) |
 |---|---|---|
-| Installation and recovery | [Installation](docs/installation.md) | [Instalação](docs/instalacao.md) |
+| Installation and recovery (Arch, CachyOS) | [Installation](docs/installation.md) | [Instalação](docs/instalacao.md) |
+| NixOS: install, options, boot and login | [NixOS](docs/nixos.md) | [NixOS](docs/nixos.pt-br.md) |
+| Nothing theme and its wallpapers (NixOS) | [Nothing theme](docs/nothing-theme.md) | [Tema Nothing](docs/nothing-theme.pt-br.md) |
 | Configuration and hardware notes | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
 | Package rationale | [Dependencies](docs/dependencies.md) | [Dependências](docs/dependencias.md) |
 | Common issues | [Troubleshooting](docs/troubleshooting.md) | [Solução de problemas](docs/problemas-conhecidos.md) |

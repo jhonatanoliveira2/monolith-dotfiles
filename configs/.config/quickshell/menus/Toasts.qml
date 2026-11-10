@@ -102,7 +102,8 @@ PanelWindow {
                 readonly property var defaultAction: modelData.actions.find(a => a.identifier === "default") || null
                 readonly property var buttons: modelData.actions.filter(a => a.identifier !== "default")
                 tid: modelData.id
-                border.color: critical ? Theme.white : Theme.line
+                border.color: critical ? (Theme.nothing ? Theme.alert : Theme.white) : Theme.line
+                DotGrid { anchors.fill: parent; z: -1 }
 
                 onClicked: m => {
                     if (m.button === Qt.RightButton) { Notifs.dismiss(modelData); return }
@@ -122,11 +123,17 @@ PanelWindow {
                     Column {
                         width: parent.width - (pic.visible ? 46 : 0)
                         spacing: 3
-                        Txt { width: parent.width; text: modelData.appName; color: Theme.grayMid; font.pixelSize: Theme.small }
-                        Txt { width: parent.width; text: modelData.summary; color: Theme.foreground }
+                        Row {
+                            width: parent.width; spacing: 6
+                            Led { visible: Theme.nothing; anchors.verticalCenter: parent.verticalCenter; width: 6; height: 6
+                                  lit: true; litColor: toast.critical ? Theme.alert : Theme.white }
+                            Txt { width: parent.width - 12; text: Theme.nothing ? modelData.appName.toUpperCase() : modelData.appName
+                                  color: Theme.grayMid; font.pixelSize: Theme.small; font.letterSpacing: Theme.nothing ? 1.5 : 0 }
+                        }
+                        Txt { width: parent.width; text: modelData.summary; color: Theme.foreground; font.family: Theme.fontSans }
                         Txt {
                             visible: modelData.body !== ""
-                            width: parent.width; text: modelData.body; font.bold: false; font.pixelSize: 12
+                            width: parent.width; text: modelData.body; font.bold: false; font.pixelSize: 12; font.family: Theme.fontSans
                             textFormat: Text.StyledText; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight
                             onLinkActivated: link => Qt.openUrlExternally(link)
                         }

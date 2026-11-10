@@ -127,9 +127,14 @@ Singleton {
                 if [ -w "$s" ] && [ "$(cat "$s")" -ge "$n" ]; then echo $((n - 5)) > "$s"; fi
                 echo "$n" > "$e"
             done
-            r=/etc/udev/rules.d/99-monolith-charge-limit.rules
-            if [ "$n" -ge 100 ]; then rm -f "$r"
-            else printf 'SUBSYSTEM=="power_supply", KERNEL=="BAT*", ATTR{charge_control_end_threshold}="%s"\\n' "$n" > "$r"; fi`, "sh", String(Math.round(n))]
+            # kept across boots: a udev rule where /etc is writable (Arch); on NixOS /etc/udev is generated from
+            # the system configuration, so the value goes to /var/lib/monolith, applied by the NixOS module's udev rule
+            case "$(readlink -f /etc/udev/rules.d)" in
+                /nix/store/*|/etc/static/*) mkdir -p /var/lib/monolith; echo "$n" > /var/lib/monolith/charge-limit ;;
+                *)  r=/etc/udev/rules.d/99-monolith-charge-limit.rules
+                    if [ "$n" -ge 100 ]; then rm -f "$r"
+                    else printf 'SUBSYSTEM=="power_supply", KERNEL=="BAT*", ATTR{charge_control_end_threshold}="%s"\\n' "$n" > "$r"; fi ;;
+            esac`, "sh", String(Math.round(n))]
         limitWrite.running = true
     }
     Process { id: limitWrite; onExited: limitRead.running = true }

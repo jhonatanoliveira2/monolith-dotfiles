@@ -46,22 +46,25 @@ Column {
             Column {
                 anchors.centerIn: parent
                 spacing: 2
-                Txt { anchors.horizontalCenter: parent.horizontalCenter; text: clock.hh; font.pixelSize: 50; color: Theme.white }
+                Txt { anchors.horizontalCenter: parent.horizontalCenter; text: clock.hh; font.pixelSize: 50; color: Theme.white
+                      font.family: Theme.fontDot; font.weight: Theme.nothing ? Font.Black : Font.Bold }
                 // the three dots light up in turn, one per second
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 7
                     Repeater {
                         model: 3
-                        delegate: Rectangle {
+                        delegate: Led {
                             required property int index
-                            width: 7; height: 7; radius: 3.5
-                            color: dash.now.getSeconds() % 3 === index ? Theme.accent : Theme.grayDark
+                            width: 7; height: 7
+                            lit: dash.now.getSeconds() % 3 === index
+                            litColor: Theme.accent; offColor: Theme.nothing ? Nothing.off : Theme.grayDark
                             Behavior on color { ColorAnimation { duration: Theme.dur(300) } }
                         }
                     }
                 }
-                Txt { anchors.horizontalCenter: parent.horizontalCenter; text: Qt.formatTime(dash.now, "mm"); font.pixelSize: 50; color: Theme.grayLight }
+                Txt { anchors.horizontalCenter: parent.horizontalCenter; text: Qt.formatTime(dash.now, "mm"); font.pixelSize: 50; color: Theme.grayLight
+                      font.family: Theme.fontDot; font.weight: Theme.nothing ? Font.Black : Font.Bold }
             }
             Txt {
                 anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 10 }
@@ -86,8 +89,8 @@ Column {
                 x: 12; y: 8; width: parent.width - 24; height: 26
                 Txt {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: { const s = dash.loc.standaloneMonthName(cal.month, Locale.LongFormat); return s.charAt(0).toUpperCase() + s.slice(1) + "  " + cal.year }
-                    color: Theme.white
+                    text: { const s = dash.loc.standaloneMonthName(cal.month, Locale.LongFormat); const t = s.charAt(0).toUpperCase() + s.slice(1) + "  " + cal.year; return Theme.nothing ? t.toUpperCase() : t }
+                    color: Theme.white; font.letterSpacing: Theme.nothing ? 1.5 : 0
                 }
                 Row {
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter }
@@ -124,14 +127,15 @@ Column {
                         Rectangle {
                             anchors.centerIn: parent
                             width: 26; height: 21; radius: 10.5
-                            color: parent.today ? Theme.accent : "transparent"
+                            color: parent.today && !Theme.nothing ? Theme.accent : "transparent"
+                            border.width: parent.today && Theme.nothing ? 1 : 0; border.color: Theme.white
                             scale: parent.today ? 1 : 0.6
                             Behavior on scale { NumberAnimation { duration: Theme.dur(220); easing.type: Easing.OutBack } }
                         }
                         Txt {
                             anchors.centerIn: parent
                             text: parent.inMonth ? parent.day : parent.day < 1 ? cal.prevDays + parent.day : parent.day - cal.days
-                            color: parent.today ? Theme.onAccent : parent.inMonth ? Theme.foreground : Theme.grayDark
+                            color: parent.today ? (Theme.nothing ? Theme.white : Theme.onAccent) : parent.inMonth ? Theme.foreground : Theme.grayDark
                             font.pixelSize: 11; font.bold: parent.today
                         }
                     }
@@ -173,7 +177,7 @@ Column {
                     spacing: 1
                     Row {
                         spacing: 8
-                        Txt { text: Weather.ok ? Weather.temp + "°" : "—"; font.pixelSize: 26; color: Theme.white }
+                        Txt { text: Weather.ok ? Weather.temp + "°" : "—"; font.pixelSize: 26; color: Theme.white; font.family: Theme.fontDot }
                         Txt { anchors.bottom: parent.bottom; anchors.bottomMargin: 5; visible: Weather.ok; text: Weather.tmax + "° / " + Weather.tmin + "°"; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
                     }
                     Txt { width: parent.width; text: Weather.ok ? Weather.desc : Weather.loading ? Labels.pick(["Carregando…", "Loading…"]) : Labels.pick(["Clima indisponível", "Weather unavailable"]); color: Theme.foreground; font.bold: false }
@@ -201,7 +205,14 @@ Column {
                         required property var modelData
                         spacing: 6
                         Txt { anchors.horizontalCenter: parent.horizontalCenter; text: Math.round(modelData.v); color: Theme.white; font.pixelSize: 10 }
+                        DotMeter {
+                            visible: Theme.nothing
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            vertical: true; width: 7; height: 140; dot: 7; gap: 3
+                            value: modelData.v / 100
+                        }
                         Rectangle {
+                            visible: !Theme.nothing
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 12; height: 140; radius: 6
                             color: Theme.grayDark
@@ -235,7 +246,9 @@ Column {
             spacing: 3
             Txt { width: parent.width; text: Media.title; color: Theme.white }
             Txt { width: parent.width; text: Media.artist; color: Theme.grayMid; font.bold: false }
+            DotMeter { visible: Theme.nothing; width: parent.width; dot: 4; value: Media.progress }
             Rectangle {
+                visible: !Theme.nothing
                 width: parent.width; height: 3; radius: 1.5; color: Theme.grayDark
                 Rectangle { width: parent.width * Media.progress; height: parent.height; radius: 1.5; color: Theme.accent
                             Behavior on width { NumberAnimation { duration: Theme.dur(400) } } }

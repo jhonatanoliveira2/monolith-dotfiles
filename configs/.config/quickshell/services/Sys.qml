@@ -203,6 +203,7 @@ Singleton {
     }
     function reapply() { apply(chosen()); if (!Settings.touchpadEnabled) applyTouchpad() }
 
+
     // Blur behind the shell's surfaces: hypr/modules/window-rules.lua reads generated/shell-blur (0 / 1) when the
     // config loads, so a change writes the flag and reloads Hyprland (Sys then reapplies the Settings choices).
     // At startup the flag is only rewritten (and Hyprland reloaded) when it differs from the setting.

@@ -13,7 +13,8 @@ Singleton {
 
     readonly property string tag: "micfx"
     readonly property string nodeName: "monolith_mic"
-    readonly property string plugin: "/usr/lib/ladspa/librnnoise_ladspa.so"
+    // found by checkProc: LADSPA_PATH, the FHS folders (Arch) and the Nix profiles (NixOS / Home Manager)
+    property string plugin: "/usr/lib/ladspa/librnnoise_ladspa.so"
     readonly property real maxDb: 12
     readonly property var bands: [
         { label: "bq_lowshelf", freq: 100, q: 0.707 }, { label: "bq_peaking", freq: 300, q: 1.0 },
@@ -117,7 +118,8 @@ Singleton {
     }
     Process {
         id: checkProc
-        command: ["test", "-f", root.plugin]
+        command: ["sh", "-c", 'IFS=:; for d in $LADSPA_PATH /usr/lib/ladspa /usr/lib64/ladspa "$HOME/.nix-profile/lib/ladspa" "/etc/profiles/per-user/$USER/lib/ladspa" /run/current-system/sw/lib/ladspa; do [ -f "$d/librnnoise_ladspa.so" ] && { echo "$d/librnnoise_ladspa.so"; exit 0; }; done; exit 1']
+        stdout: StdioCollector { onStreamFinished: if (text.trim()) root.plugin = text.trim() }
         onExited: code => {
             root.hasRnnoise = code === 0
             console.log("[micfx] rnnoise plugin " + (root.hasRnnoise ? "found" : "missing") + ": " + root.plugin)

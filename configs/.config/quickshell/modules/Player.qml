@@ -91,8 +91,15 @@ Item {
                 color: Media.playing || root.expanded ? BarTheme.grayLight : BarTheme.grayMid
                 Behavior on color { ColorAnimation { duration: Theme.dur(200) } }
             }
+            DotMeter {   // Nothing theme: the progress as a row of tiny LEDs
+                visible: Theme.nothing && Media.length > 0
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; bottomMargin: 5 }
+                dot: 2; gap: 2
+                value: Media.progress
+                litColor: BarTheme.grayLight; offColor: Qt.alpha(BarTheme.grayMid, 0.3)
+            }
             Rectangle {   // progress line
-                visible: Media.length > 0
+                visible: !Theme.nothing && Media.length > 0
                 anchors { left: parent.left; bottom: parent.bottom; bottomMargin: 6 }
                 width: parent.width; height: 1
                 color: BarTheme.grayDark
@@ -121,9 +128,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: ctl.implicitWidth + 12
             height: parent.height - 10
-            radius: 4
+            radius: Theme.nothing ? height / 2 : 4
             // light glass over the bar (follows its opacity setting); the bright controls keep it readable
-            color: Palettes.alpha(Theme.p.panel, Math.min(0.5, Config.barOpacity * 0.6))
+            color: Palettes.alpha(Theme.p.panel, Settings.opaque ? 1 : Math.min(0.5, Config.barOpacity * 0.6))
             border.width: 1
             border.color: BarTheme.line
             opacity: root.expanded && !root.menuOpen ? 1 : 0

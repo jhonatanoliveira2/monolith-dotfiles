@@ -14,8 +14,10 @@ Singleton {
     property int titleMax: Math.max(titleMin, Math.min(80, Settings.titleMax))
     property int volumeStep: Settings.volumeStep
     property real animationScale: Settings.animationScale
-    property real barOpacity: Settings.barOpacity
-    property real menuOpacity: Settings.menuOpacity
+    // Settings > Bar > "No transparency" makes every surface of the shell opaque
+    property real barOpacity: Settings.opaque ? 1 : Settings.barOpacity
+    property real menuOpacity: Settings.opaque ? 1 : Settings.menuOpacity
+    property real widgetOpacity: Settings.opaque ? 1 : Settings.widgetOpacity
     property string settingsMode: Settings.settingsMode   // "window" | "overlay"
     property int toastTimeout: Settings.toastTimeout   // ms (critical notifications stay until dismissed, see Settings.criticalSticky)
 

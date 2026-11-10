@@ -5,12 +5,17 @@
 # Usage:  wallpaper-menu              open the rofi menu (run it again to close it)
 #         wallpaper-menu --restore    re-apply the last choice (put it in your autostart)
 #         wallpaper-menu --clear-cache   delete the generated previews
+#         wallpaper-menu --clear-dotmatrix   delete the dot-matrix renderings (Nothing theme)
 #         wallpaper-menu --list <image|video>              path<TAB>preview per line (used by the shell picker)
 #         wallpaper-menu --set <static|live> <file> [ALL|out1,out2]   apply without a menu (used by the shell)
 # The Quickshell picker (Settings > Wallpapers) passes its options through the WALLPAPER_* variables below.
 #
 # Dependencies: rofi hyprctl jq awww mpvpaper  |  previews: ffmpeg  |  notifications: libnotify (optional)
 # Theme: ~/.config/hypr/rofi/wallpaper-menu.rasi (colours and border are variables at its top)
+# Nothing theme (~/.config/monolith/nothing.json, written by the NixOS / Home Manager module): with its
+# wallpaper style "dotmatrix", a still wallpaper is shown as an LED matrix rendered by monolith-dotmatrix for
+# each monitor at its native size: the build-time rendering when it matches, else one cached in
+# ~/.cache/monolith/dotmatrix. The original file is never modified, and it is what the state file records.
 set -uo pipefail
 QUIET=0
 
@@ -31,6 +36,9 @@ LIVE_FILES=(
 THEME="${WALLPAPER_ROFI_THEME:-${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/wallpaper-menu.rasi}"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/wallpaper-menu"
 STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper-menu/last"
+DM_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/dotmatrix"
+NOTHING_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/monolith/nothing.json"
+SHELL_SETTINGS="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell-monolith/settings.json"
 
 THUMB_W=480 THUMB_H=270                 # preview size (16:9)
 GRID_COLUMNS=4 GRID_LINES=3             # wallpaper grid
@@ -131,12 +139,15 @@ element-icon { size: 12em; horizontal-align: 0.5; }
 element-text { horizontal-align: 0.5; }"
 
 MONITORS=() MONITOR_LABELS=()
+declare -A MONITOR_SIZE=()              # native pixels as shown (rotated outputs swapped)
 load_monitors() {
-    local name label
-    while IFS=$'\t' read -r name label; do
+    local name label size
+    while IFS=$'\t' read -r name label size; do
         MONITORS+=("$name")
         MONITOR_LABELS+=("$name  ·  $label")
-    done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[] | [.name, "\(.width)x\(.height)@\(.refreshRate | round)"] | @tsv')
+        MONITOR_SIZE[$name]=$size
+    done < <(hyprctl monitors -j 2>/dev/null | jq -r '.[] | [.name, "\(.width)x\(.height)@\(.refreshRate | round)",
+        (if (.transform % 2) == 1 then "\(.height)x\(.width)" else "\(.width)x\(.height)" end)] | @tsv')
     (( ${#MONITORS[@]} )) || die "No active Hyprland monitors found."
 }
 
@@ -183,6 +194,63 @@ choose_file() {
 }
 
 # ───────────────────────────── applying wallpapers ───────────────────────
+# ─────────────────────── Nothing theme: dot-matrix wallpapers ──────────────────
+# dm_load: 0 when still wallpapers are to be shown as LED matrices; sets DM_ARGS / DM_KEY / DM_BUILT*.
+# The look comes from WALLPAPER_NOTHING (the shell passes it, current to the second) or else from
+# nothing.json's defaults plus the shell's saved overrides.
+DM_ARGS=() DM_KEY="" DM_BUILT_DIR="" DM_BUILT_KEY=""
+dm_load() {
+    [[ -r $NOTHING_JSON ]] && need jq && need monolith-dotmatrix || return 1
+    local look
+    if [[ -n ${WALLPAPER_NOTHING:-} ]]; then look=$WALLPAPER_NOTHING
+    else
+        look=$(jq -c --slurpfile s <(jq -c '.nothing // {}' "$SHELL_SETTINGS" 2>/dev/null || echo '{}') \
+            '.defaults * ($s[0] // {})' "$NOTHING_JSON" 2>/dev/null) || return 1
+    fi
+    local fields
+    fields=$(jq -r 'select(.enabled == true and .wallpaperStyle == "dotmatrix")
+        | [.ledSize // 6, .ledSpacing // 3, .ledShape // "circle", .dither // "none", .levels // 2,
+           (.invert // false), (.monochrome // true), .lit // "f2f2f2", .off // "141414", .background // "000000",
+           ((.contrast // 100) / 100), ((.brightness // 100) / 100)] | @tsv' <<<"$look" 2>/dev/null)
+    [[ -n $fields ]] || return 1
+    local size spacing shape dither levels invert mono lit off bg contrast brightness
+    IFS=$'\t' read -r size spacing shape dither levels invert mono lit off bg contrast brightness <<<"$fields"
+    DM_ARGS=(--size "$size" --spacing "$spacing" --shape "$shape" --dither "$dither" --levels "$levels"
+             --lit "${lit#\#}" --off "${off#\#}" --background "${bg#\#}" --contrast "$contrast" --brightness "$brightness")
+    [[ $invert == true ]] && DM_ARGS+=(--invert)
+    [[ $mono == true ]] || DM_ARGS+=(--color)
+    DM_KEY=$(monolith-dotmatrix --key "${DM_ARGS[@]}") || return 1
+    IFS=$'\t' read -r DM_BUILT_DIR DM_BUILT_KEY < <(jq -r '[.wallpapers.dir // "", .wallpapers.key // ""] | @tsv' "$NOTHING_JSON")
+    return 0
+}
+
+# dm_image <file> <monitor>: prints the picture to show on that monitor (the original when it cannot be
+# converted: animated, unreadable, unknown size)
+dm_image() {
+    local file=$1 mon=$2 size=${MONITOR_SIZE[$2]:-} sum name out
+    [[ -n $size ]] || { printf '%s\n' "$file"; return; }
+    sum=$(sha256sum <"$file" | cut -d' ' -f1)
+    # rendered at build time: same picture, same look, this monitor at this size
+    if [[ -n $DM_BUILT_DIR && $DM_BUILT_KEY == "$DM_KEY" && -r $DM_BUILT_DIR/index.tsv ]]; then
+        name=$(awk -F'\t' -v s="$sum" '$1 == s { print $2; exit }' "$DM_BUILT_DIR/index.tsv")
+        out=$DM_BUILT_DIR/$name/$mon.png
+        if [[ -n $name && -f $out ]] && [[ $(magick identify -format '%wx%h' "$out" 2>/dev/null) == "$size" ]]; then
+            printf '%s\n' "$out"; return
+        fi
+    fi
+    out=$DM_CACHE/$(printf '%s|%s|%s' "$sum" "$size" "$DM_KEY" | sha256sum | cut -c1-32).png
+    if [[ ! -s $out ]]; then
+        mkdir -p "$DM_CACHE"
+        if ! monolith-dotmatrix "$file" -o "$out" --resolution "$size" "${DM_ARGS[@]}" 2>"$DM_CACHE/last-error"; then
+            rm -f "$out"
+            notify "Dot matrix: $(tail -n1 "$DM_CACHE/last-error" 2>/dev/null) — showing the original."
+            printf '%s\n' "$file"; return
+        fi
+        touch "$out"
+    fi
+    printf '%s\n' "$out"
+}
+
 save_state() { # save_state <static|live> <outputs|ALL> [file]
     mkdir -p "${STATE_FILE%/*}"
     printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >"$STATE_FILE"
@@ -230,7 +298,14 @@ set_static() { # set_static <file>   (TARGETS / ALL_TARGETS already chosen)
     need awww || die "Missing dependency: awww"
     stop_live
     ensure_awww || die "Could not start awww-daemon."
-    awww img --outputs "$(join_by_comma "${TARGETS[@]}")" "${AWWW_ARGS[@]}" "$file" || die "awww failed to set the wallpaper."
+    if dm_load; then        # Nothing theme: one LED matrix per monitor, at its own resolution
+        local m
+        for m in "${TARGETS[@]}"; do
+            awww img --outputs "$m" "${AWWW_ARGS[@]}" "$(dm_image "$file" "$m")" || die "awww failed to set the wallpaper."
+        done
+    else
+        awww img --outputs "$(join_by_comma "${TARGETS[@]}")" "${AWWW_ARGS[@]}" "$file" || die "awww failed to set the wallpaper."
+    fi
     save_state static "$( ((ALL_TARGETS)) && echo ALL || join_by_comma "${TARGETS[@]}")" "$file"
 }
 
@@ -258,7 +333,14 @@ restore_last() {
     load_monitors
     case $kind in
         static)
-            need awww && ensure_awww && awww restore >/dev/null 2>&1
+            # Nothing theme: render again (from the cache) so a changed look or a new monitor is right
+            if [[ -f $file ]] && dm_load; then
+                if [[ $outputs == ALL ]]; then TARGETS=("${MONITORS[@]}") ALL_TARGETS=1
+                else IFS=, read -r -a TARGETS <<<"$outputs"; ALL_TARGETS=0; fi
+                QUIET=1 set_static "$file"
+            else
+                need awww && ensure_awww && awww restore >/dev/null 2>&1
+            fi
             ;;
         live)
             need mpvpaper && [[ -f $file ]] || exit 0
@@ -276,6 +358,7 @@ restore_last() {
 case ${1:-} in
     -h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --clear-cache) rm -rf -- "$CACHE_DIR/thumbs"; echo "previews removed"; exit 0 ;;
+    --clear-dotmatrix) rm -rf -- "$DM_CACHE"; echo "dot-matrix renderings removed"; exit 0 ;;
     --restore) need hyprctl && need jq || exit 1; restore_last ;;
     --list)
         QUIET=1

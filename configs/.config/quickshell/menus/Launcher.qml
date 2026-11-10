@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
+import QtQuick.Effects
 import "../core"
 import "../services"
 import "../components"
@@ -85,13 +86,21 @@ Overlay {
     Rectangle {
         id: box
         x: 14; y: 14; width: parent.width - 28; height: 44
-        color: "transparent"; border.width: 1; border.color: input.activeFocus ? Theme.white : Theme.line; radius: 6
-        Txt { id: mag; x: 14; height: parent.height; text: String.fromCodePoint(0xf002); color: Theme.grayMid; font.pixelSize: 15 }
+        color: "transparent"; border.width: 1; border.color: input.activeFocus ? Theme.white : Theme.line; radius: Theme.nothing ? height / 2 : 6
+        Txt { id: mag; x: 14; height: parent.height; text: Theme.nothing ? "" : String.fromCodePoint(0xf002); color: Theme.grayMid; font.pixelSize: 15
+              width: Theme.nothing ? 10 : implicitWidth
+              PulseLed { visible: Theme.nothing; x: 4; anchors.verticalCenter: parent.verticalCenter; active: input.activeFocus } }
+        Txt {   // Nothing theme: how many results, as a label
+            visible: Theme.nothing && list.count > 0
+            anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+            text: list.count + (Settings.language === "en" ? " APPS" : " APPS"); color: Theme.grayMid
+            font.pixelSize: Theme.small; font.letterSpacing: 1.5
+        }
         TextInput {
             id: input
-            anchors { left: mag.right; leftMargin: 12; right: parent.right; rightMargin: 12; top: parent.top; bottom: parent.bottom }
+            anchors { left: mag.right; leftMargin: 12; right: parent.right; rightMargin: Theme.nothing ? 90 : 12; top: parent.top; bottom: parent.bottom }
             verticalAlignment: TextInput.AlignVCenter
-            color: Theme.white; font.family: Theme.font; font.pixelSize: Theme.fontSize + 3
+            color: Theme.white; font.family: Theme.nothing ? Theme.fontSans : Theme.font; font.pixelSize: Theme.fontSize + 3
             clip: true
             onTextChanged: win.query = text
             Keys.onPressed: e => {
@@ -101,7 +110,8 @@ Overlay {
                 else if (e.key === Qt.Key_PageUp) { win.step(-win.rows); e.accepted = true }
                 else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { win.run(win.results[win.sel]); e.accepted = true }
             }
-            Txt { visible: input.text === ""; anchors.fill: parent; text: Strings.t("lnSearch"); color: Theme.grayMid; font.bold: false; font.pixelSize: Theme.fontSize + 1 }
+            Txt { visible: input.text === ""; anchors.fill: parent; text: Theme.nothing ? Strings.t("lnSearch").toUpperCase() : Strings.t("lnSearch")
+                  color: Theme.grayMid; font.bold: false; font.pixelSize: Theme.fontSize + 1; font.letterSpacing: Theme.nothing ? 1.5 : 0 }
         }
     }
 
@@ -113,7 +123,9 @@ Overlay {
         currentIndex: win.sel
         boundsBehavior: Flickable.StopAtBounds
         // the highlight slides between rows and the view scrolls smoothly to keep it visible
-        highlight: Rectangle { radius: 6; color: Theme.selected }
+        // (Nothing theme: an outlined pill and a lit LED at the row's start instead of a filled block)
+        highlight: Rectangle { radius: Theme.nothing ? height / 2 : 6; color: Theme.nothing ? "transparent" : Theme.selected
+                               border.width: Theme.nothing ? 1 : 0; border.color: Theme.grayMid }
         highlightMoveDuration: Theme.dur(140)
         highlightMoveVelocity: -1
         highlightRangeMode: ListView.ApplyRange
@@ -147,13 +159,17 @@ Overlay {
                     NumberAnimation { target: shift; property: "x"; to: 0; duration: Theme.dur(220); easing.type: Easing.OutCubic }
                 }
             }
+            Led { visible: Theme.nothing; x: 12; anchors.verticalCenter: parent.verticalCenter; width: 6; height: 6; lit: row.current }
             Item {
                 id: ic
-                x: 10; width: 30; height: parent.height
+                x: Theme.nothing ? 26 : 10; width: 30; height: parent.height
                 IconImage {
                     id: appIcon
                     visible: row.modelData.kind === "app" && Settings.launcherIcons && source != ""
                     anchors.centerIn: parent; implicitSize: 28
+                    // Nothing theme (monochrome): app icons in greys
+                    layer.enabled: Theme.nothing && Nothing.monochrome
+                    layer.effect: MultiEffect { saturation: -1 }
                     // iconPath(name, true) is "" when the theme lacks the icon: fall back to a generic one
                     source: row.modelData.kind !== "app" ? "" : Quickshell.iconPath(row.modelData.app.icon, true) || Quickshell.iconPath("application-x-executable", true)
                 }
@@ -171,6 +187,7 @@ Overlay {
                     width: parent.width
                     text: row.modelData.kind === "calc" ? "= " + row.modelData.text : row.modelData.kind === "cmd" ? Strings.t("lnRun") + ": " + row.modelData.text : row.modelData.app.name
                     color: row.current ? Theme.white : Theme.foreground; font.pixelSize: Theme.fontSize + 1
+                    font.family: Theme.nothing ? Theme.fontSans : Theme.font
                 }
                 Txt {
                     visible: Settings.launcherComments && text !== ""

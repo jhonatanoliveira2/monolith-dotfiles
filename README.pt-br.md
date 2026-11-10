@@ -51,7 +51,9 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 - **App de Configurações do Monolith** — páginas pesquisáveis de tela (arranjo dos monitores arrastando, com encaixe e reversão automática), áudio, rede, Bluetooth, energia, limpeza de armazenamento, entrada e atualização. As mudanças são aplicadas na hora pela API Lua do Hyprland.
 - **Menu de mídia** — transição de capas, barra de progresso, volume, troca de player e histórico pesquisável das faixas tocadas recentemente, que voltam a tocar com um clique.
 - **Hyprland em Lua** — `hyprland.lua` modular, com arquivos separados para atalhos, layout, regras e autostart.
-- **Instalador seguro** — verificação de dependências, backups automáticos, reversão em caso de falha e restauração com simulação.
+- **Instalador seguro (Arch Linux, CachyOS)** — verificação de dependências, backups automáticos, reversão em caso de falha e restauração com simulação.
+- **Instalação declarativa (NixOS)** — um flake Nix: módulos NixOS + Home Manager, instalador guiado para a ISO do NixOS, versões fixadas, tema do GRUB, splash do Plymouth e um greeter em Quickshell com o mesmo visual.
+- **Tema Nothing (opcional, NixOS)** — cinzas, Doto / Space Grotesk / Space Mono, medidores de LEDs, brilho de borda nas notificações e wallpapers estáticos convertidos em matriz de LEDs por monitor (`monolith-dotmatrix`). Sem vínculo com a Nothing Technology Limited.
 - **Bilíngue** — textos do shell e documentação em português do Brasil e inglês.
 
 ## O que vem incluído
@@ -66,6 +68,10 @@ https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
 | 🎨 Aparência | Ajustes GTK, paletas derivadas de wallpapers e shaders de cursor |
 
 ## Início rápido
+
+Um repositório, dois caminhos: o instalador em shell no **Arch Linux / CachyOS** e o flake Nix no **NixOS**. A configuração do desktop em `configs/` é a mesma nos dois.
+
+### Arch Linux e CachyOS
 
 > [!CAUTION]
 > Algumas opções dependem do hardware (monitores, entrada, idioma). Revise [`docs/configuracao.md`](docs/configuracao.md) antes de instalar.
@@ -172,6 +178,22 @@ cd monolith-dotfiles
 | `SUPER + Numpad +` | Zoom In | Aumenta o zoom do cursor em 0.3 |
 </details>
 
+### NixOS
+
+Pela ISO de instalação do NixOS (a mínima basta), conectado à rede:
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" \
+  run github:jhonatanoliveira2/monolith-dotfiles#install
+```
+
+O instalador guiado pergunta o disco, usuário, hostname, idioma, teclado, LUKS e swap, mostra um resumo e só
+apaga o disco depois que o nome dele é digitado de volta. Num NixOS já instalado, ou num flake existente, veja
+[docs/nixos.pt-br.md](docs/nixos.pt-br.md#instalação). Atualizações: Configurações > Atualização, ou
+`sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos`.
+O tema Nothing, opcional, é uma linha na configuração (`monolith.nothingTheme.enable = true;`,
+[docs/nothing-theme.pt-br.md](docs/nothing-theme.pt-br.md)).
+
 ## Estrutura do repositório
 
 ```text
@@ -180,7 +202,12 @@ scripts/                 Instalador, backup, restauração, verificações e imp
 docs/                    Guias em inglês e português do Brasil
 assets/                  Identidade visual, prévias do instalador e capturas
 wallpapers/              Wallpapers estáticos e animados incluídos
-tests/                   Testes do instalador e da documentação
+tests/                   Lint e testes do instalador, do shell (QML sem compositor) e da documentação
+flake.nix, flake.lock    O flake (pacotes, módulos NixOS / Home Manager, instalador, template)
+nix/                     NixOS: módulos, pacotes, instalador guiado, verificações, ferramentas do tema Nothing
+branding/                NixOS: fontes do tema do GRUB, do splash do Plymouth e da arte do boot
+greeter/                 NixOS: greeter em Quickshell para o greetd
+templates/nixos/         NixOS: configuração inicial (nix flake init -t)
 tools/                   Utilitário para renderizar prévias do terminal
 packages.txt             Relação de pacotes oficiais, opcionais e AUR
 LICENSE                  MIT
@@ -193,6 +220,8 @@ LICENSE                  MIT
 | Instalação e recuperação | [Installation](docs/installation.md) | [Instalação](docs/instalacao.md) |
 | Configuração e notas de hardware | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
 | Justificativas dos pacotes | [Dependencies](docs/dependencies.md) | [Dependências](docs/dependencias.md) |
+| NixOS: instalação, opções, boot e login | [NixOS](docs/nixos.md) | [NixOS](docs/nixos.pt-br.md) |
+| Tema Nothing e seus wallpapers (NixOS) | [Nothing theme](docs/nothing-theme.md) | [Tema Nothing](docs/nothing-theme.pt-br.md) |
 | Problemas comuns | [Troubleshooting](docs/troubleshooting.md) | [Solução de problemas](docs/problemas-conhecidos.md) |
 | Contribuição | [Contributing](CONTRIBUTING.en.md) | [Contribuindo](CONTRIBUTING.md) |
 

@@ -49,7 +49,15 @@ Column {
                 width: tl.width; height: 17
                 Txt { width: parent.width - val.width - 6; text: modelData.name; color: index === 0 ? Theme.white : Theme.foreground; font.pixelSize: Theme.small; font.bold: index === 0 }
                 Txt { id: val; anchors.right: parent.right; text: tl.fmt(modelData.v); color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
+                DotMeter {
+                    visible: Theme.nothing
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    dot: 2; gap: 2
+                    value: tl.items[0].v > 0 ? modelData.v / tl.items[0].v : 0
+                    litColor: index === 0 ? Theme.white : Theme.grayLight
+                }
                 Rectangle {
+                    visible: !Theme.nothing
                     anchors.bottom: parent.bottom
                     height: 2; radius: 1; color: Qt.alpha(Theme.accent, index === 0 ? 0.9 : 0.5)
                     width: parent.width * (tl.items[0].v > 0 ? modelData.v / tl.items[0].v : 0)
@@ -244,8 +252,12 @@ Column {
                             Txt { width: 150; anchors.verticalCenter: parent.verticalCenter; text: modelData.mount + "  " + modelData.fs; color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
                             Rectangle {
                                 x: 156; anchors.verticalCenter: parent.verticalCenter
-                                width: parent.width - 156 - info.width - 10; height: 6; radius: 3; color: Theme.grayDark
+                                width: parent.width - 156 - info.width - 10; height: 6; radius: 3
+                                color: Theme.nothing ? "transparent" : Theme.grayDark
+                                DotMeter { visible: Theme.nothing; anchors.fill: parent; dot: 5; value: part.f
+                                           litColor: part.f >= 0.9 ? Theme.white : Theme.grayLight }
                                 Rectangle {
+                                    visible: !Theme.nothing
                                     width: parent.width * part.f; height: parent.height; radius: 3
                                     gradient: Gradient {
                                         orientation: Gradient.Horizontal

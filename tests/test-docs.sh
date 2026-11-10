@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# test-docs.sh - documentation consistency: links, anchors, script references, bilingual pairs, package coverage.
+# test-docs.sh - documentation consistency: links, anchors, script references, bilingual pairs, package coverage,
+# and the structure of both install paths (Arch installer, NixOS flake).
 # Usage: bash tests/test-docs.sh
 set -uo pipefail
 export LC_ALL=C.UTF-8
@@ -72,7 +73,7 @@ echo "== bilingual pairs"
 [[ -f README.md && -f README.pt-br.md ]] && ok || ko "missing README pair"
 [[ -f CONTRIBUTING.md && -f CONTRIBUTING.en.md ]] && ok || ko "missing CONTRIBUTING pair"
 for pair in instalacao.md:installation.md configuracao.md:config.md dependencias.md:dependencies.md \
-    problemas-conhecidos.md:troubleshooting.md; do
+    problemas-conhecidos.md:troubleshooting.md nixos.pt-br.md:nixos.md nothing-theme.pt-br.md:nothing-theme.md; do
     [[ -f docs/${pair%%:*} && -f docs/${pair#*:} ]] && ok || ko "missing docs pair: $pair"
 done
 
@@ -98,6 +99,23 @@ for p in assets/screenshots assets/previews \
     .gitignore LICENSE packages.txt README.md README.pt-br.md CONTRIBUTING.md CONTRIBUTING.en.md; do
     [[ -e $p ]] && ok || ko "missing: $p"
 done
+
+echo "== structure of the NixOS side (flake)"
+for p in flake.nix flake.lock nix/meta.nix nix/packages.nix nix/pkgs/default.nix nix/modules/home.nix \
+    nix/modules/nixos/default.nix nix/install/monolith-install.sh nix/checks templates/nixos/flake.nix \
+    templates/nixos/configuration.nix branding/build.sh greeter/shell.qml wallpapers \
+    docs/nixos.md docs/nixos.pt-br.md docs/nothing-theme.md docs/nothing-theme.pt-br.md THIRD-PARTY-CREDITS.md; do
+    [[ -e $p ]] && ok || ko "missing: $p"
+done
+
+echo "== one repository: nothing points at the old branches"
+# the flake, the template, the installer and the update check follow the default branch; the guides may name the
+# old branches only where they explain how to leave them (docs/nothing-theme*.md)
+while IFS= read -r hit; do
+    ko "reference to a merged branch: $hit"
+done < <(grep -rnE 'feature/(nixos-support|nothing-theme)' flake.nix nix templates README.md README.pt-br.md \
+    CONTRIBUTING.md CONTRIBUTING.en.md docs/nixos.md docs/nixos.pt-br.md configs/.config/quickshell 2>/dev/null)
+grep -q 'branch = "main"' nix/meta.nix && ok || ko "nix/meta.nix does not follow main"
 
 echo
 printf 'checks passed: %s   failed: %s\n' "$PASS" "$FAIL"

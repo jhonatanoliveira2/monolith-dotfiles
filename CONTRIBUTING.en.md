@@ -15,27 +15,28 @@ Thank you for contributing to MONOLITH. Clear, verifiable and safe changes help 
 
 Scripts, comments, internal names and technical logs use English. Only user-facing messages are translated. Installer messages live in `scripts/lib/messages.sh`; keep placeholders in the same order in both languages.
 
-Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`.
+Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`; the NixOS guides use `name.md` and `name.pt-br.md` (`nixos`, `nothing-theme`).
 
-When changing dependencies, update `packages.txt` and explain why each package is needed. Do not promote commented references to active dependencies without confirming actual use.
+The repository serves two systems with the same configuration in `configs/`: Arch Linux / CachyOS (installer in `scripts/`) and NixOS (flake in `nix/`). A change in `configs/` applies to both: do not hard-code one distribution's paths (`/usr/bin/...`), detect at run time (`core/Distro.qml`). The Nothing theme is optional and only exists when `~/.config/monolith/nothing.json` is present: without it the shell must not change.
+
+When changing dependencies, update `packages.txt` (Arch) and `nix/packages.nix` or the modules in `nix/modules/nixos/` (NixOS) and explain why each package is needed. Do not promote commented references to active dependencies without confirming actual use.
 
 ## Checks
 
-Run the relevant tests before submitting:
+Run the relevant tests before submitting (the same ones CI runs on every push and pull request):
 
 ```bash
-bash tests/test-installer.sh
-bash tests/test-docs.sh
-for f in scripts/*.sh scripts/lib/*.sh tests/*.sh; do bash -n "$f"; done
+bash tests/lint.sh                   # bash -n, shellcheck, luacheck, Python and QML syntax
+bash tests/test-docs.sh              # links, anchors, bilingual pairs, structure
+bash tests/test-installer.sh         # Arch installer (temporary environments)
+bash tests/test-nixos-install.sh     # NixOS guided installer (no disk is touched)
+bash tests/test-shell.sh             # the shell's singletons without a compositor (needs quickshell)
+nix flake check                      # with Nix only: builds the packages and evaluates an example machine
 ```
 
-If ShellCheck is available, also run:
+`tests/lint.sh` skips the tools that are not installed (`--strict` turns that into a failure).
 
-```bash
-shellcheck -x -S warning scripts/*.sh scripts/lib/*.sh
-```
-
-Installer tests use temporary environments. If you change installer behaviour, add corresponding coverage to `tests/test-installer.sh`.
+The tests use temporary environments and never touch your session. If you change installer behaviour, add coverage to `tests/test-installer.sh`; if you change a shell service (`core/`, `services/`), to `tests/test-shell.sh`.
 
 ## Suggested workflow
 

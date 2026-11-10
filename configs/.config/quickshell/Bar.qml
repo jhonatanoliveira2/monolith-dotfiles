@@ -90,7 +90,7 @@ PanelWindow {
     Item {
         id: hot
         parent: band
-        visible: Settings.centerMenu
+        visible: Settings.centerMenu && !bar.vertical     // side bar: the clock opens it (top centre)
         width: bar.vertical ? parent.width : Math.max(centerZone.width + 48, parent.width * 0.16)
         height: bar.vertical ? Math.max(centerZone.height + 48, parent.height * 0.16) : parent.height
         x: (parent.width - width) / 2

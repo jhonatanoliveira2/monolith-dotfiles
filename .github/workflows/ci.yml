@@ -35,6 +35,9 @@ jobs:
       - name: Installer
         run: bash tests/test-installer.sh
 
+      - name: NixOS guided installer (no disk is touched)
+        run: bash tests/test-nixos-install.sh
+
       # needs quickshell: skipped (exit 0) where it is not installed, as on this runner
       - name: Shell (headless QML harnesses)
         run: bash tests/test-shell.sh

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Monolith
+Description=MONOLITH boot splash: the slab, its light sweep and a thin progress line
+ModuleName=script
+
+[script]
+ImageDir=@DIR@
+ScriptFile=@DIR@/monolith.script

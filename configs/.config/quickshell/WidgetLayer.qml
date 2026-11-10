@@ -23,8 +23,9 @@ PanelWindow {
     property bool tempOnly: false
     property bool addTemp: false            // editor: the "Add" buttons create temporary widgets
     // saved widgets (only when turned on, or while arranging them) and the temporary ones of the workspace shown here
-    readonly property var items: !tempOnly && (Settings.widgetsEnabled || editing) ? Widgets.onScreen(modelData.name) : []
+    // (each widget shows only on the workspace it was added on)
     readonly property int workspaceId: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : -1
+    readonly property var items: !tempOnly && (Settings.widgetsEnabled || editing) ? Widgets.onWorkspace(modelData.name, workspaceId) : []
     readonly property var temps: tempOnly || editing ? Widgets.tempsOn(workspaceId) : []
     onItemsChanged: console.log("[widgets]", modelData.name, editing ? "editor" : "desktop", "items:", items.length)
 

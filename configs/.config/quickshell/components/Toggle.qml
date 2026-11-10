@@ -12,7 +12,8 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: root.checked ? Theme.grayMid : Theme.grayDark
+        radius: Theme.nothing ? height / 2 : 0
+        color: Theme.nothing ? (root.checked ? Theme.white : Nothing.raised) : root.checked ? Theme.grayMid : Theme.grayDark
         border.width: 1
         border.color: Theme.line
         Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
@@ -21,7 +22,8 @@ Item {
         y: 2
         width: 14; height: 14
         x: root.checked ? parent.width - width - 2 : 2
-        color: Theme.foreground
+        radius: Theme.nothing ? width / 2 : 0
+        color: Theme.nothing ? (root.checked ? Nothing.surface : Nothing.muted) : Theme.foreground
         Behavior on x { NumberAnimation { duration: Theme.dur(120); easing.type: Easing.OutCubic } }
     }
     MouseArea { anchors.fill: parent; enabled: root.interactive; onClicked: root.toggled(!root.checked) }

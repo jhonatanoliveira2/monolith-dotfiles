@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MONOLITH wordmark: JetBrains Mono Bold, wide tracking (the shell's font). Rendered with fontconfig by build.sh. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 64" width="640" height="64">
+  <text x="329" y="47" text-anchor="middle" font-family="JetBrains Mono, JetBrainsMono Nerd Font" font-weight="700" font-size="44"
+        letter-spacing="18" fill="#eeeeee">MONOLITH</text>
+</svg>
