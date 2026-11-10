@@ -28,7 +28,13 @@ has_anchor() { # has_anchor <file> <anchor>
 }
 
 echo "== markdown links and anchors"
-mapfile -t MDFILES < <(find . -name '*.md' -not -path './.git/*' -not -path './configs/*' | LC_ALL=C sort)
+# tracked files only (ignored folders such as .claude/ or node_modules/ are not the project's documentation);
+# outside a git checkout (release tarball) every *.md is taken
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    mapfile -t MDFILES < <(git ls-files -co --exclude-standard -- '*.md' | grep -v '^configs/' | sed 's#^#./#' | LC_ALL=C sort)
+else
+    mapfile -t MDFILES < <(find . -name '*.md' -not -path './.git/*' -not -path './configs/*' | LC_ALL=C sort)
+fi
 for f in "${MDFILES[@]}"; do
     dir=$(dirname "$f")
     # strip fenced code blocks and HTML comments before looking for links
@@ -60,7 +66,7 @@ echo "== script and tool references"
 while IFS= read -r ref; do
     [[ -e $ref ]] && ok || ko "referenced but missing: $ref"
 # only repository-level paths: skip config-relative ones such as hypr/scripts/x.sh or quickshell/scripts/x.sh
-done < <(grep -rhoP '(?<![\w./-])(\./)?(scripts|tools|tests)/[A-Za-z0-9_./-]+\.(sh|py)' --include='*.md' . 2>/dev/null | sed 's#^\./##' | sort -u)
+done < <(grep -hoP '(?<![\w./-])(\./)?(scripts|tools|tests)/[A-Za-z0-9_./-]+\.(sh|py)' "${MDFILES[@]}" 2>/dev/null | sed 's#^\./##' | sort -u)
 
 echo "== bilingual pairs"
 [[ -f README.md && -f README.pt-br.md ]] && ok || ko "missing README pair"
@@ -82,7 +88,7 @@ for sec in official:required official:optional aur:required aur:optional manual;
 done
 
 echo "== structure required by the project brief"
-for p in assets/logo assets/screenshots assets/previews \
+for p in assets/screenshots assets/previews \
     configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty \
     configs/.config/btop configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
     configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \

@@ -45,6 +45,7 @@ ui_init() {
     else
         G_TL='+' G_TR='+' G_BL='+' G_BR='+' G_H='-' G_V='|'
         G_ON='#' G_OFF='-' G_OK='ok' G_ERR='xx' G_WARN='!!' G_INFO='*' G_ARROW='>' G_DOT='-'
+        # shellcheck disable=SC1003  # a literal backslash, not an escaped quote
         G_SPIN=('|' '/' '-' '\')
     fi
     local cols

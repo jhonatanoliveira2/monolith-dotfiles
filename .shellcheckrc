@@ -1,0 +1,5 @@
+# shellcheck configuration (tests/lint.sh, CI).
+# SC1091: sourced files are resolved at run time (scripts/lib/*.sh relative to the script).
+# SC2016: single-quoted "$1" is intended in scripts handed to `sh -c` / jq / awk.
+# SC2015: `A && B || C` is used on purpose where B cannot fail (ok / ko counters, printf).
+disable=SC1091,SC2016,SC2015

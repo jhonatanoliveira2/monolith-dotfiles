@@ -288,12 +288,12 @@ case ${1:-} in
         done
         exit 0 ;;
     --set)
-        kind=${2:-} file=${3:-} outs=${4:-ALL}
+        kind=${2:-} file=${3:-} sel=${4:-ALL}
         [[ -f $file ]] || die "File not found: $file"
         need hyprctl && need jq || die "Missing dependency: hyprctl / jq"
         load_monitors
-        if [[ $outs == ALL ]]; then TARGETS=("${MONITORS[@]}") ALL_TARGETS=1
-        else IFS=, read -r -a TARGETS <<<"$outs"; ALL_TARGETS=0; fi
+        if [[ $sel == ALL ]]; then TARGETS=("${MONITORS[@]}") ALL_TARGETS=1
+        else IFS=, read -r -a TARGETS <<<"$sel"; ALL_TARGETS=0; fi
         case $kind in static) set_static "$file" ;; live) set_live "$file" ;; *) die "Unknown kind: $kind" ;; esac
         exit 0 ;;
 esac

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the linters
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends shellcheck lua-check lua5.4 jq qt6-declarative-dev-tools
+
+      - name: Lint (shell, Lua, Python, QML syntax)
+        run: |
+          export PATH="$PATH:/usr/lib/qt6/bin"
+          command -v luac >/dev/null || sudo ln -s "$(command -v luac5.4)" /usr/local/bin/luac
+          bash tests/lint.sh --strict
+
+      - name: Documentation
+        run: bash tests/test-docs.sh
+
+      - name: Installer
+        run: bash tests/test-installer.sh

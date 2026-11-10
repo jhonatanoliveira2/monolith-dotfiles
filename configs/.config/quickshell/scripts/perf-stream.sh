@@ -24,7 +24,7 @@ prevRx=0 prevTx=0 prevT=0 n=0
 
 top3() {    # top3 <assoc name> -> "name<TAB>value..." of the three largest values
     local -n a=$1
-    local k b1= b2= b3= v1=-1 v2=-1 v3=-1
+    local k b1="" b2="" b3="" v1=-1 v2=-1 v3=-1
     for k in "${!a[@]}"; do
         local v=${a[$k]}
         if (( v > v1 )); then b3=$b2 v3=$v2 b2=$b1 v2=$v1 b1=$k v1=$v
@@ -75,6 +75,7 @@ while :; do
         { read -r st <"$d/stat"; } 2>/dev/null || continue
         pid=${d#/proc/}
         name=${st#*(}; name=${name%)*}; name=${name//$'\t'/ }
+        # shellcheck disable=SC2086  # word splitting wanted: the fields of /proc/<pid>/stat
         set -- ${st##*) }
         ticks=$(( ${12} + ${13} )) rss=$(( ${22} * PAGE ))
         curTicks[$pid]=$ticks

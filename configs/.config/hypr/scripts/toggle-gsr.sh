@@ -1,6 +1,6 @@
-# ~/.local/bin/toggle-gsr.sh
 #!/bin/bash
-PIDFILE=/tmp/osu-gsr.pid
+# toggle-gsr.sh - starts / stops a recording of the monitor under the pointer (gpu-screen-recorder).
+PIDFILE=${XDG_RUNTIME_DIR:-/tmp}/monolith-gsr.pid
 
 if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
     kill -INT "$(cat "$PIDFILE")"
