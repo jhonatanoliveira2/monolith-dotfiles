@@ -105,14 +105,19 @@ Singleton {
     readonly property string ytmBase: "http://127.0.0.1:" + Settings.ytmPort + "/api/v1/"
     function ytm(method, path, body) {
         if (ytmProc.running) return
-        const args = ["curl", "-sS", "--max-time", "3", "-X", method, "-H", "Content-Type: application/json"]
-        if (Settings.ytmToken) args.push("-H", "Authorization: Bearer " + Settings.ytmToken)
+        // The token never appears in a command line (readable by every local user in /proc/<pid>/cmdline): it
+        // travels in the process environment and curl reads the header from stdin (-H @-), fed by the shell's
+        // builtin printf.
+        const auth = Settings.ytmToken ? "printf 'Authorization: Bearer %s\\n' \"$YTM_TOKEN\" | " : ""
+        const hdr = Settings.ytmToken ? ["-H", "@-"] : []
+        const args = ["curl", "-sS", "--max-time", "3", "-X", method, "-H", "Content-Type: application/json"].concat(hdr)
         if (body) args.push("-d", body)
         // after an action, read the new state back in the same process
-        const read = ["curl", "-sS", "--max-time", "3", "-w", "\\n%{http_code}\\n"].concat(Settings.ytmToken ? ["-H", "Authorization: Bearer " + Settings.ytmToken] : [])
+        const read = ["curl", "-sS", "--max-time", "3", "-w", "\\n%{http_code}\\n"].concat(hdr)
         const q = a => "'" + String(a).replace(/'/g, "'\\''") + "'"
-        let sh = method === "GET" ? "" : args.map(q).join(" ") + " " + q(ytmBase + path) + " >/dev/null || exit 7; sleep 0.3; "
-        sh += read.map(q).join(" ") + " " + q(ytmBase + "shuffle") + "; " + read.map(q).join(" ") + " " + q(ytmBase + "repeat-mode")
+        let sh = method === "GET" ? "" : auth + args.map(q).join(" ") + " " + q(ytmBase + path) + " >/dev/null || exit 7; sleep 0.3; "
+        sh += auth + read.map(q).join(" ") + " " + q(ytmBase + "shuffle") + "; " + auth + read.map(q).join(" ") + " " + q(ytmBase + "repeat-mode")
+        ytmProc.environment = Settings.ytmToken ? ({ YTM_TOKEN: Settings.ytmToken }) : ({})
         ytmProc.command = ["sh", "-c", sh]
         ytmProc.running = true
     }

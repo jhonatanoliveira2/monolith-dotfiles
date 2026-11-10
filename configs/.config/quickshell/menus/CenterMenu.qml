@@ -31,10 +31,13 @@ MenuWindow {
             const t = out + line + "\n"
             out = t.length > 12000 ? t.slice(t.length - 12000) : t
         }
+        // saved in settings.json, or kept in memory for this session only (Settings > Bar > Center menu)
+        readonly property var history: Settings.centerHistoryKeep ? (Settings.centerHistory || []) : Settings.centerSession
         function remember(cmd) {
-            const h = Array.from(Settings.centerHistory || []).filter(x => x !== cmd)
+            const h = Array.from(history).filter(x => x !== cmd)
             h.push(cmd)
-            Settings.centerHistory = h.slice(-50)
+            if (Settings.centerHistoryKeep) Settings.centerHistory = h.slice(-50)
+            else Settings.centerSession = h.slice(-50)
             hIdx = -1
         }
         function run(cmd, inTerminal) {
@@ -83,13 +86,13 @@ MenuWindow {
                 Keys.onReturnPressed: e => col.run(text, e.modifiers & Qt.ShiftModifier)
                 Keys.onEnterPressed: e => col.run(text, e.modifiers & Qt.ShiftModifier)
                 Keys.onUpPressed: {
-                    const h = Settings.centerHistory || []
+                    const h = col.history
                     if (!h.length) return
                     col.hIdx = col.hIdx < 0 ? h.length - 1 : Math.max(0, col.hIdx - 1)
                     text = h[col.hIdx]
                 }
                 Keys.onDownPressed: {
-                    const h = Settings.centerHistory || []
+                    const h = col.history
                     if (col.hIdx < 0) return
                     col.hIdx = col.hIdx + 1 < h.length ? col.hIdx + 1 : -1
                     text = col.hIdx < 0 ? "" : h[col.hIdx]

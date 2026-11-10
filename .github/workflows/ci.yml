@@ -34,3 +34,7 @@ jobs:
 
       - name: Installer
         run: bash tests/test-installer.sh
+
+      # needs quickshell: skipped (exit 0) where it is not installed, as on this runner
+      - name: Shell (headless QML harnesses)
+        run: bash tests/test-shell.sh

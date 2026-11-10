@@ -73,6 +73,8 @@ Singleton {
     property alias centerMenu: adapter.centerMenu
     property alias centerTab: adapter.centerTab
     property alias centerHistory: adapter.centerHistory
+    property alias centerHistoryKeep: adapter.centerHistoryKeep
+    property var centerSession: []       // the history of this session only, used while centerHistoryKeep is off (never saved)
     property alias widgets: adapter.widgets
     property alias widgetsEnabled: adapter.widgetsEnabled
     property alias widgetsAutoHide: adapter.widgetsAutoHide
@@ -135,17 +137,75 @@ Singleton {
     // Writes are batched (several changes in a row become one write) and the change notification caused by
     // our own write is ignored: reloading it would bring back a half-written state and drop later changes.
     // Edits made to the file by hand are still picked up.
+    //
+    // A settings.json that cannot be used (not a JSON object, or unreadable) is never overwritten as it is: the
+    // adapter would otherwise keep its defaults and the next change would replace every preference with them.
+    // It is first copied to settings.json.bad-<date> (`writeBlocked` holds the writes until the copy exists;
+    // if the copy fails, or the file cannot be read at all, nothing is written in this session) and `corrupted`
+    // tells the shell, which shows a toast (shell.qml).
     property double lastWrite: 0
-    Timer { id: writeSoon; interval: 80; onTriggered: { root.lastWrite = Date.now(); file.writeAdapter() } }
+    property bool writeBlocked: false
+    property string loadError: ""        // why settings.json was not used ("" = fine)
+    property string corruptBackup: ""    // where the unusable file was copied
+    signal corrupted(string backup)
+
+    // "" when the text is a JSON object, else the reason
+    function jsonProblem(text) {
+        try {
+            const v = JSON.parse(text)
+            return v !== null && typeof v === "object" && !Array.isArray(v) ? "" : "not a JSON object"
+        } catch (e) { return String(e) }
+    }
+    function quarantine(why) {
+        if (backupProc.running) return
+        loadError = why
+        writeBlocked = true
+        writeSoon.stop()
+        const dst = file.path + ".bad-" + Qt.formatDateTime(new Date(), "yyyyMMdd-HHmmss")
+        console.warn("[settings] settings.json is not usable (" + why + "): keeping a copy in", dst)
+        backupProc.dst = dst
+        backupProc.command = ["cp", "-p", "--", file.path, dst]
+        backupProc.running = true
+    }
+    Process {
+        id: backupProc
+        property string dst: ""
+        stderr: StdioCollector { id: backupErr }
+        onExited: code => {
+            if (code !== 0) {
+                console.warn("[settings] the copy failed (" + backupErr.text.trim() + "): settings.json is left untouched, changes are not saved")
+                root.corrupted("")
+                return
+            }
+            root.corruptBackup = dst
+            root.writeBlocked = false
+            root.corrupted(dst)
+            writeSoon.restart()          // defaults + whatever was changed meanwhile
+        }
+    }
+    Timer { id: writeSoon; interval: 80; onTriggered: { if (root.writeBlocked) return; root.lastWrite = Date.now(); file.writeAdapter() } }
     FileView {
         id: file
         path: root.ready ? root.dir + "/settings.json" : ""
         watchChanges: true
         onFileChanged: if (!writeSoon.running && Date.now() - root.lastWrite > 1000) reload()
-        onLoaded: root.markLoaded()
-        onAdapterUpdated: writeSoon.restart()
+        onLoaded: {
+            const t = text()
+            const why = root.jsonProblem(t)
+            if (String(t).trim() === "") writeAdapter()          // nothing to lose: the defaults go in
+            else if (why) root.quarantine(why)
+            else if (!backupProc.running) { root.loadError = ""; root.writeBlocked = false }
+            root.markLoaded()
+        }
+        onAdapterUpdated: if (!root.writeBlocked) writeSoon.restart()
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) writeAdapter()
+            else {
+                // exists but cannot be read (permissions, I/O): writing over it would lose it
+                root.loadError = FileViewError.toString(error)
+                root.writeBlocked = true
+                console.warn("[settings] settings.json could not be read (" + root.loadError + "): changes are not saved in this session")
+            }
             root.markLoaded()
         }
         adapter: JsonAdapter {
@@ -218,7 +278,8 @@ Singleton {
             property bool centerMenu: true         // menus/CenterMenu.qml, opened by hovering the middle of the bar
             property int centerTab: 0              // its last open tab
             property var centerHistory: []         // its command line history (latest last)
-            property string weatherLocation: ""    // wttr.in place ("" = by IP)
+            property bool centerHistoryKeep: true  // off: the history lives in memory only (commands may hold secrets)
+            property string weatherLocation: ""    // place geocoded by Open-Meteo ("" = located by IP, scripts/weather.sh)
             property string barStyle: "capsule"    // flat | capsule | frame (core/Theme.qml)
             property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
             property bool barShadow: true          // capsule / frame styles

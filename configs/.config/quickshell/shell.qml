@@ -13,6 +13,14 @@ import "components"
 ShellRoot {
     Component.onCompleted: { Sys.init(); Themes.init(); MicFx.init(); AudioFx.init() }
 
+    // settings.json was unusable: it was copied aside before anything is written (core/Settings.qml)
+    Connections {
+        target: Settings
+        function onCorrupted(backup) {
+            Notifs.toast(Strings.t("settingsBad"), backup ? Strings.t("settingsBadCopy") + " " + backup : Strings.t("settingsBadNoCopy"))
+        }
+    }
+
     SettingsWindow {}
     Welcome {}
 

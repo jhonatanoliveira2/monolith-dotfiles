@@ -307,19 +307,27 @@ Singleton {
         if (!remove && json === codeWritten) return
         if (codeProc.running) { fishSoon.restart(); return }
         codeWritten = json
-        // jq takes the keys as $c (--argjson); a file is rewritten only when the result differs
+        // jq takes the keys as $c (--argjson); a file is rewritten only when the result differs, through a
+        // temporary file next to it (never a half-written settings.json; a symlinked one keeps its link).
+        // A file jq cannot read (VS Code accepts comments and trailing commas, jq does not) is left as it is
+        // and named on stderr, so the reason shows up in `qs log`.
         const script = [
             'c=$1; shift',
             'for f; do',
             '  [ -f "$f" ] || continue',
-            '  new=$(jq --indent 2 --argjson c "$c" \'reduce ($c | to_entries[]) as $e (.; if $e.value == null then del(.[$e.key]) else .[$e.key] = $e.value end)\' "$f" 2>/dev/null) || continue',
-            '  [ "$new" = "$(cat "$f")" ] || printf "%s\\n" "$new" >"$f"',
+            '  new=$(jq --indent 2 --argjson c "$c" \'reduce ($c | to_entries[]) as $e (.; if $e.value == null then del(.[$e.key]) else .[$e.key] = $e.value end)\' "$f" 2>/dev/null) || { echo "$f" >&2; continue; }',
+            '  [ "$new" = "$(cat "$f")" ] && continue',
+            '  t=$(readlink -f "$f") || continue',
+            '  printf "%s\\n" "$new" >"$t.monolith-tmp" && mv -f "$t.monolith-tmp" "$t" || rm -f "$t.monolith-tmp"',
             'done'
         ].join("\n")
         codeProc.command = ["sh", "-c", script, "sh", json].concat(codeFiles)
         codeProc.running = true
     }
-    Process { id: codeProc }
+    Process {
+        id: codeProc
+        stderr: SplitParser { onRead: f => console.warn("[themes] VS Code colours not written: jq cannot read", f, "(comments or trailing commas?)") }
+    }
     Process {
         id: codeSetup
         property bool done: false

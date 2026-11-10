@@ -41,7 +41,7 @@ for f in "${FILES[@]}"; do
     IFS= read -r first <"$f" 2>/dev/null || continue
     case $first in '#!'*bash* | '#!'*/sh | '#!'*' sh') SH+=("$f") ;; '#!'*python*) PY+=("$f") ;; esac
 done
-for d in configs/.config/quickshell greeter; do [[ -d $d ]] && QML_DIRS+=("$d"); done
+for d in configs/.config/quickshell greeter tests/qml; do [[ -d $d ]] && QML_DIRS+=("$d"); done
 
 echo "== shell (${#SH[@]} scripts)"
 run "bash -n" bash -c 'r=0; for f; do bash -n "$f" || r=1; done; exit $r' _ "${SH[@]}"
