@@ -18,4 +18,5 @@ BarItem {
     }
 
     Component.onCompleted: if (menu !== "") Popups.register(screenName, menu, root)
+    Component.onDestruction: if (menu !== "") Popups.unregister(screenName, menu, root)
 }

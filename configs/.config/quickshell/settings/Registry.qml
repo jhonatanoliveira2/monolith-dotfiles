@@ -222,6 +222,7 @@ Singleton {
         tog("notifications", "general", "ndnd", ["Não perturbe", "Do not disturb"], "dnd silêncio", () => Settings.dnd, v => Settings.dnd = v),
         tog("notifications", "general", "builtinNotifs", ["Notificações do shell", "Shell notifications"], "swaync daemon toast", () => Settings.builtinNotifications, v => Settings.builtinNotifications = v),
         sld("notifications", "popups", "toastTimeout", ["Duração dos avisos", "Popup duration"], "toast tempo timeout", 2, 20, 1, "s", () => Math.round(Settings.toastTimeout / 1000), v => Settings.toastTimeout = v * 1000),
+        sld("notifications", "popups", "notifHistoryMax", ["Notificações guardadas no histórico", "Notifications kept in the history"], "histórico history limite limit memória memory", 20, 500, 10, "", () => Settings.notifHistoryMax, v => { Settings.notifHistoryMax = v; Notifs.trim() }),
         sld("notifications", "popups", "maxToasts", ["Avisos ao mesmo tempo", "Popups at once"], "toast limite limit", 1, 8, 1, "", () => Settings.maxToasts, v => Settings.maxToasts = v),
         tog("notifications", "popups", "criticalSticky", ["Críticas ficam até fechar", "Critical stay until closed"], "critical urgente urgent", () => Settings.criticalSticky, v => Settings.criticalSticky = v),
 

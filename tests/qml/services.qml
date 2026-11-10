@@ -8,6 +8,8 @@ import "services"
 // MONOLITH_TEST and quits:
 //   ytm     one YouTube Music API call with a token, against the port in MONOLITH_TEST_PORT
 //   vscode  writes the theme colours into the VS Code settings files of this HOME
+//   notifs  sends itself 25 short notifications (private session bus) and reports what is still held
+//   bt      feeds the pairing agent the prompts bluetoothctl prints and reports how each one was understood
 ShellRoot {
     id: root
     readonly property string action: Quickshell.env("MONOLITH_TEST") || ""
@@ -25,8 +27,46 @@ ShellRoot {
                 Settings.ytmToken = "s3cret-token"
                 Media.ytm("POST", "toggle-play", "")
             } else if (root.action === "vscode") Themes.writeCode()
+            else if (root.action === "notifs") {
+                // 25 notifications that expire after 0.3 s, with a history limited to 10
+                Settings.notifHistoryMax = 10
+                Jobs.run("test", ["sh", "-c", "for i in $(seq 25); do gdbus call --session --dest org.freedesktop.Notifications "
+                    + "--object-path /org/freedesktop/Notifications --method org.freedesktop.Notifications.Notify "
+                    + "test 0 '' \"n$i\" body '[]' '{}' 300 >/dev/null || exit 1; done"], { timeout: 10000 }, ok => console.log("RESULT sent=" + ok))
+            } else if (root.action === "bt") {
+                // what `bluetoothctl --agent KeyboardDisplay` prints (BlueZ client/agent.c), fed in pieces as a terminal
+                // would deliver it: prompts wait without a line break and come with colour escapes
+                const esc = "\x1b[0;94m", off = "\x1b[0m"
+                const steps = [
+                    ["Agent registered\r\n", null],
+                    ["[agent] Confirm pass", null],
+                    ["key 123456 (yes/no): ", "confirm:123456"],
+                    ["\r\nRequest canceled\r\n", "-"],
+                    [esc + "[agent]" + off + " Enter PIN code: ", "pin:"],
+                    ["\r\nRequest canceled\r\n[agent] Enter passkey (number in 0-999999): ", "passkey:"],
+                    ["\r\nRequest canceled\r\n[agent] Accept pairing (yes/no): ", "authorize:"],
+                    ["\r\nRequest canceled\r\n[agent] Authorize service 0000110b-0000-1000-8000-00805f9b34fb (yes/no): ", "service:0000110b-0000-1000-8000-00805f9b34fb"],
+                    ["\r\nRequest canceled\r\n[agent] Passkey: 654321\r\n", "display:654321"],
+                    ["Request canceled\r\n[agent] PIN code: 0000\r\n", "display:0000"],
+                    ["[CHG] Device AA:BB:CC:DD:EE:FF Connected: yes\r\n", "display:0000"]
+                ]
+                const got = []
+                for (const st of steps) {
+                    Bt.feed(st[0])
+                    const r = Bt.request
+                    got.push((r ? r.kind + ":" + r.code : "-") === (st[1] === null ? "-" : st[1]) ? "ok" : "BAD(" + (r ? r.kind + ":" + r.code : "-") + ")")
+                }
+                console.log("RESULT bt=" + got.join(","))
+            }
             done.start()
         }
     }
-    Timer { id: done; interval: 1800; onTriggered: Qt.quit() }
+    Timer {
+        id: done; interval: root.action === "notifs" ? 4000 : 1800
+        onTriggered: {
+            if (root.action === "notifs")
+                console.log("RESULT notifs=history:" + Notifs.count + " popups:" + Notifs.popups.length + " expiry:" + Object.keys(Notifs.expiry).length + " held:" + Object.keys(Notifs.held).length)
+            Qt.quit()
+        }
+    }
 }

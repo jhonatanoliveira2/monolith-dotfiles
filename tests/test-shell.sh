@@ -150,6 +150,24 @@ check "a symlinked settings.json stays a link" test -L "$HOME_DIR/.config/Code/U
 check "JSON with comments: left untouched" cmp -s "$HOME_DIR/.config/VSCodium/User/settings.json" "$TMP/jsonc"
 check "JSON with comments: the reason is logged" grep -q 'VS Code colours not written' "$LOG"
 
+echo "== notifications"
+if command -v gdbus >/dev/null 2>&1; then
+    new_home
+    run_harness services MONOLITH_TEST=notifs
+    check "25 notifications: no QML errors" no_qml_errors
+    is_r() { [[ $(result "$2") == "$3" ]] && ok "$1" || ko "$1 [$(result "$2")]"; }
+    is_r "all of them were delivered to the shell's own server" sent true
+    is_r "history capped at the limit, no toast and no timing entry left after they expire" notifs "history:10 popups:0 expiry:0 held:0"
+else
+    echo "  skip  gdbus not installed"
+fi
+
+echo "== Bluetooth pairing agent (bluetoothctl prompts)"
+new_home
+run_harness services MONOLITH_TEST=bt
+check "prompts are parsed without QML errors" no_qml_errors
+[[ $(result bt) == ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok ]] && ok "confirm, PIN, passkey, authorize, service, displayed codes, split and coloured prompts" || ko "prompt parsing [$(result bt)]"
+
 echo
 printf 'passed: %s   failed: %s\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

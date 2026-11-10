@@ -104,6 +104,7 @@ PanelWindow {
         }
         Timer { id: openSoon; interval: 280; onTriggered: Popups.hoverOpen("center", bar.screenName, hot) }
         Component.onCompleted: Popups.register(bar.screenName, "center", hot)   // IPC / shortcut open it centered
+        Component.onDestruction: Popups.unregister(bar.screenName, "center", hot)
     }
     // capsule: concave fillets where the ends meet the screen edge. Each is a square with the border trick: a
     // transparent rounded "hole" whose corner sits on the square's filled corner, so only the area outside the

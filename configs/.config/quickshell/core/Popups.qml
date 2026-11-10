@@ -45,6 +45,8 @@ Singleton {
     Timer { id: closeTimer; interval: 350; onTriggered: if (!root.pinned) root.close() }
 
     function register(screen, name, item) { buttons[screen + ":" + name] = item }
+    // a bar that goes away (monitor unplugged, bar rebuilt) takes its buttons with it
+    function unregister(screen, name, item) { if (buttons[screen + ":" + name] === item) delete buttons[screen + ":" + name] }
     function cancelClose() { closeTimer.stop() }
     function scheduleClose() { if (current !== "" && !pinned) closeTimer.restart() }
 

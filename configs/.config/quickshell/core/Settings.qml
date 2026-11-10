@@ -37,6 +37,7 @@ Singleton {
     property alias repoPath: adapter.repoPath
     property alias toastTimeout: adapter.toastTimeout
     property alias maxToasts: adapter.maxToasts
+    property alias notifHistoryMax: adapter.notifHistoryMax
     property alias criticalSticky: adapter.criticalSticky
     property alias ytmPort: adapter.ytmPort
     property alias ytmToken: adapter.ytmToken
@@ -246,6 +247,7 @@ Singleton {
             property string repoPath: ""
             property int toastTimeout: 6000        // ms
             property int maxToasts: 4
+            property int notifHistoryMax: 100      // notifications kept in the history (the oldest are dropped)
             property bool criticalSticky: true
             property int ytmPort: 26538            // th-ch/youtube-music "API Server" plugin
             property string ytmToken: ""

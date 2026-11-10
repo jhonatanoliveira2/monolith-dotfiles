@@ -12,12 +12,15 @@ Process {
     signal event()
     running: wanted
     stdout: SplitParser { onRead: w.event() }
-    stderr: StdioCollector { id: err }
+    // the last lines of the error output only: these commands run for the whole session
+    property var errTail: []
+    stderr: SplitParser { onRead: l => { if (l.trim()) w.errTail = w.errTail.concat([l.trim()]).slice(-5) } }
     onExited: code => {
         if (!w.wanted) return
-        console.warn("[events]", w.label, "exited", code, Jobs.firstLine(err.text))
-        retry.restart()
+        console.warn("[events]", w.label, "exited", code, w.errTail.join(" | "))
+        w.errTail = []
+        retryTimer.restart()
     }
     // Process takes no child objects: the retry timer hangs off a property
-    property Timer retry: Timer { id: retry; interval: 5000; onTriggered: if (w.wanted) w.running = true }
+    property Timer retry: Timer { id: retryTimer; interval: 5000; onTriggered: if (w.wanted) w.running = true }
 }
