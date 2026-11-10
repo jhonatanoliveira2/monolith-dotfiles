@@ -12,7 +12,9 @@ export LC_ALL=C
 shopt -s nullglob
 INTERVAL=${1:-2}
 SELF=$PPID
-PAGE=4096 HZ=100
+# page size and clock ticks of this kernel (16 KiB pages on some ARM systems); read once, the loop stays fork-free
+PAGE=$(getconf PAGESIZE 2>/dev/null) || PAGE=4096
+HZ=$(getconf CLK_TCK 2>/dev/null) || HZ=100
 ncpu=0; while read -r k _; do [[ $k == processor ]] && (( ncpu++ )); done </proc/cpuinfo; (( ncpu > 0 )) || ncpu=1
 nodes=(/dev/dri/renderD* /dev/dri/card*)
 
@@ -74,7 +76,10 @@ while :; do
     for d in /proc/[0-9]*; do
         { read -r st <"$d/stat"; } 2>/dev/null || continue
         pid=${d#/proc/}
-        name=${st#*(}; name=${name%)*}; name=${name//$'\t'/ }
+        name=${st#*(}; name=${name%)*}
+        # the name is chosen by the process (prctl) and becomes an array subscript inside (( )): keep only harmless
+        # characters, so no bash version can expand it (older ones evaluate $(...) and `...` in a subscript)
+        name=${name//[^A-Za-z0-9 ._:+@\/-]/_}
         # shellcheck disable=SC2086  # word splitting wanted: the fields of /proc/<pid>/stat
         set -- ${st##*) }
         ticks=$(( ${12} + ${13} )) rss=$(( ${22} * PAGE ))
@@ -117,7 +122,7 @@ while :; do
         p=${prevGpu[$id]:-$ns}
         dns=$(( ns - p )); (( dns < 0 )) && dns=0
         { read -r st <"$pdir/stat"; } 2>/dev/null || continue
-        name=${st#*(}; name=${name%)*}
+        name=${st#*(}; name=${name%)*}; name=${name//[^A-Za-z0-9 ._:+@\/-]/_}
         # ns busy / µs elapsed -> % x10
         v=$(( dt > 0 ? dns / dt : 0 ))
         (( gpuBy[$name] += v ))

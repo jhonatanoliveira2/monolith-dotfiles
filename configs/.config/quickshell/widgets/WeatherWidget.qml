@@ -18,7 +18,7 @@ Item {
         anchors { left: icon.right; leftMargin: Math.round(16 * root.k); right: parent.right; verticalCenter: parent.verticalCenter }
         spacing: 2
         Txt { visible: Weather.ok; text: Weather.temp + "°C"; font.pixelSize: Math.round(30 * root.k); color: Theme.white; font.family: Theme.fontDot }
-        Txt { width: parent.width; text: Weather.ok ? Weather.desc : Weather.loading ? "…" : (Settings.language === "en" ? "Unavailable" : "Indisponível"); color: Theme.foreground; font.pixelSize: Math.round(Theme.fontSize * root.k); font.bold: false; elide: Text.ElideRight }
+        Txt { width: parent.width; text: Weather.ok ? Weather.desc : Weather.loading ? "…" : (Weather.error === "place" ? (Settings.language === "en" ? "Set a city" : "Defina a cidade") : Settings.language === "en" ? "Unavailable" : "Indisponível"); color: Theme.foreground; font.pixelSize: Math.round(Theme.fontSize * root.k); font.bold: false; elide: Text.ElideRight }
         Txt { visible: Weather.ok; width: parent.width; text: Weather.place + "  ·  " + Weather.tmin + "° / " + Weather.tmax + "°"; color: Theme.grayMid; font.pixelSize: Math.round(Theme.small * root.k); font.bold: false; elide: Text.ElideRight }
     }
     MouseArea { anchors.fill: parent; onClicked: Weather.refresh(true) }

@@ -28,9 +28,10 @@ Item {
     Process {
         id: cava
         running: sp.active && sp.useCava
-        // the config is generated per bands / fps in the runtime dir: cava has no command-line options for it
+        // the config is generated per bands / fps in the runtime dir (private to the user; never a shared /tmp, where
+        // the predictable name could be a link planted by someone else): cava has no command-line options for it
         command: ["sh", "-c",
-            "f=\"${XDG_RUNTIME_DIR:-/tmp}/qs-cava-$1-$2.conf\"; printf '%s\\n' '[general]' \"bars = $1\" \"framerate = $2\" "
+            "[ -n \"$XDG_RUNTIME_DIR\" ] || { echo 'XDG_RUNTIME_DIR is not set' >&2; exit 1; }; f=\"$XDG_RUNTIME_DIR/qs-cava-$1-$2.conf\"; printf '%s\\n' '[general]' \"bars = $1\" \"framerate = $2\" "
             + "'[input]' 'method = pipewire' '[output]' 'method = raw' 'channels = mono' 'raw_target = /dev/stdout' "
             + "'data_format = ascii' 'ascii_max_range = 100' 'bar_delimiter = 59' 'frame_delimiter = 10' "
             + "'[smoothing]' 'noise_reduction = 70' > \"$f\" && exec cava -p \"$f\"",

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# weather.sh <place> <lat> <lon> <name> <lang> - Open-Meteo (no API key), for services/Weather.qml.
-# Known coordinates skip the lookup; otherwise <place> is geocoded ("" = located by IP). Prints three lines:
+# weather.sh <place> <lat> <lon> <name> <lang> [by-ip] - Open-Meteo (no API key), for services/Weather.qml.
+# Known coordinates skip the lookup; otherwise <place> is geocoded ("" = located by IP through ipinfo.io,
+# unless by-ip is 0: then nothing is requested and the exit code is 3). Prints three lines:
 #   1) name<TAB>lat<TAB>lon   2) forecast JSON   3) air quality JSON ({} when unavailable)
 export LC_ALL=C
-q=${1%%,*} lat=$2 lon=$3 name=$4 lang=${5:-pt}
+q=${1%%,*} lat=$2 lon=$3 name=$4 lang=${5:-pt} byip=${6:-1}
 get() { curl -fsS --max-time 10 "$@"; }
 
 if [[ -z $lat || -z $lon ]]; then
@@ -11,6 +12,7 @@ if [[ -z $lat || -z $lon ]]; then
         r=$(get -G https://geocoding-api.open-meteo.com/v1/search --data-urlencode "name=$q" -d count=1 -d "language=$lang") || exit 1
         IFS=$'\t' read -r name lat lon < <(jq -r '.results[0] | [.name, .latitude, .longitude] | @tsv' <<<"$r" 2>/dev/null)
     else
+        [[ $byip == 1 ]] || exit 3
         r=$(get https://ipinfo.io/json) || exit 1
         IFS=$'\t' read -r name lat lon < <(jq -r '[.city, (.loc | split(",")[0]), (.loc | split(",")[1])] | @tsv' <<<"$r" 2>/dev/null)
     fi

@@ -132,3 +132,23 @@ Microphone, Widgets, Notifications, Network, Bluetooth, Power (laptops only), St
   `OpenUri` fall back to the browser.
 - **Bluetooth scan** keeps the request alive for 60 s: if BlueZ drops discovery right after it starts, the shell
   asks again by itself, so one click on **Scan** is enough.
+
+## Network requests made by the shell
+
+The shell contacts the services below, and only when the feature that needs them is in use. Each one can be turned
+off; nothing else leaves the machine.
+
+| Feature | Service | What is sent | When | Turn off |
+|---|---|---|---|---|
+| Weather (center menu, weather widget) | `api.open-meteo.com`, `air-quality-api.open-meteo.com` | latitude and longitude | when the tab or widget is shown, at most every 20 minutes | Settings > Bar > Center menu (no weather widget, center menu off) |
+| Weather: city lookup | `geocoding-api.open-meteo.com` | the city typed in Settings | once per city | leave the city empty |
+| Weather: location without a city | `ipinfo.io` | your IP address (it is the request itself) | when no city is set | Settings > Bar > Center menu > *Weather: locate by IP* (off: no weather until a city is set) |
+| Lyrics | `lrclib.net`, `music.163.com` (NetEase), `api.lyrics.ovh` | artist, title, album and length of the playing track | when lyrics are shown; results are cached | one switch per source in Settings > Bar > Player; all off = no request |
+| Album covers | the URL the player publishes (MPRIS `artUrl`) | a plain download | when a track enters the history | — (the address comes from your player) |
+| Update check (Arch, CachyOS) | your clone's `origin` remote, `api.github.com` | a `git fetch` and one anonymous API request | when Settings > Update is opened | do not open the page |
+| YouTube Music controls | `127.0.0.1` (the player's API Server plugin) | local only | when YouTube Music is the player | — |
+
+Before an update runs, Settings > Update lists the commits it brings (and says when the installer itself changes)
+and asks for a second click; the clone is then fast-forwarded to exactly the listed revision. The command line of
+the center menu keeps its history in `settings.json`; *Keep the command history* (Settings > Bar > Center menu)
+turns that off and clears what was saved.

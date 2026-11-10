@@ -71,14 +71,22 @@ Singleton {
     function refresh(force) {
         if (proc.running) return
         if (!force && ok && Date.now() - fetchedAt < 20 * 60 * 1000) return
+        // no city and locating by IP turned off: nothing is requested
+        if (needsPlace) { loading = false; ok = false; error = "place"; return }
         loading = true
         proc.command = ["bash", Quickshell.shellPath("scripts/weather.sh"), Settings.weatherLocation.trim(), lat, lon, place,
-                        Settings.language === "en" ? "en" : "pt"]
+                        Settings.language === "en" ? "en" : "pt", Settings.weatherByIp ? "1" : "0"]
         console.log("[weather] fetching", Settings.weatherLocation.trim() || "<ip location>")
         proc.running = true
     }
+    readonly property bool needsPlace: Settings.weatherLocation.trim() === "" && !Settings.weatherByIp
     // a new place: look it up again next time
-    Connections { target: Settings; function onWeatherLocationChanged() { root.fetchedAt = 0; root.lat = ""; root.lon = "" } }
+    Connections {
+        target: Settings
+        function onWeatherLocationChanged() { root.fetchedAt = 0; root.lat = ""; root.lon = "" }
+        // turned off while the place came from the IP: forget it
+        function onWeatherByIpChanged() { if (Settings.weatherLocation.trim() === "") { root.fetchedAt = 0; root.lat = ""; root.lon = ""; root.place = ""; if (!Settings.weatherByIp) root.ok = false } }
+    }
 
     function hm(iso) { return String(iso || "").slice(11, 16) }
     Process {

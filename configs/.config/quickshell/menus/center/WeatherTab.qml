@@ -67,7 +67,7 @@ Column {
                 Txt { text: Weather.ok ? Weather.temp + "°" : "—"; font.pixelSize: 56; color: Theme.white; font.family: Theme.fontDot }
                 Txt { anchors.top: parent.top; anchors.topMargin: 12; text: "C"; font.pixelSize: 18; color: Theme.grayMid }
             }
-            Txt { text: Weather.ok ? Weather.desc : Weather.loading ? Labels.pick(["Carregando…", "Loading…"]) : Labels.pick(["Clima indisponível", "Weather unavailable"]); color: Theme.foreground; font.pixelSize: 15 }
+            Txt { text: Weather.ok ? Weather.desc : Weather.loading ? Labels.pick(["Carregando…", "Loading…"]) : (Weather.error === "place" ? Labels.pick(["Defina a cidade em Configurações › Barra", "Set the city in Settings › Bar"]) : Labels.pick(["Clima indisponível", "Weather unavailable"])); color: Theme.foreground; font.pixelSize: 15 }
             Txt { visible: Weather.ok; text: Labels.pick(["Sensação ", "Feels like "]) + Weather.feels + "°   ·   " + Theme.g(0xf062) + " " + Weather.tmax + "°  " + Theme.g(0xf063) + " " + Weather.tmin + "°"; color: Theme.grayMid; font.bold: false }
         }
         Column {

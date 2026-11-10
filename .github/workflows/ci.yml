@@ -32,6 +32,9 @@ jobs:
       - name: Documentation
         run: bash tests/test-docs.sh
 
+      - name: Shell helper scripts (fixtures, no network)
+        run: bash tests/test-scripts.sh
+
       - name: Installer
         run: bash tests/test-installer.sh
 

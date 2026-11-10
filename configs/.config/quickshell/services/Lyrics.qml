@@ -41,10 +41,12 @@ Singleton {
         const c = clean(Media.artist, Media.title)
         key = wanted
         raw = []; lines = []; source = ""; synced = false; estimated = false
-        if (!c.title) { loading = false; return }
+        // the enabled sources (Settings > Bar > Player); none: nothing is requested
+        const src = [Settings.lyricsLrclib ? "lrclib" : "", Settings.lyricsNetease ? "netease" : "", Settings.lyricsOvh ? "ovh" : ""].filter(s => s).join(",")
+        if (!c.title || !src) { loading = false; return }
         loading = true
         proc.running = false
-        proc.command = ["bash", Quickshell.shellPath("scripts/lyrics.sh"), c.artist, c.title, Media.album, String(Math.round(Media.length))]
+        proc.command = ["bash", Quickshell.shellPath("scripts/lyrics.sh"), c.artist, c.title, Media.album, String(Math.round(Media.length)), src]
         proc.running = true
     }
 

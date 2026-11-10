@@ -30,6 +30,7 @@ bash tests/lint.sh                   # bash -n, shellcheck, luacheck, sintaxe de
 bash tests/test-docs.sh              # links, âncoras, pares bilíngues, estrutura
 bash tests/test-installer.sh         # instalador do Arch (ambientes temporários)
 bash tests/test-nixos-install.sh     # instalador guiado do NixOS (nenhum disco é tocado)
+bash tests/test-scripts.sh           # scripts auxiliares do shell (curl falso, sem rede)
 bash tests/test-shell.sh             # singletons do shell sem compositor (precisa do quickshell)
 nix flake check                      # só com Nix: constrói os pacotes e avalia uma máquina de exemplo
 ```

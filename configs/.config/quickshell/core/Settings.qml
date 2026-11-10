@@ -74,6 +74,10 @@ Singleton {
     property alias centerTab: adapter.centerTab
     property alias centerHistory: adapter.centerHistory
     property alias centerHistoryKeep: adapter.centerHistoryKeep
+    property alias weatherByIp: adapter.weatherByIp
+    property alias lyricsLrclib: adapter.lyricsLrclib
+    property alias lyricsNetease: adapter.lyricsNetease
+    property alias lyricsOvh: adapter.lyricsOvh
     property var centerSession: []       // the history of this session only, used while centerHistoryKeep is off (never saved)
     property alias widgets: adapter.widgets
     property alias widgetsEnabled: adapter.widgetsEnabled
@@ -283,6 +287,11 @@ Singleton {
             property var centerHistory: []         // its command line history (latest last)
             property bool centerHistoryKeep: true  // off: the history lives in memory only (commands may hold secrets)
             property string weatherLocation: ""    // place geocoded by Open-Meteo ("" = located by IP, scripts/weather.sh)
+            // what leaves the machine (docs: "Network requests made by the shell")
+            property bool weatherByIp: true        // no city set: ask ipinfo.io where this IP is (off: no weather until a city is set)
+            property bool lyricsLrclib: true       // lyrics sources: artist / title / album are sent to each enabled one
+            property bool lyricsNetease: true      // music.163.com
+            property bool lyricsOvh: true          // lyrics.ovh
             property string barStyle: "capsule"    // flat | capsule | frame (core/Theme.qml)
             property int frameTone: 14             // frame style: 0 = black .. 100 = the theme tint (core/Theme.qml)
             property bool barShadow: true          // capsule / frame styles

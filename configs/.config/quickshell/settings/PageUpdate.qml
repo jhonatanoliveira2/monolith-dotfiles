@@ -15,6 +15,7 @@ Column {
     property string upState: "idle"      // idle | checking | updating | done | failed
     property var info: ({})
     property string log: ""
+    property var changes: []             // new commits the update brings ("hash date subject"), listed before it runs
     readonly property int behind: info.behind !== undefined ? Number(info.behind) : -1
     readonly property bool nix: Distro.nixManaged
     readonly property string nixRev: String(Distro.nix.shortRev || "").slice(0, 7)
@@ -22,7 +23,7 @@ Column {
     readonly property bool nixNewer: nix && !!info.apihead && info.apihead !== nixRev
 
     function check() {
-        upState = "checking"; info = ({})
+        upState = "checking"; info = ({}); changes = []
         checkProc.command = nix ? ["bash", Quickshell.shellPath("scripts/update-check.sh"), "", Distro.nix.repo || Registry.repoUrl, Distro.nix.branch || "main"]
                                 : ["bash", Quickshell.shellPath("scripts/update-check.sh"), path, Registry.repoUrl]
         checkProc.running = true
@@ -34,8 +35,12 @@ Column {
         }
         upState = "updating"; log = ""
         const b = info.branch && info.branch !== "(detached)" ? info.branch : "main"
-        updProc.command = ["sh", "-c", "set -e; export GIT_TERMINAL_PROMPT=0; if [ -d \"$1/.git\" ]; then git -C \"$1\" pull --ff-only origin \"$3\"; else git clone --branch \"$3\" \"$2\" \"$1\"; fi; " +
-                           "cd \"$1\" && bash scripts/install.sh --yes --no-deps --no-color --no-clear", "sh", path, info.url || Registry.repoUrl, b]
+        // An existing clone moves to exactly the revision the check listed (`target`, already fetched): what runs
+        // is what was shown, even if the remote changed in between. Only without it (older check output) it pulls.
+        updProc.command = ["sh", "-c", "set -e; export GIT_TERMINAL_PROMPT=0; if [ -d \"$1/.git\" ]; then " +
+                           "if [ -n \"$4\" ]; then git -C \"$1\" merge --ff-only \"$4\"; else git -C \"$1\" pull --ff-only origin \"$3\"; fi; " +
+                           "else git clone --branch \"$3\" \"$2\" \"$1\"; fi; " +
+                           "cd \"$1\" && bash scripts/install.sh --yes --no-deps --no-color --no-clear", "sh", path, info.url || Registry.repoUrl, b, info.target || ""]
         updProc.running = true
     }
     Component.onCompleted: check()
@@ -44,8 +49,13 @@ Column {
         id: checkProc
         stdout: StdioCollector {
             onStreamFinished: {
-                const o = {}
-                for (const line of text.split("\n")) { const i = line.indexOf("="); if (i > 0) o[line.slice(0, i)] = line.slice(i + 1) }
+                const o = {}, ch = []
+                for (const line of text.split("\n")) {
+                    const i = line.indexOf("=")
+                    if (i <= 0) continue
+                    if (line.slice(0, i) === "change") ch.push(line.slice(i + 1)); else o[line.slice(0, i)] = line.slice(i + 1)
+                }
+                root.changes = ch
                 root.info = o
                 root.upState = o.error || (o.clone === "0" && o.api !== "200" && !root.nix) ? "failed" : "idle"
             }
@@ -95,12 +105,26 @@ Column {
                 Btn { compact: true; icon: Theme.glyph.refresh; text: Labels.t("check"); onActivated: root.check() }
                 Btn {
                     visible: !root.nix || root.nixCmd !== ""
-                    compact: true; active: root.nix ? root.nixNewer : root.behind > 0 || root.info.clone === "0"; confirm: Number(root.info.dirty) > 0
+                    compact: true; active: root.nix ? root.nixNewer : root.behind > 0 || root.info.clone === "0"; confirm: !root.nix && root.info.clone !== "0"      // code from the remote is about to run: always a second click
                     text: root.info.clone === "0" && !root.nix ? Labels.t("clone") : Labels.t("updateNow")
                     onActivated: root.update()
                 }
             }
         }
+    }
+
+    // what the update brings, to be read before the second click
+    Column {
+        visible: !root.nix && root.changes.length > 0 && root.upState !== "updating"
+        width: parent.width; spacing: 2
+        Txt { text: Labels.t("upIncoming"); color: Theme.grayMid; font.pixelSize: Theme.small }
+        Txt { visible: Number(root.info.installer) > 0; width: parent.width; wrapMode: Text.Wrap; elide: Text.ElideNone; font.pixelSize: Theme.small; color: Theme.accent
+              text: Labels.t("upInstaller") + " (" + root.info.installer + ")" }
+        Repeater {
+            model: root.changes
+            delegate: Txt { required property string modelData; width: parent.width; elide: Text.ElideRight; font.pixelSize: Theme.small; font.bold: false; color: Theme.foreground; text: modelData }
+        }
+        Txt { visible: Number(root.info.more) > 0; text: "+ " + root.info.more + " " + Labels.t("behind"); color: Theme.grayMid; font.pixelSize: Theme.small; font.bold: false }
     }
 
     Txt {

@@ -132,3 +132,23 @@ Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`)
   `OpenUri` abrem no navegador.
 - **Busca de Bluetooth** mantém o pedido ativo por 60 s: se o BlueZ derrubar a descoberta logo após iniciar, o
   shell pede de novo sozinho, então um clique em **Procurar** basta.
+
+## Requisições de rede feitas pelo shell
+
+O shell contata os serviços abaixo, e só quando o recurso que precisa deles está em uso. Cada um pode ser
+desligado; nada além disso sai da máquina.
+
+| Recurso | Serviço | O que é enviado | Quando | Como desligar |
+|---|---|---|---|---|
+| Clima (menu central, widget de clima) | `api.open-meteo.com`, `air-quality-api.open-meteo.com` | latitude e longitude | quando a aba ou o widget aparece, no máximo a cada 20 minutos | Configurações > Barra > Menu central (sem widget de clima, menu central desligado) |
+| Clima: busca da cidade | `geocoding-api.open-meteo.com` | a cidade digitada nas Configurações | uma vez por cidade | deixe a cidade vazia |
+| Clima: localização sem cidade | `ipinfo.io` | o seu endereço IP (é a própria requisição) | quando não há cidade definida | Configurações > Barra > Menu central > *Clima: localizar pelo IP* (desligado: sem clima até definir uma cidade) |
+| Letras | `lrclib.net`, `music.163.com` (NetEase), `api.lyrics.ovh` | artista, título, álbum e duração da faixa em reprodução | quando as letras são exibidas; os resultados ficam em cache | uma chave por fonte em Configurações > Barra > Player; todas desligadas = nenhuma requisição |
+| Capas de álbum | a URL que o player publica (MPRIS `artUrl`) | um download simples | quando uma faixa entra no histórico | — (o endereço vem do seu player) |
+| Verificação de atualização (Arch, CachyOS) | o remoto `origin` do seu clone, `api.github.com` | um `git fetch` e uma requisição anônima à API | quando Configurações > Atualização é aberta | não abra a página |
+| Controles do YouTube Music | `127.0.0.1` (plugin API Server do player) | só local | quando o YouTube Music é o player | — |
+
+Antes de uma atualização rodar, Configurações > Atualização lista os commits que ela traz (e avisa quando o próprio
+instalador muda) e pede um segundo clique; o clone é então avançado exatamente para a revisão listada. A linha de
+comando do menu central guarda o histórico no `settings.json`; *Guardar o histórico de comandos* (Configurações >
+Barra > Menu central) desliga isso e apaga o que foi salvo.
