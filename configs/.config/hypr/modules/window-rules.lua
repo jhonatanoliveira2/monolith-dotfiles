@@ -65,3 +65,10 @@ hl.layer_rule({
     ignore_alpha = 0.3,
     no_anim = true,
 })
+
+-- Nautilus: translucent glass (gtk-4.0/gtk.css) over the wallpaper as it is, without blur
+hl.window_rule({
+    name = "nautilus-no-blur",
+    match = { class = "^org\\.gnome\\.Nautilus$" },
+    no_blur = true,
+})

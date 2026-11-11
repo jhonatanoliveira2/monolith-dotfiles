@@ -591,6 +591,43 @@ configure_quickshell() {
     fi
 }
 
+# Monolith Icons (branding/icons.py): flat grey folders and files of the default theme, written to
+# ~/.local/share/icons. The icon theme is switched only from Adwaita (the default), so a theme picked by
+# the user, or Monolith-Dots-Icons of the Nothing theme, is kept.
+install_icons() {
+    local dest=$TARGET_HOME/.local/share/icons/Monolith-Icons tmp cur
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn_later "$(t icons.no_python)"
+        return 0
+    fi
+    if (( OPT_DRY )); then
+        ui_info "$(t icons.would_install)"
+        return 0
+    fi
+    mkdir -p -- "${dest%/*}" || { warn_later "$(t icons.failed)"; return 0; }
+    tmp="${dest%/*}/.Monolith-Icons.monolith-tmp.$$"
+    rm -rf -- "$tmp"
+    if ! python3 -I "$SCRIPT_DIR/../branding/icons.py" "$tmp" --name Monolith-Icons >>"$LOG_FILE" 2>&1; then
+        rm -rf -- "$tmp"
+        warn_later "$(t icons.failed)"
+        return 0
+    fi
+    rm -rf -- "$dest" && mv -T -- "$tmp" "$dest" || { rm -rf -- "$tmp"; warn_later "$(t icons.failed)"; return 0; }
+    log INFO "icon theme written: $dest"
+    ui_ok "$(t icons.installed)"
+    real_session && command -v gsettings >/dev/null 2>&1 || return 0
+    local -a runner=()
+    [[ -z ${DBUS_SESSION_BUS_ADDRESS-} ]] && command -v dbus-run-session >/dev/null 2>&1 && runner=(dbus-run-session --)
+    cur=$("${runner[@]}" gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null) || return 0
+    case $cur in
+        "'Monolith-Icons'" | "'Monolith-Dots-Icons'") ;;
+        "'Adwaita'" | "''")
+            "${runner[@]}" gsettings set org.gnome.desktop.interface icon-theme Monolith-Icons >>"$LOG_FILE" 2>&1 \
+                && log INFO "gsettings icon-theme = Monolith-Icons" ;;
+        *) ui_dim "$(t icons.kept "${cur//\'/}")" ;;
+    esac
+}
+
 # Materia-dark is what makes the transparency in gtk-4.0/gtk.css work (Nautilus).
 # Skipped when deploying to another home (MONOLITH_TARGET_HOME), because gsettings is per-user.
 apply_gtk_theme() {
@@ -673,6 +710,7 @@ step_verify() {
         ui_info "$(t verify.dry_run)"
         ensure_user_dirs
         install_wallpapers
+        install_icons
         apply_gtk_theme
         configure_vscode
         configure_quickshell
@@ -697,6 +735,7 @@ step_verify() {
     ui_ok "$(t verify.ok "$ok")"
     ensure_user_dirs
     install_wallpapers
+    install_icons
     apply_gtk_theme
     configure_vscode
     configure_quickshell

@@ -1,23 +1,161 @@
-/* Nautilus: fundo translúcido */
+/* MONOLITH: Nautilus (Arquivos) no tema padrão
+ *
+ * Cores da paleta "default" do shell (quickshell/core/Palettes.qml): fundo #111111, texto #eeeeee,
+ * cinzas #cccccc / #888888 / #444444 e destaque branco com texto preto por cima.
+ * Vidro escuro sem blur (regra nautilus-no-blur do Hyprland), nada colorido. As pastas e os ícones
+ * de arquivo cinza vêm do tema de ícones Monolith-Icons (branding/icons.py), não de filtro CSS.
+ * Vermelho só em ações destrutivas, como no shell.
+ * Tudo fica preso a .nautilus-window, então os outros apps GTK 4 não mudam. */
+
+/* ── Paleta (variáveis do libadwaita 1.6+) ── */
+.nautilus-window {
+    --accent-bg-color: #ffffff;
+    --accent-fg-color: #000000;
+    --accent-color: #eeeeee;
+
+    --window-bg-color: #111111;
+    --window-fg-color: #eeeeee;
+    --view-bg-color: #111111;
+    --view-fg-color: #eeeeee;
+
+    --headerbar-bg-color: transparent;
+    --headerbar-fg-color: #eeeeee;
+    --headerbar-backdrop-color: transparent;
+    --headerbar-border-color: transparent;
+    --headerbar-shade-color: rgba(255, 255, 255, 0.06);
+
+    --sidebar-bg-color: transparent;
+    --sidebar-fg-color: #eeeeee;
+    --sidebar-backdrop-color: transparent;
+    --sidebar-border-color: rgba(255, 255, 255, 0.06);
+    --sidebar-shade-color: rgba(0, 0, 0, 0.25);
+
+    --card-bg-color: rgba(255, 255, 255, 0.05);
+    --card-fg-color: #eeeeee;
+    --popover-bg-color: #161616;
+    --popover-fg-color: #eeeeee;
+    --dialog-bg-color: #161616;
+    --dialog-fg-color: #eeeeee;
+    --thumbnail-bg-color: #1a1a1a;
+    --thumbnail-fg-color: #eeeeee;
+
+    --border-color: rgba(255, 255, 255, 0.08);
+    --shade-color: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Vidro: a janela é transparente e cada painel tem seu tom ── */
 .nautilus-window {
     background-color: transparent;
 }
 
-/* Barra lateral */
 .nautilus-window .sidebar-pane,
 .nautilus-window .sidebar,
 .nautilus-window .navigation-sidebar {
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
-/* Área dos arquivos */
 .nautilus-window .content-pane,
 .nautilus-window .content-view,
 .nautilus-window .view {
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgba(17, 17, 17, 0.45);
 }
 
-/* Menus e popovers permanecem opacos */
+.nautilus-window headerbar,
+.nautilus-window .top-bar,
+.nautilus-window tabbar .box {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* ── Barra lateral ("Places") ── */
+.nautilus-window .navigation-sidebar > row {
+    border-radius: 6px;
+    color: #cccccc;
+}
+
+.nautilus-window .navigation-sidebar > row image {
+    color: #888888;
+}
+
+.nautilus-window .navigation-sidebar > row:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #eeeeee;
+}
+
+.nautilus-window .navigation-sidebar > row:selected {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.nautilus-window .navigation-sidebar > row:selected image {
+    color: #ffffff;
+}
+
+/* títulos de seção (Places, Devices, Network) */
+.nautilus-window .navigation-sidebar .heading,
+.nautilus-window .navigation-sidebar > row:disabled label {
+    color: #888888;
+}
+
+/* ── Caminho: uma pílula discreta ── */
+.nautilus-window .nautilus-pathbar {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 9999px;
+}
+
+.nautilus-window .nautilus-path-button.current-dir label {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* ── Grade e lista: seleção em branco translúcido ── */
+.nautilus-window .nautilus-grid-view gridview > child:hover,
+.nautilus-window .nautilus-list-view columnview > listview > row:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nautilus-window .nautilus-grid-view gridview > child:selected,
+.nautilus-window .nautilus-list-view columnview > listview > row:selected {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.nautilus-window .nautilus-grid-view gridview > child:selected:hover,
+.nautilus-window .nautilus-list-view columnview > listview > row:selected:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.nautilus-window .nautilus-grid-view .nautilus-view-cell label {
+    color: #eeeeee;
+}
+
+.nautilus-window .nautilus-grid-view .nautilus-view-cell label.dim-label,
+.nautilus-window .nautilus-list-view .dim-label {
+    color: #888888;
+}
+
+.nautilus-window rubberband {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 4px;
+}
+
+/* ── Barra de status flutuante e uso de disco ── */
+.nautilus-window .floating-bar {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #cccccc;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nautilus-window .disk-space-used {
+    color: #eeeeee;
+}
+
+.nautilus-window .disk-space-free {
+    color: #444444;
+}
+
+/* ── Menus e popovers permanecem opacos ── */
 popover,
 popover > contents {
     opacity: 1;

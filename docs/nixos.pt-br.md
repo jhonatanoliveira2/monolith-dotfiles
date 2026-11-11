@@ -233,7 +233,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | `fetch.atShellStart` | `false` | roda o `fetch` ao abrir o fish (não no console Linux; `MONOLITH_NO_FETCH=1` pula) |
 | `fetch.shadingMode`, `extraConfig` | `"ascii"`, `""` | `ascii` (o relevo de `#`), `blocks` ou `sextants` (mais nítido, Ghostty / Kitty); linhas extras para `~/.config/fetch/config` (ex.: `"speed=1.2"`) |
 | `wallpapers` | `true` | copia `wallpapers/` para `~/Pictures/Wallpapers` e `~/Videos/wallpaper-live` |
-| `gtk` | `true` | `Materia-dark` e o esquema de cores escuro (dconf) |
+| `gtk` | `true` | `Materia-dark`, o esquema de cores escuro e o tema de ícones `Monolith-Icons` (dconf) |
 | `dev.enable`, `dev.source`, `dev.modules` | `false`, `null`, `null` | [modo de desenvolvimento](#modo-de-desenvolvimento): configuração ligada a um checkout editável |
 
 ## Boot, splash e login

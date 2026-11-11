@@ -229,7 +229,7 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `fetch.atShellStart` | `false` | run `fetch` when fish opens (not on the Linux console; `MONOLITH_NO_FETCH=1` skips it) |
 | `fetch.shadingMode`, `extraConfig` | `"ascii"`, `""` | `ascii` (the `#` relief), `blocks`, or `sextants` (sharpest, Ghostty / Kitty); extra lines for `~/.config/fetch/config` (e.g. `"speed=1.2"`) |
 | `wallpapers` | `true` | copy `wallpapers/` into `~/Pictures/Wallpapers` and `~/Videos/wallpaper-live` |
-| `gtk` | `true` | `Materia-dark` and the dark colour scheme (dconf) |
+| `gtk` | `true` | `Materia-dark`, the dark colour scheme and the `Monolith-Icons` icon theme (dconf) |
 | `dev.enable`, `dev.source`, `dev.modules` | `false`, `null`, `null` | [development mode](#development-mode): configuration linked to an editable checkout |
 
 ## Boot, splash and login

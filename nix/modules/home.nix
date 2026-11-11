@@ -185,7 +185,7 @@ in
     gtk = mkOption {
       type = types.bool;
       default = true;
-      description = "Set the GTK theme Materia-dark and the dark colour scheme (dconf), as the Arch installer does.";
+      description = "Set the GTK theme Materia-dark, the dark colour scheme and the Monolith-Icons icon theme (dconf), as the Arch installer does.";
     };
   };
 
@@ -197,6 +197,7 @@ in
         mpkgs.scripts
         mpkgs.nothp
       ]
+      ++ lib.optional cfg.gtk mpkgs.monolith-icons
       ++ lib.optional cfg.fetch.enable pkgs.fetch
       ++ lib.optional (cfg.browserPackage != null) cfg.browserPackage
       ++ cfg.extraPackages;
@@ -286,6 +287,8 @@ in
       "org/gnome/desktop/interface" = {
         gtk-theme = "Materia-dark";
         color-scheme = "prefer-dark";
+        # a default: the Nothing theme (home-nothing.nix) sets Monolith-Dots-Icons over it
+        icon-theme = lib.mkDefault "Monolith-Icons";
       };
     };
   };

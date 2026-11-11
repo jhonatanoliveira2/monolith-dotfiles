@@ -116,6 +116,9 @@ check "live wallpaper copied to ~/Videos/wallpaper-live" cmp -s "$MONOLITH_WALLP
 check ".gitkeep is not copied as a wallpaper" test ! -e "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/.gitkeep"
 check "GTK theme set to Materia-dark" grep -q "gtk-theme='Materia-dark'" "$GSETTINGS_STATE"
 check "dark color scheme set" grep -q "color-scheme='prefer-dark'" "$GSETTINGS_STATE"
+check "Monolith-Icons written to ~/.local/share/icons" test -f "$MONOLITH_TARGET_HOME/.local/share/icons/Monolith-Icons/scalable/places/folder.svg"
+check "Monolith-Icons index.theme inherits Adwaita" grep -q "^Inherits=Adwaita" "$MONOLITH_TARGET_HOME/.local/share/icons/Monolith-Icons/index.theme"
+check "icon theme set to Monolith-Icons" grep -q "icon-theme='Monolith-Icons'" "$GSETTINGS_STATE"
 printf 'my own edit\n' >"$MONOLITH_TARGET_HOME/Pictures/Wallpapers/landscape.png"
 touch "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/keep.png"
 
@@ -124,7 +127,10 @@ inst >"$TMP/second.out" 2>&1; rc=$?
 [[ $rc == 0 ]] && ok "second run exits 0" || ko "second run exit $rc"
 check "existing wallpapers are left alone" test -f "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/keep.png"
 check "a wallpaper you changed is never overwritten" grep -qx "my own edit" "$MONOLITH_TARGET_HOME/Pictures/Wallpapers/landscape.png"
-check "gsettings is not rewritten when already set" test "$(wc -l <"$GSETTINGS_STATE.calls")" = 2
+check "gsettings is not rewritten when already set" test "$(wc -l <"$GSETTINGS_STATE.calls")" = 3
+printf "org.gnome.desktop.interface icon-theme='Papirus-Dark'\n" >>"$GSETTINGS_STATE"
+inst >"$TMP/third.out" 2>&1
+check "an icon theme picked by the user is kept" test "$(grep -c "icon-theme Monolith-Icons" "$GSETTINGS_STATE.calls")" = 1
 check "second run reports nothing to copy" grep -q "Nothing to copy" "$TMP/second.out"
 [[ $(backups | wc -l) == "$n_before" ]] && ok "second run created no new backup" || ko "second run created a backup"
 
