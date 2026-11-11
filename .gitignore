@@ -41,7 +41,7 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/
-
+CLAUDE.md
 # --- local state created by the scripts ------------------------------------------
 .local/state/
 .local/share/monolith-dotfiles/
