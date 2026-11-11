@@ -54,7 +54,6 @@ ui_init
 # Format: "<path relative to $HOME>|<english reason>"
 EXPECTED_FILES=(
     ".config/quickshell/shell.qml|Quickshell entry point (bar, menus, notifications)"
-    ".config/hypr/hyprlock-colors.conf|sourced by hypr/hyprlock.conf"
     ".config/hypr/scripts/password-cursor.sh|used by hypr/hyprlock.conf (cursor label)"
     ".config/hypr/scripts/now-playing.sh|used by hypr/hyprlock.conf (media label)"
     ".local/bin/wallpaper-menu|used by the SUPER+D binding"
