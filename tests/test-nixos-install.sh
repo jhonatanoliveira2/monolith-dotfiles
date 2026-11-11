@@ -132,6 +132,32 @@ check "untouched files stay" grep -qx arch-grub "$E/EFI/GRUB/grubx64.efi"
 check "NixOS's own folder may change" grep -qx new-nixos "$E/EFI/NixOS-boot-efi/grubx64.efi"
 check "a new file outside NixOS's folder is removed" test ! -e "$E/EFI/stray.efi"
 
+echo "== installer: the configuration follows the installer's source (branch / commit)"
+check "default: the template's URL is kept" hasf uefi 'url = "github:jhonatanoliveira2/monolith-dotfiles";'
+fresh src
+check "MONOLITH_FLAKE run succeeds" env MI_BOOT=uefi MONOLITH_FLAKE='github:jhonatanoliveira2/monolith-dotfiles?ref=unify/main' bash "$INST" --customize-only "$TMP/src"
+check "MONOLITH_FLAKE: monolith input set" hasf src 'url = "github:jhonatanoliveira2/monolith-dotfiles?ref=unify/main";'
+check "MONOLITH_FLAKE: nixpkgs untouched" hasf src 'url = "github:NixOS/nixpkgs/nixos-unstable";'
+REV=0123456789abcdef0123456789abcdef01234567
+mkdir -p "$TMP/bin"   # git ls-remote stub: the heads in $HEADS
+printf '#!/bin/sh\nprintf "%%b" "$HEADS"\n' >"$TMP/bin/git"; chmod +x "$TMP/bin/git"
+resolve() {   # resolve_source on its own; prints FLAKE_REF
+    {
+        echo 'set -euo pipefail; B="" N="" W="" L="" MK_WARN=! LANGX=en'
+        sed -n '/^REPO=/p;/^TEMPLATE_URL=/p;/^FLAKE_REF=/p;/^SRC_REV=/p;/^t() {/p;/^warn() {/p' "$INST"
+        sed -n '/^resolve_source() {/,/^}/p' "$INST"
+        echo 'resolve_source 2>/dev/null; printf "%s" "$FLAKE_REF"'
+    } >"$TMP/resolve.sh"
+    PATH="$TMP/bin:$PATH" HEADS=$1 MONOLITH_REV=$REV bash "$TMP/resolve.sh"
+}
+B=github:jhonatanoliveira2/monolith-dotfiles
+check "installer from a branch: that branch" test "$(resolve "aaaa\trefs/heads/main\n$REV\trefs/heads/unify/main\n")" = "$B?ref=unify/main"
+check "installer from main: the bare URL" test "$(resolve "$REV\trefs/heads/feature\n$REV\trefs/heads/main\n")" = "$B"
+check "branch not found: that exact commit" test "$(resolve "aaaa\trefs/heads/main\n")" = "$B/$REV"
+check "no network: that exact commit" test "$(resolve "")" = "$B/$REV"
+check "MONOLITH_FLAKE wins" test "$(MONOLITH_FLAKE=path:/x resolve "$REV\trefs/heads/main\n")" = "path:/x"
+check "no revision (dirty build): the bare URL" test "$(REV="" resolve "")" = "$B"
+
 fresh broken
 sed -i 's/user = "alice";/username = "alice";/' "$TMP/broken/configuration.nix"
 check "a changed template is reported, not half-filled silently" bash -c "! bash '$INST' --customize-only '$TMP/broken'"

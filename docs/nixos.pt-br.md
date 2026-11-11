@@ -105,6 +105,9 @@ template com as respostas, instala, define a senha do usuário (o root fica bloq
   20 GiB nunca são oferecidos; `-- --dry-run` mostra cada comando sem alterar nada.
 - Se a instalação parar depois de o disco ser preparado (rede, um erro corrigido na branch), rode o mesmo comando
   de novo: ele oferece retomar e busca a versão mais recente da branch (`--refresh`).
+- A configuração busca o MONOLITH no mesmo lugar que o instalador: rodado com `?ref=<branch>`, o
+  `/etc/nixos/flake.nix` segue essa branch (o próprio commit quando a branch não é encontrada);
+  `MONOLITH_FLAKE=<flake ref>` escolhe outra origem.
 - Depois de instalar: `sudo nixos-rebuild switch --flake /etc/nixos`.
 
 ### Pela ISO de instalação do NixOS, à mão

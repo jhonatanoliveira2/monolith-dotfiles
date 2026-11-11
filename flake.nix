@@ -27,12 +27,21 @@
       meta = import ./nix/meta.nix { inherit self lib; };
     in
     {
-      overlays.default = final: _prev: { monolith = import ./nix/pkgs { pkgs = final; }; };
+      overlays.default = final: _prev: {
+        monolith = import ./nix/pkgs {
+          pkgs = final;
+          rev = self.rev or "";
+        };
+      };
 
       packages = forAllSystems (
         pkgs:
         let
-          set = import ./nix/pkgs { inherit pkgs; };
+          # rev: the installer writes the same source (branch / commit) into the configuration it generates
+          set = import ./nix/pkgs {
+            inherit pkgs;
+            rev = self.rev or "";
+          };
         in
         {
           inherit (set)

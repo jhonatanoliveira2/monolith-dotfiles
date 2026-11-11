@@ -1,6 +1,10 @@
 # Every derivation of the flake. Sources come straight from the shared tree (configs/, branding/, greeter/):
 # nothing is copied or duplicated for NixOS, the same files serve the Arch installer.
-{ pkgs }:
+# rev: the commit this flake was fetched at (empty for a dirty checkout), for the installer
+{
+  pkgs,
+  rev ? "",
+}:
 let
   inherit (pkgs) callPackage;
 in
@@ -16,7 +20,7 @@ rec {
   plymouth-theme = callPackage ./plymouth-theme.nix { inherit branding; };
   grub-theme = callPackage ./grub-theme.nix { inherit branding; };
   # guided installer for the NixOS ISO (`nix run .#install`)
-  installer = callPackage ./installer.nix { };
+  installer = callPackage ./installer.nix { inherit rev; };
   # Quickshell greeter for greetd (greeter/ + shared components of the shell)
   greeter = callPackage ./greeter.nix { inherit branding shell; };
   # Nothing theme: dot-matrix renderer (build + runtime) and its fonts; the wallpapers are rendered by the

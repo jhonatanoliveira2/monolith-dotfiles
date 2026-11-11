@@ -34,7 +34,10 @@
 # disk was prepared (network, an evaluation error fixed upstream), running it again offers to resume.
 set -euo pipefail
 
-FLAKE_REF=${MONOLITH_FLAKE:-github:jhonatanoliveira2/monolith-dotfiles}
+REPO=jhonatanoliveira2/monolith-dotfiles
+TEMPLATE_URL=github:$REPO                 # the monolith input as written in templates/nixos/flake.nix
+FLAKE_REF=${MONOLITH_FLAKE:-$TEMPLATE_URL} # where the configuration takes MONOLITH from (resolve_source)
+SRC_REV=${MONOLITH_REV:-}                  # set by the Nix package: the commit this installer was built from
 TEMPLATE_DIR=${MONOLITH_TEMPLATE:-}      # set by the Nix package (templates/nixos from the same revision)
 MNT=/mnt
 STATE=$MNT/var/lib/monolith-install      # on the new root: answers for a resume, the copy of a shared ESP
@@ -149,9 +152,42 @@ done
 
 # ── template ──────────────────────────────────────────────────────────────────────────────────────────────
 # customize <dir>: fills flake.nix / configuration.nix of templates/nixos with the answers
+# The configuration takes MONOLITH from where the installer came from. `nix run github:…?ref=<branch>#install`
+# with the template's bare URL locked the repository's default branch instead: another commit, possibly one
+# without flake.nix ("path '«github:…/<rev>»/flake.nix' does not exist" while creating flake.lock).
+# The branch whose head is the installer's commit is looked up (main → the bare URL, kept); none (a commit
+# pushed since, no network) → that exact commit, so the configuration never differs from the installer.
+resolve_source() {
+    [[ -z ${MONOLITH_FLAKE:-} && $SRC_REV =~ ^[0-9a-f]{40}$ ]] || return 0
+    local heads b branch="" found=()
+    heads=$(timeout 30 git ls-remote --heads "https://github.com/$REPO" 2>/dev/null) || heads=""
+    mapfile -t found < <(awk -v r="$SRC_REV" '$1 == r && $2 ~ /^refs\/heads\// { sub(/^refs\/heads\//, "", $2); print $2 }' <<<"$heads")
+    for b in "${found[@]}"; do
+        [[ $b =~ ^[A-Za-z0-9._/-]+$ ]] || continue
+        if [[ $b == main ]]; then branch=main; break; fi
+        [[ -n $branch ]] || branch=$b
+    done
+    if [[ $branch == main ]]; then FLAKE_REF=$TEMPLATE_URL
+    elif [[ -n $branch ]]; then FLAKE_REF="$TEMPLATE_URL?ref=$branch"
+    else
+        FLAKE_REF="$TEMPLATE_URL/$SRC_REV"
+        warn "$(t "Branch do instalador não identificada: a configuração usa o commit ${SRC_REV:0:12} (para seguir uma branch, mude a url do monolith em /etc/nixos/flake.nix)." \
+            "The installer's branch was not identified: the configuration uses commit ${SRC_REV:0:12} (to follow a branch, change the monolith url in /etc/nixos/flake.nix).")"
+    fi
+}
+# flake.nix: the monolith input → $FLAKE_REF (only the template's own line is touched)
+set_source() {
+    local f=$1 esc
+    [[ $FLAKE_REF == "$TEMPLATE_URL" ]] && return 0
+    esc=$(printf '%s' "$FLAKE_REF" | sed 's/[&|\\]/\\&/g')
+    sed -i "s|url = \"$TEMPLATE_URL\";|url = \"$esc\";|" "$f"
+    grep -qF "url = \"$FLAKE_REF\";" "$f" || die "template: monolith input not set ($f)"
+}
+
 customize() {
     local dir=$1 c=$1/configuration.nix f=$1/flake.nix
     [[ -f $c && -f $f ]] || die "template not found in $dir"
+    set_source "$f"
     sed -i \
         -e "s|user = \"alice\";|user = \"$USERNAME\";|" \
         -e "s|description = \"Alice\";|description = \"$FULLNAME\";|" \
@@ -389,6 +425,8 @@ else
         "No access to cache.nixos.org. Plug the cable or use nmtui / wpa_cli first.")"
     yes_no "$(t "Continuar mesmo assim?" "Continue anyway?")" n || exit 1
 fi
+resolve_source
+ok "MONOLITH: $FLAKE_REF"
 # GPU drivers bound on the ISO, kept for the initrd (early KMS) when they are open drivers the kernel ships
 for drv in /sys/class/drm/card[0-9]*/device/driver; do
     [[ -e $drv ]] || continue
@@ -551,6 +589,12 @@ if findmnt -n "$MNT" >/dev/null 2>&1 && [[ -f $MNT/etc/nixos/flake.nix && -f $MN
         USERNAME=$(sed -n 's/^ *user = "\([^"]*\)".*/\1/p' "$MNT/etc/nixos/configuration.nix" | head -n1)
         [[ -n $HOST && -n $USERNAME ]] || die "$(t "Não consegui ler usuário / hostname de" "Could not read user / hostname from") $MNT/etc/nixos/configuration.nix"
         load_state
+        # prepared by an installer that wrote the bare URL (the default branch): the same source as this run
+        if grep -qF "url = \"$TEMPLATE_URL\";" "$MNT/etc/nixos/flake.nix" && [[ $FLAKE_REF != "$TEMPLATE_URL" ]]; then
+            set_source "$MNT/etc/nixos/flake.nix"
+            rm -f "$MNT/etc/nixos/flake.lock"
+            ok "flake.nix: monolith = $FLAKE_REF"
+        fi
     else
         die "$(t "Desmonte antes de recomeçar:" "Unmount before starting over:") umount -R $MNT; cryptsetup close cryptroot"
     fi
@@ -981,9 +1025,9 @@ cfgdir=$MNT/etc/nixos
 if ((RESUME)) && [[ -f $cfgdir/flake.lock ]]; then
     step "$(t "Atualizando o MONOLITH para a versão mais recente da branch" "Updating MONOLITH to the newest commit of the branch")"
     run nix flake update monolith --flake "$cfgdir" || run nix flake lock --update-input monolith "$cfgdir" ||
-        die "$(t "Não foi possível atualizar a entrada monolith (rede?)." "Could not update the monolith input (network?).")"
+        die "$(t "Não foi possível atualizar a entrada monolith (rede? origem: $FLAKE_REF)." "Could not update the monolith input (network? source: $FLAKE_REF).")"
 else
-    run nix flake lock "$cfgdir" || die "$(t "Não foi possível criar o flake.lock (rede?)." "Could not create flake.lock (network?).")"
+    run nix flake lock "$cfgdir" || die "$(t "Não foi possível criar o flake.lock (rede? origem: $FLAKE_REF)." "Could not create flake.lock (network? source: $FLAKE_REF).")"
 fi
 if ! run nixos-install --no-root-passwd --no-channel-copy --flake "$cfgdir#$HOST"; then
     warn "$(t "A instalação falhou. O disco continua preparado: corrija o problema (ou aguarde a correção na branch) e rode o instalador de novo para retomar." \
