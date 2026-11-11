@@ -17,7 +17,7 @@ Scripts, comments, internal names and technical logs use English. Only user-faci
 
 Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`; the NixOS guides use `name.md` and `name.pt-br.md` (`nixos`, `nothing-theme`).
 
-The repository serves two systems with the same configuration in `configs/`: Arch Linux / CachyOS (installer in `scripts/`) and NixOS (flake in `nix/`). A change in `configs/` applies to both: do not hard-code one distribution's paths (`/usr/bin/...`), detect at run time (`core/Distro.qml`). The Nothing theme is optional and only exists when `~/.config/monolith/nothing.json` is present: without it the shell must not change.
+The repository serves two systems with the same configuration in `configs/`: Arch Linux / CachyOS (installer in `scripts/`) and NixOS (flake in `nix/`). A change in `configs/` applies to both: do not hard-code one distribution's paths (`/usr/bin/...`), detect at run time (`core/Distro.qml`). The Nothing theme is optional and only exists when `~/.config/monolith/nothing.json` is present (written by Nix or by `scripts/nothing-theme.sh`, from the same files of `nix/nothing/`): without it the shell must not change.
 
 When changing dependencies, update `packages.txt` (Arch) and `nix/packages.nix` or the modules in `nix/modules/nixos/` (NixOS) and explain why each package is needed. Do not promote commented references to active dependencies without confirming actual use.
 
@@ -49,4 +49,4 @@ The tests use temporary environments and never touch your session. If you change
 
 ## Screenshots and previews
 
-Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. The READMEs use `1.png`, `2.png` and `3.png`. Installer previews are generated with `tools/ansi2svg.py`.
+Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. The READMEs show no screenshots or videos for now (the old ones were out of date); new ones go there once they match the current desktop. Installer previews are generated with `tools/ansi2svg.py`.

@@ -17,7 +17,7 @@ Scripts, comentários, nomes internos e logs técnicos usam inglês. Apenas mens
 
 A documentação também é bilíngue. Ao alterar um guia, atualize os dois arquivos correspondentes em `docs/` e mantenha comandos, caminhos, opções e identificadores técnicos iguais. Os pares usam os nomes `configuracao.md` e `config.md`, `dependencias.md` e `dependencies.md`, `instalacao.md` e `installation.md`, `problemas-conhecidos.md` e `troubleshooting.md`; os guias do NixOS usam `nome.md` e `nome.pt-br.md` (`nixos`, `nothing-theme`).
 
-O repositório atende dois sistemas com a mesma configuração em `configs/`: Arch Linux / CachyOS (instalador em `scripts/`) e NixOS (flake em `nix/`). Uma mudança em `configs/` vale para os dois: não use caminhos fixos de uma distribuição (`/usr/bin/...`), detecte em tempo de execução (`core/Distro.qml`). O tema Nothing é opcional e só existe quando `~/.config/monolith/nothing.json` está presente: sem ele o shell não pode mudar.
+O repositório atende dois sistemas com a mesma configuração em `configs/`: Arch Linux / CachyOS (instalador em `scripts/`) e NixOS (flake em `nix/`). Uma mudança em `configs/` vale para os dois: não use caminhos fixos de uma distribuição (`/usr/bin/...`), detecte em tempo de execução (`core/Distro.qml`). O tema Nothing é opcional e só existe quando `~/.config/monolith/nothing.json` está presente (gravado pelo Nix ou pelo `scripts/nothing-theme.sh`, a partir dos mesmos arquivos de `nix/nothing/`): sem ele o shell não pode mudar.
 
 Ao alterar dependências, atualize `packages.txt` (Arch) e `nix/packages.nix` ou os módulos em `nix/modules/nixos/` (NixOS) e explique o motivo de cada pacote. Não transforme referências em comentários em dependências ativas sem confirmar o uso real.
 
@@ -49,4 +49,4 @@ Os testes usam ambientes temporários e nunca tocam a sua sessão. Se alterar o 
 
 ## Capturas e prévias
 
-Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. Os READMEs usam `1.png`, `2.png` e `3.png`. As prévias do instalador são geradas por `tools/ansi2svg.py`.
+Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. Por enquanto os READMEs não mostram capturas nem vídeos (os antigos estavam desatualizados); novos entram lá quando corresponderem ao desktop atual. As prévias do instalador são geradas por `tools/ansi2svg.py`.

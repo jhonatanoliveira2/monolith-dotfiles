@@ -20,41 +20,12 @@
 </p>
 
 <p align="center">
-  <a href="#capturas-de-tela">Capturas</a> &nbsp;•&nbsp;
   <a href="#destaques">Destaques</a> &nbsp;•&nbsp;
   <a href="#início-rápido">Instalar</a> &nbsp;•&nbsp;
   <a href="#atalhos">Atalhos</a> &nbsp;•&nbsp;
   <a href="#documentação">Docs</a>
 </p>
 
----
-
-https://github.com/user-attachments/assets/3df9da29-d3b5-43b1-9512-f72b0a0250b3
-
-<p align="center"><a href="https://youtu.be/W_SYo-i9fXk">▶ Assista ao tour completo no YouTube</a></p>
-
-## Capturas de tela
-
-<p align="center">
-  <img src="assets/screenshots/1.png" alt="Desktop MONOLITH com a barra do Quickshell" width="100%">
-</p>
-<table>
-  <tr>
-    <td width="50%"><img src="assets/screenshots/2.png" alt="Menus e configurações" width="100%"></td>
-    <td width="50%"><img src="assets/screenshots/3.png" alt="Terminal e ferramentas" width="100%"></td>
-  </tr>
-</table>
-
-## Destaques
-
-- **Barra nativa em Quickshell** — workspaces, player MPRIS com miniplayer ao passar o mouse, monitor do sistema, rede, Bluetooth, áudio, brilho, bateria e notificações, sem scripts de polling.
-- **App de Configurações do Monolith** — páginas pesquisáveis de tela (arranjo dos monitores arrastando, com encaixe e reversão automática), áudio, rede, Bluetooth, energia, limpeza de armazenamento, entrada e atualização. As mudanças são aplicadas na hora pela API Lua do Hyprland.
-- **Menu de mídia** — transição de capas, barra de progresso, volume, troca de player e histórico pesquisável das faixas tocadas recentemente, que voltam a tocar com um clique.
-- **Hyprland em Lua** — `hyprland.lua` modular, com arquivos separados para atalhos, layout, regras e autostart.
-- **Instalador seguro (Arch Linux, CachyOS)** — verificação de dependências, backups automáticos, reversão em caso de falha e restauração com simulação.
-- **Instalação declarativa (NixOS)** — um flake Nix: módulos NixOS + Home Manager, instalador guiado para a ISO do NixOS, versões fixadas, tema do GRUB, splash do Plymouth e um greeter em Quickshell com o mesmo visual.
-- **Tema Nothing (opcional, NixOS)** — cinzas, Doto / Space Grotesk / Space Mono, medidores de LEDs, brilho de borda nas notificações e wallpapers estáticos convertidos em matriz de LEDs por monitor (`monolith-dotmatrix`). Sem vínculo com a Nothing Technology Limited.
-- **Bilíngue** — textos do shell e documentação em português do Brasil e inglês.
 
 ## O que vem incluído
 
@@ -99,11 +70,7 @@ cd monolith-dotfiles
   Os backups ficam em `~/.local/share/monolith-dotfiles/backups/`. Consulte o [guia de instalação](docs/instalacao.md#backup-e-recuperação) para restaurar um snapshot específico ou recuperar arquivos manualmente.
 </details>
 
-<details>
-  <summary><strong>Prévia do instalador</strong></summary>
-  <p align="center"><img src="assets/previews/installer-welcome.svg" alt="Boas-vindas e etapas do instalador MONOLITH" width="760"></p>
-  <p align="center"><img src="assets/previews/installer-run.svg" alt="Progresso e conclusão do instalador MONOLITH" width="760"></p>
-</details>
+**Tema:** o instalador pergunta entre o tema padrão e o tema Nothing (`--theme default|nothing` pula a pergunta). Depois: `./scripts/nothing-theme.sh on` / `off` ([docs/nothing-theme.pt-br.md](docs/nothing-theme.pt-br.md#arch-linux--cachyos-scriptsnothing-themesh)).
 
 ## Atalhos
 
@@ -180,19 +147,19 @@ cd monolith-dotfiles
 
 ### NixOS
 
-Pela ISO de instalação do NixOS (a mínima basta), conectado à rede:
+Pela ISO de instalação do NixOS, conectado à rede:
 
 ```bash
 sudo nix --extra-experimental-features "nix-command flakes" \
   run github:jhonatanoliveira2/monolith-dotfiles#install
 ```
 
-O instalador guiado pergunta o disco, usuário, hostname, idioma, teclado, LUKS e swap, mostra um resumo e só
+O instalador guiado pergunta o disco, usuário, hostname, idioma, teclado, LUKS, swap e tema (padrão ou Nothing), mostra um resumo e só
 apaga o disco depois que o nome dele é digitado de volta. Num NixOS já instalado, ou num flake existente, veja
 [docs/nixos.pt-br.md](docs/nixos.pt-br.md#instalação). Atualizações: Configurações > Atualização, ou
 `sudo nix flake update monolith --flake /etc/nixos && sudo nixos-rebuild switch --flake /etc/nixos`.
-O tema Nothing, opcional, é uma linha na configuração (`monolith.nothingTheme.enable = true;`,
-[docs/nothing-theme.pt-br.md](docs/nothing-theme.pt-br.md)).
+O tema Nothing escolhido ali é uma linha da configuração (`monolith.nothingTheme.enable = true;`,
+[docs/nothing-theme.pt-br.md](docs/nothing-theme.pt-br.md)): mude-a e reconstrua para trocar depois.
 
 ## Estrutura do repositório
 
@@ -200,7 +167,7 @@ O tema Nothing, opcional, é uma linha na configuração (`monolith.nothingTheme
 configs/                 Configurações de desktop instaladas na pasta pessoal
 scripts/                 Instalador, backup, restauração, verificações e importação
 docs/                    Guias em inglês e português do Brasil
-assets/                  Identidade visual, prévias do instalador e capturas
+assets/                  Imagens usadas pela documentação
 wallpapers/              Wallpapers estáticos e animados incluídos
 tests/                   Lint e testes do instalador, do shell (QML sem compositor) e da documentação
 flake.nix, flake.lock    O flake (pacotes, módulos NixOS / Home Manager, instalador, template)
@@ -221,7 +188,7 @@ LICENSE                  MIT
 | Configuração e notas de hardware | [Configuration](docs/config.md) | [Configuração](docs/configuracao.md) |
 | Justificativas dos pacotes | [Dependencies](docs/dependencies.md) | [Dependências](docs/dependencias.md) |
 | NixOS: instalação, opções, boot e login | [NixOS](docs/nixos.md) | [NixOS](docs/nixos.pt-br.md) |
-| Tema Nothing e seus wallpapers (NixOS) | [Nothing theme](docs/nothing-theme.md) | [Tema Nothing](docs/nothing-theme.pt-br.md) |
+| Tema Nothing e seus wallpapers (NixOS, Arch / CachyOS) | [Nothing theme](docs/nothing-theme.md) | [Tema Nothing](docs/nothing-theme.pt-br.md) |
 | Problemas comuns | [Troubleshooting](docs/troubleshooting.md) | [Solução de problemas](docs/problemas-conhecidos.md) |
 | Contribuição | [Contributing](CONTRIBUTING.en.md) | [Contribuindo](CONTRIBUTING.md) |
 
