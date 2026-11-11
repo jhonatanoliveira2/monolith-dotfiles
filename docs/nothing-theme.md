@@ -187,18 +187,8 @@ sudo nixos-rebuild switch --flake /etc/nixos
 Log out and in (or restart the shell) to load the new fonts. `monolith.nothingTheme.enable = false;` (or removing
 the line) goes back to the standard look.
 
-A system installed from one of the old branches (`feature/nixos-support`, `feature/nothing-theme`) still follows
-that branch through the `monolith` input of its flake. Both were merged into `main`; point the input at it:
-
-```sh
-sudo sed -i -E 's#monolith-dotfiles/feature/(nixos-support|nothing-theme)#monolith-dotfiles#' /etc/nixos/flake.nix
-sudo nix flake update monolith --flake /etc/nixos
-sudo nixos-rebuild switch --flake /etc/nixos
-```
-
-The theme used to be on by default on `feature/nothing-theme`: add `monolith.nothingTheme.enable = true;` to keep
-it. A new install from the ISO:
-`sudo nix --extra-experimental-features "nix-command flakes" run github:jhonatanoliveira2/monolith-dotfiles#install`.
+A system installed from one of the old branches (`feature/nixos-support`, `feature/nothing-theme`): see
+[Updating from an old branch](migrating.md#nixos).
 
 ## Arch Linux / CachyOS: `scripts/nothing-theme.sh`
 

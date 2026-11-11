@@ -189,19 +189,8 @@ sudo nixos-rebuild switch --flake /etc/nixos
 Saia e entre na sessão (ou reinicie o shell) para carregar as fontes novas. `monolith.nothingTheme.enable = false;`
 (ou apagar a linha) volta ao visual padrão.
 
-Um sistema instalado a partir de uma das branches antigas (`feature/nixos-support`, `feature/nothing-theme`)
-continua seguindo aquela branch pelo input `monolith` do flake. As duas foram unidas à `main`; aponte o input
-para ela:
-
-```sh
-sudo sed -i -E 's#monolith-dotfiles/feature/(nixos-support|nothing-theme)#monolith-dotfiles#' /etc/nixos/flake.nix
-sudo nix flake update monolith --flake /etc/nixos
-sudo nixos-rebuild switch --flake /etc/nixos
-```
-
-O tema vinha ativado por padrão na `feature/nothing-theme`: acrescente `monolith.nothingTheme.enable = true;` para
-mantê-lo. Instalação nova pela ISO:
-`sudo nix --extra-experimental-features "nix-command flakes" run github:jhonatanoliveira2/monolith-dotfiles#install`.
+Um sistema instalado a partir de uma das branches antigas (`feature/nixos-support`, `feature/nothing-theme`): veja
+[Atualizar a partir de uma branch antiga](migracao.md#nixos).
 
 ## Arch Linux / CachyOS: `scripts/nothing-theme.sh`
 
