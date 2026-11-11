@@ -8,14 +8,14 @@ Thank you for contributing to MONOLITH. Clear, verifiable and safe changes help 
 
 - Do not include tokens, credentials, private keys, email addresses, usernames or personal paths. Review the entire diff before submitting.
 - Do not claim tests you did not run. State the environment you used and any checks that remain outstanding.
-- User-facing text must be available in English and Brazilian Portuguese.
+- Write in the language you prefer, English or Brazilian Portuguese: code, interface text and documentation. A translation to the other one is welcome, never required.
 - Preserve third-party licenses and notices alongside the components they apply to.
 
 ## Project conventions
 
-Scripts, comments, internal names and technical logs use English. Only user-facing messages are translated. Installer messages live in `scripts/lib/messages.sh`; keep placeholders in the same order in both languages.
+The existing code uses English for scripts, comments, internal names and technical logs; following that helps, but it is not a rule. Installer messages live in `scripts/lib/messages.sh` (`_m key "English" ["Portuguese"]`), the shell's in `core/Strings.qml` and `settings/Labels.qml`. A text written in one language is shown in that language until someone translates it; when both exist, keep the placeholders in the same order.
 
-Documentation is bilingual too. When changing a guide, update both corresponding files in `docs/` and keep commands, paths, options and technical identifiers identical. The pairs are `configuracao.md` and `config.md`, `dependencias.md` and `dependencies.md`, `instalacao.md` and `installation.md`, and `problemas-conhecidos.md` and `troubleshooting.md`; the NixOS guides use `name.md` and `name.pt-br.md` (`nixos`, `nothing-theme`).
+Most guides in `docs/` exist in both languages (for instance `installation.md` and `instalacao.md`, `nixos.md` and `nixos.pt-br.md`). When changing a guide you may change only the version in your language, and a new guide may exist in one language only. If you update both, keep commands, paths and options identical.
 
 The repository serves two systems with the same configuration in `configs/`: Arch Linux / CachyOS (installer in `scripts/`) and NixOS (flake in `nix/`). A change in `configs/` applies to both: do not hard-code one distribution's paths (`/usr/bin/...`), detect at run time (`core/Distro.qml`). The Nothing theme is optional and only exists when `~/.config/monolith/nothing.json` is present (written by Nix or by `scripts/nothing-theme.sh`, from the same files of `nix/nothing/`): without it the shell must not change.
 
@@ -27,7 +27,7 @@ Run the relevant tests before submitting (the same ones CI runs on every push an
 
 ```bash
 bash tests/lint.sh                   # bash -n, shellcheck, luacheck, Python and QML syntax
-bash tests/test-docs.sh              # links, anchors, bilingual pairs, structure
+bash tests/test-docs.sh              # links, anchors, structure
 bash tests/test-installer.sh         # Arch installer (temporary environments)
 bash tests/test-nixos-install.sh     # NixOS guided installer (no disk is touched)
 bash tests/test-scripts.sh           # the shell's helper scripts (fake curl, no network)
@@ -47,6 +47,6 @@ The tests use temporary environments and never touch your session. If you change
 3. Test what changed and report the actual results.
 4. Open an [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) to report a problem or a repository contribution to propose a change.
 
-## Screenshots and previews
+## Previews
 
-Add screenshots under `assets/screenshots/`. Remove notifications and personal data before publishing. The READMEs show no screenshots or videos for now (the old ones were out of date); new ones go there once they match the current desktop. Installer previews are generated with `tools/ansi2svg.py`.
+The README's previews live in `assets/previews/` and are generated from the real programs by `python3 tools/previews.py` (needs fastfetch, fish, `script` and Python with Pillow and numpy; `--only name` redoes one). They never show the user's name or hostname; check the result before sending, and remove personal data from any new image.

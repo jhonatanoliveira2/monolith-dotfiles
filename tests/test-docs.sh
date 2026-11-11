@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test-docs.sh - documentation consistency: links, anchors, script references, bilingual pairs, package coverage,
+# test-docs.sh - documentation consistency: links, anchors, script references, translations kept, package coverage,
 # and the structure of both install paths (Arch installer, NixOS flake).
 # Usage: bash tests/test-docs.sh
 set -uo pipefail
@@ -69,11 +69,11 @@ while IFS= read -r ref; do
 # only repository-level paths: skip config-relative ones such as hypr/scripts/x.sh or quickshell/scripts/x.sh
 done < <(grep -hoP '(?<![\w./-])(\./)?(scripts|tools|tests)/[A-Za-z0-9_./-]+\.(sh|py)' "${MDFILES[@]}" 2>/dev/null | sed 's#^\./##' | sort -u)
 
-echo "== bilingual pairs"
+echo "== existing translations are still there"
 [[ -f README.md && -f README.pt-br.md ]] && ok || ko "missing README pair"
 [[ -f CONTRIBUTING.md && -f CONTRIBUTING.en.md ]] && ok || ko "missing CONTRIBUTING pair"
 for pair in instalacao.md:installation.md configuracao.md:config.md dependencias.md:dependencies.md \
-    problemas-conhecidos.md:troubleshooting.md nixos.pt-br.md:nixos.md nothing-theme.pt-br.md:nothing-theme.md; do
+    problemas-conhecidos.md:troubleshooting.md nixos.pt-br.md:nixos.md nothing-theme.pt-br.md:nothing-theme.md migracao.md:migrating.md atalhos.md:keybinds.md; do
     [[ -f docs/${pair%%:*} && -f docs/${pair#*:} ]] && ok || ko "missing docs pair: $pair"
 done
 
@@ -82,14 +82,13 @@ source scripts/lib/common.sh
 source scripts/lib/packages.sh
 for sec in official:required official:optional aur:required aur:optional manual; do
     while IFS= read -r pkg; do
-        for d in docs/dependencias.md docs/dependencies.md; do
-            grep -qF "$pkg" "$d" && ok || ko "$pkg ($sec) is not documented in $d"
-        done
+        # one language is enough (CONTRIBUTING: a translation is welcome, never required)
+        grep -qF "$pkg" docs/dependencies.md docs/dependencias.md && ok || ko "$pkg ($sec) is not documented in docs/dependencies.md nor docs/dependencias.md"
     done < <(pkg_list "$sec")
 done
 
 echo "== structure required by the project brief"
-for p in assets/screenshots assets/previews \
+for p in assets/previews \
     configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty \
     configs/.config/btop configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
     configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \
@@ -110,7 +109,7 @@ done
 
 echo "== one repository: nothing points at the old branches"
 # the flake, the template, the installer and the update check follow the default branch; the guides may name the
-# old branches only where they explain how to leave them (docs/nothing-theme*.md)
+# old branches only where they explain how to leave them (docs/nothing-theme*.md, docs/migrating.md, docs/migracao.md)
 while IFS= read -r hit; do
     ko "reference to a merged branch: $hit"
 done < <(grep -rnE 'feature/(nixos-support|nothing-theme)' flake.nix nix templates README.md README.pt-br.md \

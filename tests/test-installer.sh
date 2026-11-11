@@ -68,10 +68,11 @@ else
 fi
 
 echo "== i18n catalogue"
-check "every key has English and Portuguese, same placeholders" bash -c '
+check "every key has English; a Portuguese one, when there, has the same placeholders" bash -c '
     source "$0/scripts/lib/common.sh"; source "$0/scripts/lib/i18n.sh"; source "$0/scripts/lib/messages.sh"
     for k in "${!MSG_en[@]}"; do
-        [[ -n ${MSG_pt_BR[$k]-} ]] || exit 1
+        [[ -n ${MSG_en[$k]} ]] || exit 1
+        [[ -n ${MSG_pt_BR[$k]-} ]] || continue
         a=$(grep -o "%s" <<<"${MSG_en[$k]}" | wc -l); b=$(grep -o "%s" <<<"${MSG_pt_BR[$k]}" | wc -l)
         [[ $a == "$b" ]] || exit 1
     done' "$ROOT"

@@ -8,14 +8,14 @@ Obrigado por contribuir com o MONOLITH. Alterações claras, verificáveis e seg
 
 - Não inclua tokens, credenciais, chaves privadas, e-mails, nomes de usuário ou caminhos pessoais. Revise o diff inteiro antes de enviar.
 - Não declare testes que não executou. Informe o ambiente usado e quaisquer verificações pendentes.
-- Textos apresentados ao usuário devem existir em inglês e português do Brasil.
+- Escreva no idioma que preferir, inglês ou português do Brasil, no código, nos textos da interface e na documentação. A tradução para o outro idioma é bem-vinda, mas não é obrigatória.
 - Preserve licenças e avisos de terceiros junto dos componentes aos quais se aplicam.
 
 ## Convenções do projeto
 
-Scripts, comentários, nomes internos e logs técnicos usam inglês. Apenas mensagens voltadas ao usuário são traduzidas. As mensagens do instalador ficam em `scripts/lib/messages.sh`; mantenha os placeholders na mesma ordem nos dois idiomas.
+O código existente usa inglês em scripts, comentários, nomes internos e logs técnicos; seguir isso ajuda, mas não é regra. As mensagens do instalador ficam em `scripts/lib/messages.sh` (`_m chave "inglês" ["português"]`) e as do shell em `core/Strings.qml` e `settings/Labels.qml`. Um texto escrito em um idioma só aparece nesse idioma até alguém traduzir; quando houver os dois, mantenha os placeholders na mesma ordem.
 
-A documentação também é bilíngue. Ao alterar um guia, atualize os dois arquivos correspondentes em `docs/` e mantenha comandos, caminhos, opções e identificadores técnicos iguais. Os pares usam os nomes `configuracao.md` e `config.md`, `dependencias.md` e `dependencies.md`, `instalacao.md` e `installation.md`, `problemas-conhecidos.md` e `troubleshooting.md`; os guias do NixOS usam `nome.md` e `nome.pt-br.md` (`nixos`, `nothing-theme`).
+A maior parte dos guias em `docs/` existe nos dois idiomas (por exemplo `instalacao.md` e `installation.md`, `nixos.pt-br.md` e `nixos.md`). Ao alterar um guia, você pode mudar só a versão do idioma que usa, e um guia novo pode existir em um idioma só. Se atualizar os dois, mantenha comandos, caminhos e opções iguais.
 
 O repositório atende dois sistemas com a mesma configuração em `configs/`: Arch Linux / CachyOS (instalador em `scripts/`) e NixOS (flake em `nix/`). Uma mudança em `configs/` vale para os dois: não use caminhos fixos de uma distribuição (`/usr/bin/...`), detecte em tempo de execução (`core/Distro.qml`). O tema Nothing é opcional e só existe quando `~/.config/monolith/nothing.json` está presente (gravado pelo Nix ou pelo `scripts/nothing-theme.sh`, a partir dos mesmos arquivos de `nix/nothing/`): sem ele o shell não pode mudar.
 
@@ -27,7 +27,7 @@ Execute os testes relevantes antes de enviar (os mesmos que o CI roda em cada pu
 
 ```bash
 bash tests/lint.sh                   # bash -n, shellcheck, luacheck, sintaxe de Python e de QML
-bash tests/test-docs.sh              # links, âncoras, pares bilíngues, estrutura
+bash tests/test-docs.sh              # links, âncoras, estrutura
 bash tests/test-installer.sh         # instalador do Arch (ambientes temporários)
 bash tests/test-nixos-install.sh     # instalador guiado do NixOS (nenhum disco é tocado)
 bash tests/test-scripts.sh           # scripts auxiliares do shell (curl falso, sem rede)
@@ -47,6 +47,6 @@ Os testes usam ambientes temporários e nunca tocam a sua sessão. Se alterar o 
 3. Teste o que mudou e descreva resultados reais.
 4. Abra uma [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) para relatar um problema ou uma contribuição no repositório para propor a alteração.
 
-## Capturas e prévias
+## Prévias
 
-Adicione capturas em `assets/screenshots/`. Remova notificações e dados pessoais antes de publicar. Por enquanto os READMEs não mostram capturas nem vídeos (os antigos estavam desatualizados); novos entram lá quando corresponderem ao desktop atual. As prévias do instalador são geradas por `tools/ansi2svg.py`.
+As prévias do README ficam em `assets/previews/` e são geradas a partir dos programas reais por `python3 tools/previews.py` (precisa de fastfetch, fish, `script` e Python com Pillow e numpy; `--only nome` refaz uma só). Elas não mostram o nome do usuário nem o hostname; confira o resultado antes de enviar, e tire dados pessoais de qualquer imagem nova.

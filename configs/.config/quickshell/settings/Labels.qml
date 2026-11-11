@@ -350,7 +350,7 @@ QtObject {
     })
     function t(key) {
         const m = Config.language === "en" ? en : pt
-        return m[key] !== undefined ? m[key] : Strings.t(key)
+        return m[key] !== undefined ? m[key] : (en[key] !== undefined ? en[key] : Strings.t(key))   // one language is enough
     }
     function pick(pair) { return Config.language === "en" ? pair[1] : pair[0] }
 }

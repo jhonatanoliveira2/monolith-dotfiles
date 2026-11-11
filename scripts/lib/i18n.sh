@@ -2,7 +2,7 @@
 # shellcheck shell=bash
 # shellcheck disable=SC2034  # variables are shared with the scripts that source this file
 # i18n.sh - tiny translation layer. English is the default language.
-#   _m <key> "<english>" "<pt_BR>"   register a message (see messages.sh)
+#   _m <key> "<english>" ["<pt_BR>"] register a message (see messages.sh); without pt_BR the English one is shown
 #   t <key> [printf args...]         print a message in the active language
 
 declare -gA MSG_en=()
@@ -12,7 +12,7 @@ MONOLITH_LANG=${MONOLITH_LANG:-en}
 
 _m() {
     MSG_en[$1]=$2
-    MSG_pt_BR[$1]=$3
+    MSG_pt_BR[$1]=${3-}
 }
 
 # normalize_lang <value>: map user input to a supported language id (en | pt_BR).
