@@ -296,7 +296,7 @@ Singleton {
             () => Settings.themeMode, v => Themes.setMode(v)),
         tog("themes", "themeMode", "themeVscode", ["Aplicar as cores ao VS Code", "Apply the colours to VS Code"],
             "tema theme cores colors vscode vs code editor", () => Settings.themeVscode, v => Settings.themeVscode = v),
-        // Nothing theme (core/Nothing.qml): runtime overrides of the Nix defaults; hidden without nothing.json
+        // Nothing theme (core/Nothing.qml): runtime overrides of the defaults in nothing.json (Nix or scripts/nothing-theme.sh); hidden without it
         tog("themes", "nothing", "nothingOn", ["Tema Nothing", "Nothing theme"], "nothing dot matrix led pontos matriz glyph tema theme",
             () => Nothing.get("enabled") === true, v => Nothing.set("enabled", v), { when: () => Nothing.available }),
         tog("themes", "nothing", "nothingMono", ["Monocromático (substitui o tema de cores)", "Monochrome (replaces the colour theme)"], "nothing cinza grey gray monocromático monochrome",
@@ -331,7 +331,7 @@ Singleton {
             () => Nothing.get("invert") === true, v => Nothing.set("invert", v), { when: () => Nothing.active && Nothing.wallpaperStyle === "dotmatrix" }),
         btn("themes", "nothing", "nothingCache", ["Apagar wallpapers convertidos (cache)", "Delete converted wallpapers (cache)"], "nothing cache limpar clear wallpaper",
             () => root.run([Config.wallpaperMenu, "--clear-dotmatrix"]), { when: () => Nothing.available }),
-        btn("themes", "nothing", "nothingReset", ["Restaurar padrões (configuração Nix)", "Reset to defaults (Nix configuration)"], "nothing restaurar reset padrão default",
+        btn("themes", "nothing", "nothingReset", ["Restaurar padrões do tema", "Reset to the theme's defaults"], "nothing restaurar reset padrão default",
             () => Nothing.reset(), { when: () => Nothing.available && Nothing.customised }),
         btn("themes", "themeDynamic", "themeRegen", ["Regenerar paleta do wallpaper", "Regenerate wallpaper palette"], "tema theme paleta palette wpgtk cores colors",
             () => { if (Settings.themeMode !== "dynamic") Settings.themeMode = "dynamic"; Themes.regenerate() }),

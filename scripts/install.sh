@@ -27,7 +27,7 @@ source "$SCRIPT_DIR/lib/distro.sh"
 
 TOTAL_STEPS=7
 OPT_LANG="" OPT_YES=0 OPT_DRY=0 OPT_NO_DEPS=0 OPT_OPTIONAL=0 OPT_NO_OPTIONAL=0 OPT_NO_AUR=0
-OPT_AUR_HELPER="" OPT_NO_COLOR=0 OPT_NO_CLEAR=0 OPT_FORCE_SYMLINKS=0
+OPT_AUR_HELPER="" OPT_NO_COLOR=0 OPT_NO_CLEAR=0 OPT_FORCE_SYMLINKS=0 OPT_THEME=""
 
 # plan + journal (used for rollback)
 declare -a PLAN_NEW=() PLAN_DIFF=() PLAN_SAME=()
@@ -50,6 +50,9 @@ Usage: ./scripts/install.sh [options]
   --no-aur             never use an AUR helper (print the manual commands instead)
   --aur-helper NAME    use this AUR helper (default: paru, then yay)
   --force-symlinks     allow writing through symlinked directories under \$HOME
+  --theme default|nothing  the theme (asked otherwise): the default one or the Nothing theme
+                       (LED / dot matrix; scripts/nothing-theme.sh); default turns Nothing off if it was on
+  --nothing-theme      the same as --theme nothing
   --no-color           disable colours        --no-clear   do not clear the screen
   -h, --help           this help              --version    print the version
 
@@ -71,6 +74,9 @@ parse_args() {
             --aur-helper) OPT_AUR_HELPER=${2:?}; shift 2 ;;
             --aur-helper=*) OPT_AUR_HELPER=${1#*=}; shift ;;
             --force-symlinks) OPT_FORCE_SYMLINKS=1; shift ;;
+            --nothing-theme) OPT_THEME=nothing; shift ;;
+            --theme) OPT_THEME=${2:?--theme needs a value}; shift 2 ;;
+            --theme=*) OPT_THEME=${1#*=}; shift ;;
             --no-color) OPT_NO_COLOR=1; shift ;;
             --no-clear) OPT_NO_CLEAR=1; shift ;;
             --version) echo "$MONOLITH_VERSION"; exit 0 ;;
@@ -150,6 +156,31 @@ select_language() {
     fi
     export MONOLITH_LANG
     log INFO "language: $MONOLITH_LANG"
+}
+
+nothing_on() { [[ -f $STATE_DIR/nothing-theme/parts ]]; }
+
+# choose_theme: default theme or Nothing theme (both MONOLITH). Asked only in an interactive run without
+# --theme; the suggestion is the theme in use. Without asking (--yes), the theme in use stays.
+choose_theme() {
+    if [[ -n $OPT_THEME ]]; then
+        [[ $OPT_THEME == default || $OPT_THEME == nothing ]] || { echo "--theme: default | nothing" >&2; exit 1; }
+    elif (( UI_INTERACTIVE && ! OPT_YES )); then
+        local def=1 ans
+        nothing_on && def=2
+        printf '\n'
+        ui_panel "$(t theme.title)" "" "  1) $(t theme.default)" "  2) $(t theme.nothing)" ""
+        printf '\n'
+        while true; do
+            printf '    %s?%s %s [1-2] %s(Enter = %s)%s ' "$C_CYAN" "$C_RESET" "$(t theme.ask)" "$C_GRAPH" "$def" "$C_RESET"
+            IFS= read -r ans || ans=""
+            case ${ans:-$def} in
+                1) OPT_THEME=default; break ;;
+                2) OPT_THEME=nothing; break ;;
+            esac
+        done
+    fi
+    log INFO "theme: ${OPT_THEME:-unchanged} (nothing on: $(nothing_on && echo yes || echo no))"
 }
 
 welcome() {
@@ -615,6 +646,27 @@ configure_vscode() {
     if (( rc == 0 )); then ui_ok "$(t vscode.applied)"; else warn_later "$(t vscode.failed)"; fi
 }
 
+# The theme chosen (scripts/nothing-theme.sh): Nothing turns it on; default turns it off when it was on; with
+# no choice, a Nothing theme already on is brought up to date from this checkout (renderer, cursor, icons...).
+# "on --refresh" keeps the parts chosen before.
+configure_nothing() {
+    local -a args=(--lang "$MONOLITH_LANG")
+    if [[ $OPT_THEME == default ]]; then
+        nothing_on || { ui_ok "$(t theme.default_ok)"; return 0; }
+        args=(off "${args[@]}")
+    elif [[ $OPT_THEME == nothing ]] || nothing_on; then
+        args=(on "${args[@]}")
+        nothing_on && args+=(--refresh)
+    else
+        return 0
+    fi
+    (( OPT_DRY )) && args+=(--dry-run)
+    (( OPT_YES )) && args+=(--yes)
+    (( OPT_NO_COLOR )) && args+=(--no-color)
+    log INFO "nothing-theme.sh ${args[*]}"
+    bash "$SCRIPT_DIR/nothing-theme.sh" "${args[@]}" || warn_later "$(t nt.install_failed)"
+}
+
 step_verify() {
     ui_step 7 "$TOTAL_STEPS" "$(t step.verify)"
     if (( OPT_DRY )); then
@@ -624,6 +676,7 @@ step_verify() {
         apply_gtk_theme
         configure_vscode
         configure_quickshell
+        configure_nothing
         return 0
     fi
     local rel bad=0 ok=0
@@ -647,6 +700,7 @@ step_verify() {
     apply_gtk_theme
     configure_vscode
     configure_quickshell
+    configure_nothing
     printf '\n'
     bash "$SCRIPT_DIR/check-dependencies.sh" --section advice --where target ${OPT_NO_COLOR:+--no-color} || true
 }
@@ -681,7 +735,7 @@ main() {
     init_logging install
     log INFO "MONOLITH installer $MONOLITH_VERSION started (dry_run=$OPT_DRY)"
     log INFO "args: $*"
-    log INFO "options: yes=$OPT_YES no_deps=$OPT_NO_DEPS with_optional=$OPT_OPTIONAL no_optional=$OPT_NO_OPTIONAL no_aur=$OPT_NO_AUR aur_helper=${OPT_AUR_HELPER:-auto} force_symlinks=$OPT_FORCE_SYMLINKS"
+    log INFO "options: yes=$OPT_YES no_deps=$OPT_NO_DEPS with_optional=$OPT_OPTIONAL no_optional=$OPT_NO_OPTIONAL no_aur=$OPT_NO_AUR aur_helper=${OPT_AUR_HELPER:-auto} force_symlinks=$OPT_FORCE_SYMLINKS theme=${OPT_THEME:-ask}"
     log INFO "user=$(id -un 2>/dev/null) uid=$(id -u) home=$HOME target_home=${TARGET_HOME:-$HOME} interactive=$UI_INTERACTIVE tty=$UI_TTY"
     log INFO "system: $(uname -srm 2>/dev/null) / $( . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-unknown}")"
     log INFO "session: XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP-} WAYLAND_DISPLAY=${WAYLAND_DISPLAY-} shell=${SHELL-}"
@@ -704,6 +758,7 @@ main() {
     if (( UI_INTERACTIVE && ! OPT_YES )); then
         ui_confirm "$(t welcome.continue)" y || { ui_warn "$(t common.aborted)"; exit 3; }
     fi
+    choose_theme
 
     step_preflight
     step_dependency_report

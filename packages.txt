@@ -82,6 +82,9 @@ fd                          # LazyVim: file finder (recommended)
 nwg-look                    # nwg-look/config (GTK settings manager, run by hand)
 pavucontrol                 # "Audio mixer" button in the Quickshell audio menu
 cava                        # audio spectrum shown when a song has no lyrics (falls back to the peak level)
+# Nothing theme (scripts/nothing-theme.sh, off unless turned on)
+python-numpy                # monolith-dotmatrix: wallpapers as LED dot matrices
+python-pillow               # monolith-dotmatrix and the MONOLITH Dots cursor (drawn by nix/nothing/cursor.py)
 # Features that only matter for some machines
 power-profiles-daemon       # power profiles (Quickshell UPower service)
 xorg-xwayland               # X11 applications (window-rules.lua has an xwayland rule)

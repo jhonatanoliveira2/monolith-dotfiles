@@ -10,6 +10,9 @@ import "services"
 //   vscode  writes the theme colours into the VS Code settings files of this HOME
 //   notifs  sends itself 25 short notifications (private session bus) and reports what is still held
 //   bt      feeds the pairing agent the prompts bluetoothctl prints and reports how each one was understood
+//   nothingfile  writes nothing.json while the shell runs (nothing-theme.sh on) and reports whether the
+//                current wallpaper is shown again (Nothing.wallpaperChanged), which the startup read must not do
+//   nothingoff   the same when nothing.json is removed (nothing-theme.sh off)
 ShellRoot {
     id: root
     readonly property string action: Quickshell.env("MONOLITH_TEST") || ""
@@ -17,9 +20,13 @@ ShellRoot {
         Splash, Audio, BarLayout, Battery, Brightness, Displays, Bt, Media, Net, Notifs, Osd, Profile, QuickMenu, Stats,
         Perf, Lyrics, Weather, Widgets, Sys, Themes, Wallpapers, Binds, MicFx, AudioFx, Jobs]
 
+    property int wallpaperChanges: 0
+    Connections { target: Nothing; function onWallpaperChanged() { root.wallpaperChanges++ } }
+
     Timer {
         interval: 800; running: true
         onTriggered: {
+            console.log("RESULT wallpaperAtStart=" + root.wallpaperChanges)
             console.log("RESULT nothing=" + Nothing.available + "/" + Nothing.active + " bar=" + Settings.barPosition + "/" + Settings.barStyle + " lookDone=" + Settings.nothingLookDone)
             console.log("RESULT singletons=" + root.singletons.filter(s => s !== null && s !== undefined).length + "/" + root.singletons.length)
             if (root.action === "ytm") {
@@ -27,6 +34,11 @@ ShellRoot {
                 Settings.ytmToken = "s3cret-token"
                 Media.ytm("POST", "toggle-play", "")
             } else if (root.action === "vscode") Themes.writeCode()
+            else if (root.action === "nothingfile")
+                Jobs.run("test", ["sh", "-c", "mkdir -p \"$HOME/.config/monolith\" && printf '{ \"defaults\": { \"enabled\": true } }' >\"$HOME/.config/monolith/nothing.json\""],
+                    { timeout: 5000 }, ok => console.log("RESULT written=" + ok))
+            else if (root.action === "nothingoff")
+                Jobs.run("test", ["rm", "-f", Quickshell.env("HOME") + "/.config/monolith/nothing.json"], { timeout: 5000 }, ok => console.log("RESULT removed=" + ok))
             else if (root.action === "notifs") {
                 // 25 notifications that expire after 0.3 s, with a history limited to 10
                 Settings.notifHistoryMax = 10
@@ -62,8 +74,10 @@ ShellRoot {
         }
     }
     Timer {
-        id: done; interval: root.action === "notifs" ? 4000 : 1800
+        id: done; interval: root.action === "notifs" ? 4000 : root.action.indexOf("nothing") === 0 ? 6000 : 1800
         onTriggered: {
+            if (root.action.indexOf("nothing") === 0)
+                console.log("RESULT nothingfile=" + Nothing.available + "/" + root.wallpaperChanges)
             if (root.action === "notifs")
                 console.log("RESULT notifs=history:" + Notifs.count + " popups:" + Notifs.popups.length + " expiry:" + Object.keys(Notifs.expiry).length + " held:" + Object.keys(Notifs.held).length)
             Qt.quit()

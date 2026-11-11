@@ -54,6 +54,7 @@ The installer reads `/etc/os-release` and reports what it found: Arch Linux (`ID
 | `--no-aur` | Does not call an AUR helper; prints manual commands. |
 | `--aur-helper NAME` | Selects the AUR helper (defaults to `paru`, then `yay`). |
 | `--force-symlinks` | Allows writes through symlinked directories under `$HOME`. Review their targets first. |
+| `--theme default\|nothing` | The theme, otherwise asked after the welcome screen: the default theme or the [Nothing theme](nothing-theme.md) (`scripts/nothing-theme.sh`). `default` turns the Nothing theme off if it was on; without a choice (`--yes`) the theme in use stays. `--nothing-theme` = `--theme nothing`. |
 | `--no-color`, `--no-clear` | Disables colours or screen clearing. |
 | `--version`, `-h`, `--help` | Shows the version or help. |
 

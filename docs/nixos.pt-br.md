@@ -65,7 +65,8 @@ sudo nix --extra-experimental-features "nix-command flakes" \
 ```
 
 Ele pergunta o idioma, o disco de destino, usuário, hostname, fuso, locale, teclado, criptografia do disco
-(LUKS) e swap, mostra um resumo e só apaga o disco depois que o nome dele é digitado de volta. Então particiona
+(LUKS), swap e o tema (padrão ou [Nothing](nothing-theme.pt-br.md): `monolith.nothingTheme.enable`;
+`-- --theme default|nothing` pula a pergunta), mostra um resumo e só apaga o disco depois que o nome dele é digitado de volta. Então particiona
 (GPT + partição EFI de 1 GiB no UEFI, MBR no BIOS), formata em ext4, executa `nixos-generate-config`, preenche o
 template com as respostas, instala, define a senha do usuário (o root fica bloqueado: use `sudo`) e reinicia.
 

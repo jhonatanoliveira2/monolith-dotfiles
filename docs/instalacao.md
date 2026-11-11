@@ -53,6 +53,7 @@ O instalador lê o `/etc/os-release` e informa o que encontrou: Arch Linux (`ID=
 | `--no-aur` | Não chama auxiliar do AUR; exibe os comandos manuais. |
 | `--aur-helper NOME` | Seleciona o auxiliar do AUR (por padrão, `paru` e depois `yay`). |
 | `--force-symlinks` | Permite escrever por diretórios simbólicos dentro de `$HOME`. Use apenas após revisar os destinos. |
+| `--theme default\|nothing` | O tema, perguntado depois da tela de boas-vindas se não for passado: o tema padrão ou o [tema Nothing](nothing-theme.pt-br.md) (`scripts/nothing-theme.sh`). `default` desliga o tema Nothing se ele estava ligado; sem escolha (`--yes`) o tema em uso continua. `--nothing-theme` = `--theme nothing`. |
 | `--no-color`, `--no-clear` | Desativa cores ou a limpeza de tela. |
 | `--version`, `-h`, `--help` | Mostra a versão ou a ajuda. |
 

@@ -39,6 +39,9 @@ STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper-menu/last"
 DM_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/dotmatrix"
 NOTHING_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/monolith/nothing.json"
 SHELL_SETTINGS="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell-monolith/settings.json"
+# on Arch / CachyOS monolith-dotmatrix is in ~/.local/bin (scripts/nothing-theme.sh), which the PATH the shell
+# and the binds start this with may lack; appended, so a system or Nix copy still comes first
+[[ ":$PATH:" == *":$HOME/.local/bin:"* ]] || PATH="$PATH:$HOME/.local/bin"
 
 THUMB_W=480 THUMB_H=270                 # preview size (16:9)
 GRID_COLUMNS=4 GRID_LINES=3             # wallpaper grid

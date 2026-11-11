@@ -108,6 +108,16 @@ run_harness services
 printf '{ "defaults": { "enabled": false } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
 run_harness services
 [[ $(result nothing) == true/false* ]] && ok "theme present but disabled: not active" || ko "theme present but disabled: not active [$(result nothing)]"
+[[ $(result wallpaperAtStart) == 0 ]] && ok "reading nothing.json at startup does not re-apply the wallpaper" || ko "reading nothing.json at startup does not re-apply the wallpaper [$(result wallpaperAtStart)]"
+new_home
+run_harness services MONOLITH_TEST=nothingfile
+check "nothing.json written while running: no QML errors" no_qml_errors
+[[ $(result nothingfile) == true/1 ]] && ok "nothing.json written while running (nothing-theme.sh on): the wallpaper is shown again, once" || ko "nothing.json written while running: the wallpaper is shown again, once [$(result nothingfile)]"
+new_home
+mkdir -p "$HOME_DIR/.config/monolith"
+printf '{ "defaults": { "enabled": true } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
+run_harness services MONOLITH_TEST=nothingoff
+[[ $(result nothingfile) == false/1 ]] && ok "nothing.json removed while running (nothing-theme.sh off): theme gone, the wallpaper shown again" || ko "nothing.json removed while running: theme gone, the wallpaper shown again [$(result nothingfile)]"
 
 echo "== YouTube Music token"
 if command -v python3 >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then

@@ -4,9 +4,10 @@
 
 O tema Nothing é uma identidade visual opcional do MONOLITH Shell, inspirada no
 [NIHIL Shell](https://github.com/poligle/Nihil-Shell) (MIT) e no visual de matriz de pontos dos aparelhos
-Nothing. Ele é gerado pelos módulos Nix, por isso só existe no **NixOS**, e vem **desligado por padrão**: uma
-linha (`monolith.nothingTheme.enable = true;`) o ativa. Sem ele o shell é exatamente o MONOLITH padrão, no NixOS
-como no Arch Linux / CachyOS.
+Nothing. Ele vem **desligado por padrão** e funciona nos dois caminhos de instalação, a partir das mesmas
+fontes: no **NixOS** uma linha (`monolith.nothingTheme.enable = true;`) o ativa; no **Arch Linux / CachyOS** um
+comando (`./scripts/nothing-theme.sh on`, veja [abaixo](#arch-linux--cachyos-scriptsnothing-themesh)). Sem ele o
+shell é exatamente o MONOLITH padrão.
 
 > Este projeto não é afiliado à Nothing Technology Limited. Nenhum logotipo da Nothing nem fonte proprietária
 > (Ndot) é usado; as fontes são Doto, Space Grotesk e Space Mono (SIL OFL). Créditos:
@@ -20,6 +21,7 @@ como no Arch Linux / CachyOS.
 - [Configurações: na hora vs. rebuild](#configurações-na-hora-vs-rebuild)
 - [Wallpapers](#wallpapers)
 - [Ativar o tema num sistema já instalado](#ativar-o-tema-num-sistema-já-instalado)
+- [Arch Linux / CachyOS: `scripts/nothing-theme.sh`](#arch-linux--cachyos-scriptsnothing-themesh)
 - [Problemas comuns](#problemas-comuns)
 
 ## O que muda
@@ -54,7 +56,7 @@ As animações são curtas e desaceleradas, e seguem Configurações › Aparên
 ## Como é montado
 
 ```
-nix/nothing/tokens.nix          paleta, fontes, tempos (fonte única de verdade)
+nix/nothing/tokens.json         paleta, fontes, tempos (fonte única de verdade; o tokens.nix o lê)
 nix/modules/nothing-options.nix opções, compartilhadas pelo NixOS (monolith.nothingTheme) e pelo Home Manager
 nix/modules/nixos/nothing.nix   fontes no sistema, repassa as opções ao Home Manager
 nix/modules/home-nothing.nix    ~/.config/monolith/nothing.json, fontes + conversor no PATH, wallpapers do build
@@ -62,9 +64,11 @@ nix/nothing/dotmatrix.py        monolith-dotmatrix (Python + numpy + Pillow): im
 nix/pkgs/nothing-fonts.nix      Doto, Space Grotesk, Space Mono (arquivos avulsos do google/fonts, com hash)
 nix/pkgs/nothing-wallpapers.nix cada imagem estática x cada monitor declarado, uma derivação por par
 configs/.config/quickshell/core/Nothing.qml   lê o nothing.json + os ajustes de runtime (Settings.nothing)
+scripts/nothing-theme.sh        Arch Linux / CachyOS: o mesmo nothing.json, fontes, conversor, cursor, ícones,
+                                fastfetch e cava, a partir dos mesmos arquivos de nix/nothing/
 ```
 
-O Nix gera os tokens em JSON; o `core/Nothing.qml` os entrega ao QML (`Theme.p`, `Theme.font`,
+O Nix (ou o `scripts/nothing-theme.sh`) grava os tokens em JSON; o `core/Nothing.qml` os entrega ao QML (`Theme.p`, `Theme.font`,
 `Theme.fontSans`, `Theme.fontDot`, `Theme.alert`, `Theme.nothing`). Sem o `nothing.json` (tema
 desligado) `Nothing.available` é falso e nenhum arquivo do shell se comporta diferente.
 
@@ -114,10 +118,12 @@ monolith.nothingTheme.enable = true;   # desligado por padrão; false = o visual
   botão para voltar ao padrão). Ficam salvos como ajustes em
   `~/.local/state/quickshell-monolith/settings.json` (`nothing`); mudar uma opção de wallpaper reaplica o
   wallpaper estático atual com o novo visual.
-- **Restaurar padrões:** descarta os ajustes e volta aos valores da configuração Nix.
+- **Restaurar padrões:** descarta os ajustes e volta aos padrões do `nothing.json` (a configuração Nix, ou os
+  padrões do próprio tema no Arch / CachyOS).
 - **Apagar wallpapers convertidos (cache):** esvazia `~/.cache/monolith/dotmatrix`.
 - **Exigem rebuild** (listados no fim da seção): `enable` como padrão, as fontes, os próprios padrões, as cores
-  dos wallpapers e as conversões do build (`wallpaper.outputs`, `wallpaper.dirs`).
+  dos wallpapers e as conversões do build (`wallpaper.outputs`, `wallpaper.dirs`). No Arch / CachyOS o fim da
+  seção lista, em vez disso, o que exige rodar `./scripts/nothing-theme.sh on` de novo.
 
 ## Wallpapers
 
@@ -170,7 +176,7 @@ das Configurações for igual ao do Nix; qualquer outro visual usa o cache de ru
 
 ## Ativar o tema num sistema já instalado
 
-Acrescente a opção à configuração em `/etc/nixos` e reconstrua:
+Uma instalação nova pela ISO pergunta o tema (padrão ou Nothing) e grava esta linha sozinha. Fora isso, acrescente a opção à configuração em `/etc/nixos` e reconstrua:
 
 ```nix
 monolith.nothingTheme.enable = true;
@@ -197,13 +203,48 @@ O tema vinha ativado por padrão na `feature/nothing-theme`: acrescente `monolit
 mantê-lo. Instalação nova pela ISO:
 `sudo nix --extra-experimental-features "nix-command flakes" run github:jhonatanoliveira2/monolith-dotfiles#install`.
 
+## Arch Linux / CachyOS: `scripts/nothing-theme.sh`
+
+No clone do MONOLITH (o mesmo de onde o `install.sh` rodou):
+
+```sh
+./scripts/nothing-theme.sh on        # liga (pode rodar de novo quando quiser: atualiza tudo)
+./scripts/nothing-theme.sh status    # o que ele instalou
+./scripts/nothing-theme.sh off       # desliga: remove o que instalou e devolve o que substituiu
+./scripts/install.sh --theme nothing # ou junto com a instalação (ele também pergunta)
+```
+
+Ele faz na sua home o que o módulo do Home Manager faz no NixOS, a partir dos mesmos arquivos (`nix/nothing/`):
+
+| Parte | Arquivos | Para deixar de fora |
+|---|---|---|
+| tokens e padrões | `~/.config/monolith/nothing.json` (o shell muda na hora) | — |
+| fontes | Doto, Space Grotesk, Space Mono em `~/.local/share/fonts/monolith-nothing` (a mesma revisão do google/fonts e os mesmos sha256 do Nix; um arquivo que não confere é descartado) | — |
+| conversor | `~/.local/bin/monolith-dotmatrix` (precisa de `python-numpy`, `python-pillow`) | — |
+| cursor | MONOLITH Dots em `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, tamanho: `--cursor-size 32` |
+| ícones | MONOLITH Dots Icons em `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
+| fastfetch | `~/.config/fastfetch/nothing.jsonc`: o logo do Arch em LEDs e o nome da distribuição; a função `fastfetch` do fish o usa quando chamada sem argumentos | `--no-fastfetch` |
+| cava | `~/.config/cava/config` em cinzas, `~/.local/bin/monolith-cava`, a função `cava` do fish (`command cava` é o comum) | `--no-cava` |
+
+- Se faltar `python-numpy` / `python-pillow` (pacotes opcionais do `packages.txt`, instalados pelo `install.sh`
+  a menos que use `--no-optional`), ele oferece `sudo pacman -S`. Sem o Pillow o cursor fica de fora; sem o
+  numpy os wallpapers ficam como são até ele ser instalado.
+- Um arquivo que já existia e não é do tema (um `~/.config/cava/config` seu, por exemplo) é guardado em
+  `~/.local/state/monolith-dotfiles/nothing-theme/saved` e volta com `off`; os valores anteriores do gsettings também.
+- Rodar `on` de novo com `--no-icons` (etc.) remove essa parte. O `./scripts/install.sh` atualiza o tema sozinho
+  depois de uma atualização quando ele está ligado, mantendo as partes escolhidas antes.
+- Não há conversão no build: cada wallpaper é convertido no primeiro uso e guardado em cache. Plymouth e greeter
+  são recursos do NixOS, então as variantes em LED deles só existem lá.
+
 ## Problemas comuns
 
-- **Quadrados no lugar das fontes Doto / Space:** saia e entre na sessão depois do primeiro rebuild (cache de
+- **Quadrados no lugar das fontes Doto / Space:** saia e entre na sessão depois do primeiro rebuild ou do
+  `nothing-theme.sh on` (no Arch, confira se o `nothing-theme.sh status` lista as fontes) (cache de
   fontes); o shell usa a JetBrainsMono Nerd Font para qualquer família que não encontrar.
 - **O wallpaper continua o original:** confira Configurações › Temas › Nothing › Wallpaper = Matriz de LEDs;
   imagens animadas e vídeos nunca são convertidos; `monolith-dotmatrix --help` precisa funcionar no terminal.
 - **Uma conversão parece desatualizada:** Configurações › Temas › Nothing › Apagar wallpapers convertidos, e
   escolha a imagem de novo.
 - **A seção não aparece nas Configurações:** falta o `~/.config/monolith/nothing.json`: o tema está desligado
-  (falta `monolith.nothingTheme.enable = true;`) ou o sistema não foi reconstruído depois disso.
+  (falta `monolith.nothingTheme.enable = true;`) ou o sistema não foi reconstruído depois disso; no Arch /
+  CachyOS, execute `./scripts/nothing-theme.sh on`.

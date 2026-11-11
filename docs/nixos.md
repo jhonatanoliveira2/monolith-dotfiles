@@ -63,8 +63,9 @@ sudo nix --extra-experimental-features "nix-command flakes" \
   run github:jhonatanoliveira2/monolith-dotfiles#install
 ```
 
-It asks for the language, the target disk, user, hostname, time zone, locale, keyboard, disk encryption (LUKS)
-and swap, shows a summary and only erases the disk after its name is typed back. Then it partitions
+It asks for the language, the target disk, user, hostname, time zone, locale, keyboard, disk encryption (LUKS),
+swap and the theme (default or [Nothing](nothing-theme.md): `monolith.nothingTheme.enable`; `-- --theme default|nothing`
+skips the question), shows a summary and only erases the disk after its name is typed back. Then it partitions
 (GPT + 1 GiB EFI partition on UEFI, MBR on BIOS), formats ext4, runs `nixos-generate-config`, fills the
 template with the answers, installs, sets the user's password (root stays locked: use `sudo`) and reboots.
 

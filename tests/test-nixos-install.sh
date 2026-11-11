@@ -110,6 +110,14 @@ check "early KMS modules written" has gpu '    boot.gpuModules = [ "amdgpu" "i91
 check "early KMS inside the monolith block" bash -c "grep -A1 'boot.enable = true;' '$TMP/gpu/configuration.nix' | grep -q gpuModules"
 check "no GPU line without modules" bash -c "! grep -q gpuModules '$TMP/uefi/configuration.nix'"
 
+fresh nothing
+check "Nothing theme run succeeds" env MI_THEME=nothing bash "$INST" --customize-only "$TMP/nothing"
+check "Nothing theme: nothingTheme.enable on, inside the monolith block" \
+    bash -c "sed -n '/^  monolith = {/,/^  };/p' '$TMP/nothing/configuration.nix' | grep -q '^    nothingTheme.enable = true;'"
+check "default theme: the Nothing theme stays off" bash -c "! grep -qE '^ *nothingTheme.enable = true;' '$TMP/uefi/configuration.nix'"
+check "--theme accepts only default | nothing" bash -c "! bash '$INST' --theme glow --customize-only '$TMP/x' 2>/dev/null"
+check "the question and the summary line are there" bash -c "grep -q 'Tema padrão (cinzas' '$INST' && grep -q 'Nothing (LEDs)' '$INST'"
+
 echo "== installer: a shared ESP is copied before the install and put back after it"
 E=$TMP/esp/mnt/boot/efi
 mkdir -p "$E/EFI/GRUB" "$E/EFI/NixOS-boot-efi" "$E/EFI/BOOT"

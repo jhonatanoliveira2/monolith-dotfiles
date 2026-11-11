@@ -252,6 +252,110 @@ check "the installer reports CachyOS" grep -q "CachyOS detected" "$TMP/cachy.out
 MONOLITH_OS_RELEASE="$D/cachyos" bash "$ROOT/scripts/install.sh" --lang pt_BR --yes --no-deps --no-color --no-clear --dry-run </dev/null >"$TMP/cachy-pt.out" 2>&1
 check "the installer reports CachyOS (pt_BR)" grep -q "CachyOS detectado" "$TMP/cachy-pt.out"
 
+echo "== Nothing theme (scripts/nothing-theme.sh)"
+new_env nothing
+NT_HOME=$MONOLITH_TARGET_HOME
+NT_STATE="$NT_HOME/.local/state/monolith-dotfiles/nothing-theme"
+# a fake curl that answers every download with the wrong bytes: the fixed sha256 must refuse them
+cat >"$TMP/nothing/bin/curl" <<'STUB'
+#!/bin/bash
+out=""
+while (( $# )); do [[ $1 == -o ]] && { out=$2; shift; }; shift; done
+[[ -n $out ]] && echo "not a font" >"$out"
+exit 0
+STUB
+chmod +x "$TMP/nothing/bin/curl"
+printf 'org.gnome.desktop.interface icon-theme=%s\n' "'Adwaita'" >"$GSETTINGS_STATE"
+mkdir -p "$NT_HOME/.config/cava"
+printf 'my own cava config\n' >"$NT_HOME/.config/cava/config"
+nt() { PATH="$TMP/nothing/bin:$PATH" MONOLITH_APPLY_GSETTINGS=1 bash "$ROOT/scripts/nothing-theme.sh" --lang en --yes --no-color "$@" </dev/null; }
+has_pil=0; python3 -I -c 'import PIL' 2>/dev/null && has_pil=1
+
+nt on --dry-run >"$TMP/nt-dry.out" 2>&1
+check "dry-run writes nothing" test ! -e "$NT_HOME/.config/monolith/nothing.json" -a ! -e "$NT_STATE"
+check "dry-run lists what it would write" grep -q "Would write ~/.config/monolith/nothing.json" "$TMP/nt-dry.out"
+
+nt on >"$TMP/nt-on.out" 2>&1
+check "on: exits 0" test $? -eq 0
+J="$NT_HOME/.config/monolith/nothing.json"
+check "nothing.json is valid JSON with the theme enabled" jq -e '.defaults.enabled == true and .version == 1' "$J"
+check "palette and fonts come from tokens.json" jq -e '.palette.ink == "#f2f2f2" and .palette.alert == "#d71921" and .fonts.dot == "Doto"' "$J"
+check "no build-time wallpapers on Arch" jq -e '.wallpapers.dir == "" and .wallpapers.outputs == []' "$J"
+# the defaults written here are the ones of the Nix options (nix/modules/nothing-options.nix)
+declare -A NIXDEF=()
+while IFS='=' read -r k v; do NIXDEF[$k]=$v; done < <(awk '
+    match($0, /^ *[A-Za-z]+ = (mkOption )?\{/) {
+        d = int(index($0, $1) / 2); split($1, a, " "); name[d] = a[1]; depth = d; next }
+    /default = / && depth >= 0 {
+        v = $0; sub(/.*default = /, "", v); sub(/;.*/, "", v); gsub(/"/, "", v)
+        p = name[1]; for (i = 2; i <= depth; i++) p = p "." name[i]; print p "=" v }
+' "$ROOT/nix/modules/nothing-options.nix")
+bad=""
+for pair in led.size:ledSize led.spacing:ledSpacing led.shape:ledShape monochrome:monochrome edgeGlow:edgeGlow \
+    wallpaper.style:wallpaperStyle wallpaper.dither:dither wallpaper.levels:levels wallpaper.invert:invert \
+    wallpaper.contrast:contrast wallpaper.brightness:brightness wallpaper.colors.lit:lit \
+    wallpaper.colors.off:off wallpaper.colors.background:background; do
+    nix=${NIXDEF[${pair%%:*}]-missing} got=$(jq -r ".defaults.${pair#*:}" "$J")
+    [[ $nix == "$got" ]] || bad+=" ${pair%%:*}(nix=$nix json=$got)"
+done
+[[ -z $bad ]] && ok "defaults equal the Nix options" || ko "defaults differ from the Nix options:$bad"
+check "a font that fails its checksum is discarded" test ! -e "$NT_HOME/.local/share/fonts/monolith-nothing"
+check "... and reported" grep -q "did not match its checksum" "$TMP/nt-on.out"
+check "monolith-dotmatrix installed, executable" test -x "$NT_HOME/.local/bin/monolith-dotmatrix"
+check "monolith-cava installed, executable" test -x "$NT_HOME/.local/bin/monolith-cava"
+check "a cava config of the user's own is saved" grep -qx "my own cava config" "$NT_STATE/saved/.config/cava/config"
+check "the theme's cava config is in place" cmp -s "$ROOT/nix/nothing/cava.conf" "$NT_HOME/.config/cava/config"
+check "fish functions for cava and fastfetch" test -f "$NT_HOME/.config/fish/functions/cava.fish" -a -f "$NT_HOME/.config/fish/functions/fastfetch.fish"
+check "fastfetch: valid JSON, the distribution's name instead of NixOS" \
+    bash -c '! grep -q "N I X O S" "$1" && grep -v "^//" "$1" | jq -e ".logo.source" >/dev/null' _ "$NT_HOME/.config/fastfetch/nothing.jsonc"
+check "fastfetch: the Arch LED logo" cmp -s "$ROOT/nix/nothing/fastfetch-logo-arch.txt" "$NT_HOME/.config/fastfetch/nothing-logo.txt"
+check "icon theme drawn" test -f "$NT_HOME/.local/share/icons/Monolith-Dots-Icons/index.theme"
+check "gsettings icon-theme set" grep -q "set icon-theme Monolith-Dots-Icons" "$GSETTINGS_STATE.calls"
+if (( has_pil )); then
+    check "cursor theme drawn" test -f "$NT_HOME/.icons/Monolith-Dots/cursors/pointer" -o -L "$NT_HOME/.icons/Monolith-Dots/cursors/pointer"
+    check "Hyprland cursor file" grep -qx "Monolith-Dots 24" "$NT_HOME/.config/monolith/cursor"
+    check "gsettings cursor-theme set" grep -q "set cursor-theme Monolith-Dots" "$GSETTINGS_STATE.calls"
+else
+    check "without Pillow the cursor is left out, with a warning" grep -q "Cursor left out" "$TMP/nt-on.out"
+fi
+nt status >"$TMP/nt-status.out" 2>&1
+check "status lists what it installed" grep -q ".config/monolith/nothing.json" "$TMP/nt-status.out"
+before=$(cd "$NT_HOME" && find . -path ./.local/state -prune -o -type f -print | LC_ALL=C sort | md5sum)
+nt on >/dev/null 2>&1
+after=$(cd "$NT_HOME" && find . -path ./.local/state -prune -o -type f -print | LC_ALL=C sort | md5sum)
+check "on again changes nothing" test "$before" = "$after"
+check "on again does not save its own files" test ! -e "$NT_STATE/saved/.config/monolith"
+
+nt on --no-icons >/dev/null 2>&1
+check "--no-icons removes the icon theme" test ! -e "$NT_HOME/.local/share/icons/Monolith-Dots-Icons"
+check "... and puts the previous icon-theme back" bash -c 'tail -n1 "$1" | grep -q "set icon-theme '"'"'Adwaita'"'"'"' _ "$GSETTINGS_STATE.calls"
+inst >"$TMP/nt-inst.out" 2>&1
+check "install.sh refreshes the theme when it is on" grep -qE "nothing-theme.sh on .*--refresh" "$NT_HOME"/.local/state/monolith-dotfiles/install-*.log
+check "... keeping the parts chosen before" bash -c 'grep -qx icons=0 "$1" && test ! -e "$2"' _ "$NT_STATE/parts" "$NT_HOME/.local/share/icons/Monolith-Dots-Icons"
+
+nt off >/dev/null 2>&1
+check "off removes nothing.json and the record" test ! -e "$J" -a ! -e "$NT_STATE"
+check "off removes the renderer and the fish functions" test ! -e "$NT_HOME/.local/bin/monolith-dotmatrix" -a ! -e "$NT_HOME/.config/fish/functions"
+check "off puts the user's cava config back" grep -qx "my own cava config" "$NT_HOME/.config/cava/config"
+check "off leaves no theme folder" test ! -e "$NT_HOME/.icons/Monolith-Dots" -a ! -e "$NT_HOME/.config/fastfetch/nothing.jsonc"
+nt off >"$TMP/nt-off2.out" 2>&1
+check "off when it is off: nothing to do" grep -q "is not on" "$TMP/nt-off2.out"
+
+new_env nothing-flag
+cp "$TMP/nothing/bin/curl" "$TMP/nothing-flag/bin/curl"
+inst --nothing-theme >"$TMP/nt-flag.out" 2>&1
+check "install.sh --nothing-theme turns it on" jq -e '.defaults.enabled' "$MONOLITH_TARGET_HOME/.config/monolith/nothing.json"
+inst --theme nothing >/dev/null 2>&1
+check "--theme nothing when it is on: refreshed, still on" jq -e '.defaults.enabled' "$MONOLITH_TARGET_HOME/.config/monolith/nothing.json"
+inst --theme default >"$TMP/nt-default.out" 2>&1
+check "--theme default turns the Nothing theme off" test ! -e "$MONOLITH_TARGET_HOME/.config/monolith/nothing.json" -a ! -e "$MONOLITH_TARGET_HOME/.local/state/monolith-dotfiles/nothing-theme"
+inst --theme=default >"$TMP/nt-default2.out" 2>&1
+check "--theme default when it is off: nothing to undo" grep -q "Theme: default." "$TMP/nt-default2.out"
+check "--theme refuses other values" bash -c '! PATH="$1:$PATH" bash "$2" --lang en --yes --no-deps --no-color --no-clear --theme glow </dev/null >/dev/null 2>&1' _ "$TMP/nothing-flag/bin" "$ROOT/scripts/install.sh"
+new_env nothing-none
+inst >/dev/null 2>&1
+check "without a choice (--yes) install.sh leaves the theme off" test ! -e "$MONOLITH_TARGET_HOME/.config/monolith/nothing.json"
+
 echo "== languages"
 new_env lang
 inst --dry-run >"$TMP/en.out" 2>&1

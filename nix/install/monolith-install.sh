@@ -6,6 +6,8 @@
 #
 # Options:  --dry-run        show every step and command, change nothing
 #           --lang pt|en     language of the questions (asked otherwise)
+#           --theme default|nothing   the theme (asked otherwise): the default theme or the Nothing theme
+#                            (monolith.nothingTheme.enable: LEDs in the shell, greeter, Plymouth)
 #           -h | --help
 #
 # Steps: checks (root, live ISO, network) -> target -> questions -> summary -> confirmation (type the disk or
@@ -46,6 +48,7 @@ DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS=""
 TARGET=disk ESPMNT=/boot ROOTPART="" ESPPART="" ESPNEW=0   # TARGET=parts: existing partitions
 DUALBOOT=0 BIOSMBR=1 ESPDEV="" ROOTDEV="" ORIG_ORDER="" CHAIN="" ESPUUID="" ERASEWORD=0 LOADER=""
 CLASSIFY_DIR="" CHAIN_DIR=""
+DESKTOP=""                               # the installed system's theme: default | nothing (asked)
 
 # ── output / input ────────────────────────────────────────────────────────────────────────────────────────
 # Look: "monolith" (greys, the block wordmark, numbered steps) or "nothing" (LED dots: a dot-matrix wordmark,
@@ -71,7 +74,8 @@ step() {
         printf '\n  %s━━%s %s%02d%s  %s%s%s\n' "$K" "$N" "$M" "$STEP" "$N" "$B$W" "$*" "$N"
     fi
 }
-if [[ $THEME == nothing ]]; then MK_OK="●" MK_WARN="○" MK_ERR="●" MK_ASK="◦"; else MK_OK="✓" MK_WARN="!" MK_ERR="✗" MK_ASK="›"; fi
+marks() { if [[ $THEME == nothing ]]; then MK_OK="●" MK_WARN="○" MK_ERR="●" MK_ASK="◦"; else MK_OK="✓" MK_WARN="!" MK_ERR="✗" MK_ASK="›"; fi; }
+marks
 ok() { printf '  %s%s%s %s%s\n' "$W" "$MK_OK" "$L" "$*" "$N"; }
 warn() { printf '  %s%s %s%s\n' "$B$W" "$MK_WARN" "$*" "$N" >&2; }
 die() { printf '  %s%s %s%s\n' "$R$B" "$MK_ERR" "$*" "$N" >&2; exit 1; }
@@ -135,12 +139,13 @@ yes_no() { # yes_no <prompt> <y|n>
     [[ ${a,,} == y* || ${a,,} == s* ]]
 }
 
-usage() { sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
 
 while (($#)); do
     case $1 in
         --dry-run) DRY=1 ;;
         --lang) LANGX=${2-}; shift ;;
+        --theme) DESKTOP=${2-}; shift; [[ $DESKTOP == default || $DESKTOP == nothing ]] || die "--theme: default | nothing" ;;
         --customize-only) CUSTOMIZE_ONLY=${2-}; shift ;;   # tests: fill a template copy from MI_* variables
         --classify-dir) CLASSIFY_DIR=${2-}; shift ;;       # tests: what classify_dir sees in a directory
         --chain-entries) CHAIN_DIR=${2-}; shift ;;         # tests: chain_entries of a directory laid out as an ESP
@@ -243,6 +248,12 @@ customize() {
         sed -i "/boot.enable = true;/a\\
     boot.gpuModules = [ ${list}]; # GPU driver in the initrd: splash from the first second" "$c"
         grep -qF "boot.gpuModules = [ $list]" "$c" || die "template: gpuModules not set"
+    fi
+    if [[ $DESKTOP == nothing ]]; then   # the Nothing theme: shell, greeter, Plymouth, cursor, icons (docs/nothing-theme.md)
+        sed -i 's|^    # nothingTheme.enable = true;|    nothingTheme.enable = true; # chosen in the installer (false = the default theme)|' "$c"
+        grep -qE '^    nothingTheme.enable = true;' "$c" || die "template: nothingTheme.enable not set"
+    else
+        grep -qE '^ *nothingTheme.enable = true;' "$c" && die "template: the Nothing theme must stay off"
     fi
     local extra=""
     ((SWAP_GIB > 0)) && extra+="  swapDevices = [ { device = \"/var/lib/swapfile\"; size = $((SWAP_GIB * 1024)); } ];\\n"
@@ -384,6 +395,7 @@ if [[ -n $CUSTOMIZE_ONLY ]]; then
     ESPMNT=${MI_ESPMNT:-/boot} DUALBOOT=${MI_DUALBOOT:-0} BIOSMBR=${MI_MBR:-1} CHAIN=${MI_CHAIN-} ESPUUID=${MI_ESPUUID-}
     USERNAME=${MI_USER:-maria} FULLNAME=${MI_NAME:-Maria Silva} HOST=${MI_HOST:-estacao} TZONE=${MI_TZ:-Europe/Lisbon}
     LOCALE=${MI_LOCALE:-pt_PT.UTF-8} XKB=${MI_XKB:-pt} KEYMAP=${MI_KEYMAP:-pt-latin1} STATEVER=${MI_STATE:-26.05} GPUMODS=${MI_GPU-}
+    DESKTOP=${MI_THEME:-default}
     customize "$CUSTOMIZE_ONLY"
     exit 0
 fi
@@ -804,6 +816,18 @@ if ((!RESUME)); then
     fi
     ram_gib=$(awk '/^MemTotal/ { printf "%d", ($2 + 1048575) / 1048576 }' /proc/meminfo)
     ask SWAP_GIB "$(t "Swap em GiB (arquivo; 0 = nenhuma)" "Swap in GiB (file; 0 = none)")" "$((ram_gib < 8 ? ram_gib : 8))" '^[0-9]{1,3}$'
+    if [[ -z $DESKTOP ]]; then
+        printf '\n  %s\n' "$(t "Tema:" "Theme:")"
+        printf '  %s1)%s %s\n' "$B" "$N" "$(t "Tema padrão (cinzas, barra no topo)" "Default theme (greys, bar on top)")"
+        printf '  %s2)%s %s\n' "$B" "$N" "$(t "Tema Nothing (LEDs / matriz de pontos: shell, wallpapers, cursor, ícones, greeter e Plymouth)" "Nothing theme (LEDs / dot matrix: shell, wallpapers, cursor, icons, greeter and Plymouth)")"
+        ask TPICK "$(t "Opção" "Choice")" "1" '^[12]$'
+        if [[ $TPICK == 2 ]]; then DESKTOP=nothing; else DESKTOP=default; fi
+    fi
+    # the rest of the install in the chosen theme's look (unless MONOLITH_INSTALL_THEME picked one)
+    if [[ -z ${MONOLITH_INSTALL_THEME-} ]]; then
+        if [[ $DESKTOP == nothing ]]; then THEME=nothing; else THEME=monolith; fi
+        marks
+    fi
 
     # ── summary + confirmation ────────────────────────────────────────────────────────────────────────────
     step "$(t "Resumo" "Summary")"
@@ -823,6 +847,7 @@ if ((!RESUME)); then
   $(t "Fuso / locale" "Time zone / locale"): $TZONE / $LOCALE
   $(t "Teclado" "Keyboard"):        $XKB / $KEYMAP
   Swap:           $SWAP_GIB GiB
+  $(t "Tema" "Theme"):          $( [[ $DESKTOP == nothing ]] && t "Nothing (LEDs)" "Nothing (LEDs)" || t "padrão" "default")
   NixOS:          $STATEVER, MONOLITH ($FLAKE_REF)
 
 EOF
