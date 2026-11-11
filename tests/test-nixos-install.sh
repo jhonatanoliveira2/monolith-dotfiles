@@ -46,14 +46,62 @@ check "extra lines right after stateVersion" bash -c "grep -A2 'system.stateVers
 
 fresh gpu
 fresh parts
-check "existing-partitions run succeeds" env MI_ESPMNT=/boot/efi MI_OSPROBER=1 bash "$INST" --customize-only "$TMP/parts"
+check "existing-partitions run succeeds" env MI_ESPMNT=/boot/efi MI_DUALBOOT=1 bash "$INST" --customize-only "$TMP/parts"
 check "shared ESP mounted at /boot/efi" has parts 'boot.loader.efi.efiSysMountPoint = "/boot/efi";'
-check "os-prober on" has parts 'useOSProber = true;'
 check "UEFI kept with a shared ESP" has parts 'efiSupport = true;'
+check "dual boot: firmware boot order never changed" has parts 'boot.loader.efi.canTouchEfiVariables = false;'
+check "dual boot: canTouchEfiVariables true is gone" bash -c "! grep -q 'canTouchEfiVariables = true' '$TMP/parts/configuration.nix'"
+check "dual boot: no os-prober" bash -c "! grep -q useOSProber '$TMP/parts/configuration.nix'"
+fresh parts-chain
+check "chainload entries run succeeds" env MI_ESPMNT=/boot/efi MI_DUALBOOT=1 MI_ESPUUID=ABCD-1234 \
+    MI_CHAIN=$'GRUB|/EFI/GRUB/grubx64.efi\nWindows|/EFI/Microsoft/bootmgfw.efi\nbad\"name|/EFI/x/y.efi' bash "$INST" --customize-only "$TMP/parts-chain"
+check "chainload: the other GRUB" has parts-chain 'chainloader /EFI/GRUB/grubx64.efi'
+check "chainload: Windows" has parts-chain 'menuentry "Windows" {'
+check "chainload: ESP found by UUID" has parts-chain 'search --no-floppy --fs-uuid --set=root ABCD-1234'
+check "chainload: unsafe labels skipped" bash -c "! grep -q 'bad' '$TMP/parts-chain/configuration.nix'"
+check "chainload: inside the grub block" bash -c "grep -A3 'efiSupport = true;' '$TMP/parts-chain/configuration.nix' | grep -q \"extraEntries = ''\""
 fresh parts-bios
-check "existing partitions on BIOS" env MI_BOOT=bios MI_DISK=/dev/sdb MI_OSPROBER=1 bash "$INST" --customize-only "$TMP/parts-bios"
-check "BIOS: GRUB on the root's disk" has parts-bios 'device = "/dev/sdb";'
-check "BIOS: os-prober on" has parts-bios 'useOSProber = true;'
+check "existing partitions on BIOS" env MI_BOOT=bios MI_DISK=/dev/sdb MI_DUALBOOT=1 MI_MBR=0 bash "$INST" --customize-only "$TMP/parts-bios"
+check "BIOS dual boot: the MBR is left alone (nodev)" has parts-bios 'device = "nodev";'
+check "BIOS dual boot: never the disk" bash -c "! grep -q 'device = \"/dev/sdb\"' '$TMP/parts-bios/configuration.nix'"
+check "BIOS dual boot: no os-prober" bash -c "! grep -q useOSProber '$TMP/parts-bios/configuration.nix'"
+fresh parts-bios-mbr
+check "BIOS, MBR replacement asked for" env MI_BOOT=bios MI_DISK=/dev/sdb MI_DUALBOOT=1 MI_MBR=1 bash "$INST" --customize-only "$TMP/parts-bios-mbr"
+check "BIOS: GRUB on the root's disk when asked" has parts-bios-mbr 'device = "/dev/sdb";'
+fresh osprober
+sed -i 's|    efiSupport = true;|    efiSupport = true;\n    useOSProber = true;|' "$TMP/osprober/configuration.nix"
+check "a template with os-prober on is refused" bash -c "! env MI_DUALBOOT=1 bash '$INST' --customize-only '$TMP/osprober'"
+
+echo "== installer: what a partition holds (read only)"
+P=$TMP/probe
+mk() { rm -rf "$P"; mkdir -p "$P"; for f in "$@"; do mkdir -p "$P/$(dirname "$f")"; touch "$P/$f"; done; }
+kind() { bash "$INST" --classify-dir "$P"; }
+mk etc/os-release; printf 'NAME="Arch Linux"\nPRETTY_NAME="Arch Linux"\n' >"$P/etc/os-release"
+check "a Linux root is a system" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == 'os|Arch Linux' ]]"
+mk usr/lib/os-release
+check "os-release under usr/lib too" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == os\|* ]]"
+mk Windows/System32/ntoskrnl.exe
+check "a Windows partition is a system" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == 'os|Windows' ]]"
+mk EFI/GRUB/grubx64.efi vmlinuz-linux initramfs-linux.img
+check "an ESP that holds kernels (Arch) is an ESP" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == esp\|* ]]"
+mk vmlinuz-linux initramfs-linux.img grub/grub.cfg
+check "another system's /boot is protected" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == boot\|* ]]"
+mk loader/entries/arch.conf
+check "a systemd-boot /boot is protected" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == boot\|* ]]"
+mk jhow/.bashrc
+check "a /home is data" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == data\|* ]]"
+mk; mkdir -p "$P/lost+found"
+check "an empty file system is blank" bash -c "[[ \$(bash '$INST' --classify-dir '$P') == blank\|* ]]"
+
+echo "== installer: other boot loaders on a shared ESP"
+mk EFI/GRUB/grubx64.efi EFI/Microsoft/Boot/bootmgfw.efi EFI/BOOT/BOOTX64.EFI EFI/NixOS-boot-efi/grubx64.efi EFI/arch-shim/shimx64.efi EFI/arch-shim/grubx64.efi
+chains=$(bash "$INST" --chain-entries "$P")
+check "the other GRUB is chainloaded" grep -qx 'GRUB|/EFI/GRUB/grubx64.efi' <<<"$chains"
+check "shim before GRUB in the same folder" grep -qx 'arch-shim|/EFI/arch-shim/shimx64.efi' <<<"$chains"
+check "the fallback EFI/BOOT is not listed" bash -c "! grep -qi '/EFI/BOOT/' <<<'$chains'"
+check "NixOS's own folder is not listed" bash -c "! grep -qi nixos <<<'$chains'"
+check "Windows Boot Manager is found one level down" grep -qx 'Windows|/EFI/Microsoft/Boot/bootmgfw.efi' <<<"$chains"
+
 check "whole disk: ESP stays at /boot" bash -c "! grep -q efiSysMountPoint '$TMP/uefi/configuration.nix'"
 check "whole disk: no os-prober" bash -c "! grep -q useOSProber '$TMP/uefi/configuration.nix'"
 
@@ -61,6 +109,28 @@ check "GPU modules run succeeds" env MI_GPU="amdgpu i915" bash "$INST" --customi
 check "early KMS modules written" has gpu '    boot.gpuModules = [ "amdgpu" "i915" ];'
 check "early KMS inside the monolith block" bash -c "grep -A1 'boot.enable = true;' '$TMP/gpu/configuration.nix' | grep -q gpuModules"
 check "no GPU line without modules" bash -c "! grep -q gpuModules '$TMP/uefi/configuration.nix'"
+
+echo "== installer: a shared ESP is copied before the install and put back after it"
+E=$TMP/esp/mnt/boot/efi
+mkdir -p "$E/EFI/GRUB" "$E/EFI/NixOS-boot-efi" "$E/EFI/BOOT"
+echo arch-grub >"$E/EFI/GRUB/grubx64.efi"; echo kernel >"$E/vmlinuz-linux"; echo initrd >"$E/initramfs-linux.img"
+echo old-nixos >"$E/EFI/NixOS-boot-efi/grubx64.efi"; echo fallback >"$E/EFI/BOOT/BOOTX64.EFI"
+{   # the installer's own functions, run on that directory
+    echo 'set -euo pipefail; B="" D="" R="" N="" W="" L="" MK_OK=ok MK_WARN=! MK_ERR=x LANGX=en DRY=0 ESPDEV=/dev/x ESPMNT=/boot/efi'
+    printf 'MNT=%q STATE=%q\n' "$TMP/esp/mnt" "$TMP/esp/mnt/var/lib/monolith-install"
+    sed -n '/^t() {/p;/^ok() {/p;/^warn() {/p;/^die() {/p' "$INST"
+    sed -n '/^run() {/,/^}/p;/^esp_snapshot() {/,/^}/p;/^nixos_owned() {/p;/^esp_diff() {/,/^}/p;/^esp_verify() {/,/^}/p' "$INST"
+    echo 'esp_snapshot'
+    echo 'echo HIJACK >"$MNT$ESPMNT/EFI/BOOT/BOOTX64.EFI"; rm "$MNT$ESPMNT/initramfs-linux.img"'
+    echo 'echo new-nixos >"$MNT$ESPMNT/EFI/NixOS-boot-efi/grubx64.efi"; echo x >"$MNT$ESPMNT/EFI/stray.efi"'
+    echo 'esp_verify'
+} >"$TMP/esp/run.sh"
+check "snapshot and check run" env LC_ALL=pt_BR.UTF-8 bash "$TMP/esp/run.sh"
+check "a changed file of the other system is put back" grep -qx fallback "$E/EFI/BOOT/BOOTX64.EFI"
+check "a deleted file of the other system is put back (Arch initramfs)" grep -qx initrd "$E/initramfs-linux.img"
+check "untouched files stay" grep -qx arch-grub "$E/EFI/GRUB/grubx64.efi"
+check "NixOS's own folder may change" grep -qx new-nixos "$E/EFI/NixOS-boot-efi/grubx64.efi"
+check "a new file outside NixOS's folder is removed" test ! -e "$E/EFI/stray.efi"
 
 fresh broken
 sed -i 's/user = "alice";/username = "alice";/' "$TMP/broken/configuration.nix"

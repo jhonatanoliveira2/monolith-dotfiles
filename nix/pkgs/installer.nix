@@ -18,6 +18,9 @@
   systemd,
   iputils,
   nano,
+  efibootmgr,
+  gnutar,
+  findutils,
 }:
 let
   template = lib.cleanSource ../../templates/nixos;
@@ -48,6 +51,9 @@ stdenvNoCC.mkDerivation {
           systemd
           iputils
           nano
+          efibootmgr
+          gnutar
+          findutils
         ]
       }
     runHook postInstall

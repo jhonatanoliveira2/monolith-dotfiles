@@ -72,11 +72,31 @@ template with the answers, installs, sets the user's password (root stays locked
   terminal or with `NO_COLOR`.
 - **Where to install**: *a whole disk* (erased, as above) or *existing partitions*, next to another system
   (Windows, another Linux). In the second mode only the partition chosen for NixOS (20 GiB or more) is
-  formatted (ext4); on UEFI an existing EFI partition is kept as it is, NixOS is added to it and it is mounted
-  at `/boot/efi` (the kernels stay on the ext4 root, so even Windows' 100 MiB ESP is enough); without one, a
-  partition you choose becomes the ESP. GRUB lists the other systems (`useOSProber`). The partition name is
-  typed back to confirm, and a partition that holds data is pointed out. No LUKS in this mode; create the
-  partition beforehand (gparted, cfdisk, or shrink Windows' from Windows itself).
+  formatted (ext4); on UEFI an existing EFI partition is kept as it is and mounted at `/boot/efi` (the kernels
+  stay on the ext4 root, so even Windows' 100 MiB ESP is enough); without one, an **empty** partition you choose
+  becomes NixOS's ESP. No LUKS in this mode; create the partition beforehand (gparted, cfdisk, or shrink
+  Windows' from Windows itself).
+- **Dual boot: the other system's boot is never touched.**
+  - Every partition is read first, read-only (the block device itself is set read-only while it is looked at,
+    journals are not replayed). Partitions that hold a system (`os-release`, Windows), another system's
+    `/boot`, an ESP, LUKS / LVM / RAID or a swap are listed as *protected* and never offered; one with other
+    files can be chosen, but only after typing `ERASE` as well as its name. The swap of a hibernated system
+    stops the installer before anything is written.
+  - UEFI: NixOS's GRUB goes only into its own `EFI/NixOS-*` folder (`canTouchEfiVariables = false`, so
+    `grub-install --no-nvram`, now and on every rebuild). The firmware boot order recorded before the install is
+    restored with NixOS added at its **end**: the other system stays the default. Every file already on a shared
+    ESP is checksummed and copied (`/var/lib/monolith-install/esp-before.tar`) before the install and checked
+    after it; anything changed outside NixOS's folder is put back.
+  - os-prober is **not** used: its guessed entries for another Linux (Arch with the kernel on the ESP, microcode
+    as the first initrd) can start it with the wrong kernel / initrd, which ends in a kernel panic. The other
+    boot loaders on the ESP are chainloaded from NixOS's menu instead (`boot.loader.grub.extraEntries`).
+  - BIOS: the MBR is left alone (`device = "nodev"`, GRUB only writes `/boot/grub/grub.cfg`) unless replacing
+    it is asked for.
+  - `/etc/nixos/DUAL-BOOT.txt` has the entry to add NixOS to the other system's GRUB (`/etc/grub.d/40_custom`);
+    meanwhile it starts from the firmware boot menu (F12 / F11 / F8 / Esc) -> "NixOS MONOLITH".
+  - Installed with an earlier version of this installer? Remove `useOSProber = true;` and set
+    `boot.loader.efi.canTouchEfiVariables = false;` in `/etc/nixos/configuration.nix`, then
+    `sudo nixos-rebuild switch --flake /etc/nixos`; `sudo efibootmgr -o <order>` puts the other system first again.
 - Safety: the ISO stick, mounted disks, disks in use (swap, LUKS, LVM, RAID) and disks under 20 GiB are never
   offered; `-- --dry-run` shows every command without changing anything.
 - If the install stops after the disk was prepared (network, an error fixed on the branch), run the same command
