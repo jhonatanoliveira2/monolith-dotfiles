@@ -104,6 +104,12 @@ template com as respostas, instala, define a senha do usuário (o root fica bloq
     `sudo nixos-rebuild switch --flake /etc/nixos`; `sudo efibootmgr -o <ordem>` põe o outro sistema na frente de novo.
 - Segurança: o pendrive da ISO, discos montados, discos em uso (swap, LUKS, LVM, RAID) e discos com menos de
   20 GiB nunca são oferecidos; `-- --dry-run` mostra cada comando sem alterar nada.
+- Pouca RAM (8 GB com parte dela tomada por uma GPU integrada): a swap perguntada só existe no sistema instalado,
+  então durante a instalação o instalador cria uma swap temporária em arquivo na nova raiz
+  (`/mnt/.monolith-install-swap`, até 8 GiB, o bastante para 16 GiB de RAM + swap, deixando 15 GiB livres) e, com
+  menos de 8 GiB de RAM, compila um pacote por vez (`--max-jobs 1`). O arquivo é desligado e apagado logo depois do
+  `nixos-install`. Instalando à mão: `fallocate -l 8G /mnt/swapfile && chmod 600 /mnt/swapfile && mkswap /mnt/swapfile
+  && swapon /mnt/swapfile` antes do `nixos-install`, depois `swapoff` e `rm` antes de reiniciar.
 - Se a instalação parar depois de o disco ser preparado (rede, um erro corrigido na branch), rode o mesmo comando
   de novo: ele oferece retomar e busca a versão mais recente da branch (`--refresh`).
 - A configuração busca o MONOLITH no mesmo lugar que o instalador: rodado com `?ref=<branch>`, o

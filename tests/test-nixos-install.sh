@@ -166,6 +166,17 @@ check "no network: that exact commit" test "$(resolve "")" = "$B/$REV"
 check "MONOLITH_FLAKE wins" test "$(MONOLITH_FLAKE=path:/x resolve "$REV\trefs/heads/main\n")" = "path:/x"
 check "no revision (dirty build): the bare URL" test "$(REV="" resolve "")" = "$B"
 
+echo "== installer: temporary swap during the install (little RAM)"
+swapgib() { bash -c "$(sed -n '/^tmp_swap_gib() {/,/^}/p' "$INST"); tmp_swap_gib $1 $2 $3"; }
+K=1048576
+check "5.5 GiB of RAM, big disk: 8 GiB (the maximum)" test "$(swapgib $((K * 11 / 2)) 0 $((K * 200)))" = 8
+check "12 GiB of RAM: 4 GiB" test "$(swapgib $((K * 12)) 0 $((K * 200)))" = 4
+check "16 GiB of RAM: none" test "$(swapgib $((K * 16)) 0 $((K * 200)))" = 0
+check "swap already active counts" test "$(swapgib $((K * 6)) $((K * 10)) $((K * 200)))" = 0
+check "20 GiB root: leaves 15 GiB free" test "$(swapgib $((K * 6)) 0 $((K * 20)))" = 5
+check "16 GiB root: too small, none" test "$(swapgib $((K * 6)) 0 $((K * 16)))" = 0
+check "swap file switched off before reboot" bash -c "grep -n 'tmp_swap_off\$' '$INST' | head -1 | cut -d: -f1 | xargs -I{} test {} -lt \$(grep -n 'umount -R \"\$MNT\"' '$INST' | tail -1 | cut -d: -f1)"
+
 fresh broken
 sed -i 's/user = "alice";/username = "alice";/' "$TMP/broken/configuration.nix"
 check "a changed template is reported, not half-filled silently" bash -c "! bash '$INST' --customize-only '$TMP/broken'"

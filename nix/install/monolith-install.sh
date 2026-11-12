@@ -12,7 +12,7 @@
 #
 # Steps: checks (root, live ISO, network) -> target -> questions -> summary -> confirmation (type the disk or
 # partition name) -> partitions, ext4 -> nixos-generate-config -> MONOLITH template filled with the answers ->
-# nixos-install -> user password -> reboot. Two targets:
+# nixos-install (a temporary swap file on the new root when RAM is short) -> user password -> reboot. Two targets:
 #   * a whole disk, erased: GPT + ESP on UEFI (msdos on BIOS), optional LUKS;
 #   * existing partitions (next to another system): only the partition chosen for NixOS is formatted (ext4);
 #     on UEFI an existing ESP (Windows', another Linux's) is kept and mounted at /boot/efi (the kernels stay on
@@ -591,6 +591,52 @@ dualboot_notes() {
     ok "$(t "Instruções de dual boot" "Dual boot steps"): /etc/nixos/DUAL-BOOT.txt"
 }
 
+# ── memory during the install ─────────────────────────────────────────────────────────────────────────────
+# The swap asked for above only exists in the installed system. During nixos-install the live ISO has no swap
+# and keeps its own files in RAM, so evaluating the flake and building can run out of memory on a small
+# machine (8 GB with part of it taken by an integrated GPU). A temporary swap file on the new root, which is
+# already mounted, covers that without any new partition. It is switched off and deleted after the install
+# (and on any exit).
+TMPSWAP=$MNT/.monolith-install-swap TMPSWAP_ON=0
+# tmp_swap_gib <ram KiB> <swap KiB> <free KiB on the root>: GiB of temporary swap (0 = none). Aims for
+# RAM + swap >= 16 GiB, at most 8 GiB, and leaves 15 GiB of the root for the system.
+tmp_swap_gib() {
+    local G=1048576 need room
+    need=$(((16 * G - $1 - $2 + G - 1) / G))
+    ((need > 8)) && need=8
+    room=$(($3 / G - 15))
+    ((need > room)) && need=$room
+    ((need >= 2)) && printf '%d' "$need" || printf 0
+}
+tmp_swap_on() {
+    local ram swp free gib
+    ram=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
+    swp=$(awk '/^SwapTotal:/ { print $2 }' /proc/meminfo)
+    free=$(df -Pk "$MNT" 2>/dev/null | awk 'NR == 2 { print $4 }')
+    gib=$(tmp_swap_gib "${ram:-0}" "${swp:-0}" "${free:-0}")
+    if ((gib == 0)); then
+        (((ram + swp) / 1048576 < 12)) && warn "$(t "Pouca memória e pouco espaço livre em $MNT para uma swap temporária: a instalação pode falhar por falta de RAM." \
+            "Little memory and too little free space on $MNT for a temporary swap: the install may run out of RAM.")"
+        return 0
+    fi
+    [[ -e $TMPSWAP ]] && { swapoff "$TMPSWAP" 2>/dev/null || true; rm -f "$TMPSWAP"; }
+    if run fallocate -l "${gib}G" "$TMPSWAP" || run dd if=/dev/zero of="$TMPSWAP" bs=1M count=$((gib * 1024)) status=none; then
+        if run chmod 600 "$TMPSWAP" && run mkswap -q "$TMPSWAP" && run swapon "$TMPSWAP"; then
+            TMPSWAP_ON=1
+            ok "$(t "Swap temporária para a instalação" "Temporary swap for the install"): ${gib} GiB ($TMPSWAP)"
+            return 0
+        fi
+    fi
+    rm -f "$TMPSWAP" 2>/dev/null || true
+    warn "$(t "Não foi possível criar a swap temporária; seguindo sem ela." "Could not create the temporary swap; going on without it.")"
+}
+tmp_swap_off() {
+    ((TMPSWAP_ON)) || return 0
+    TMPSWAP_ON=0
+    run swapoff "$TMPSWAP" || true
+    run rm -f "$TMPSWAP" || true
+}
+
 # ── resume ────────────────────────────────────────────────────────────────────────────────────────────────
 RESUME=0
 if findmnt -n "$MNT" >/dev/null 2>&1 && [[ -f $MNT/etc/nixos/flake.nix && -f $MNT/etc/nixos/hardware-configuration.nix ]]; then
@@ -1054,7 +1100,15 @@ if ((RESUME)) && [[ -f $cfgdir/flake.lock ]]; then
 else
     run nix flake lock "$cfgdir" || die "$(t "Não foi possível criar o flake.lock (rede? origem: $FLAKE_REF)." "Could not create flake.lock (network? source: $FLAKE_REF).")"
 fi
-if ! run nixos-install --no-root-passwd --no-channel-copy --flake "$cfgdir#$HOST"; then
+tmp_swap_on
+trap 'tmp_swap_off >/dev/null 2>&1' EXIT
+# under 8 GiB of RAM, one build at a time (downloads still run in parallel)
+jobs=()
+(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) < 8 * 1048576)) && jobs=(--max-jobs 1)
+install_ok=1
+run nixos-install --no-root-passwd --no-channel-copy "${jobs[@]}" --flake "$cfgdir#$HOST" || install_ok=0
+tmp_swap_off
+if ((!install_ok)); then
     warn "$(t "A instalação falhou. O disco continua preparado: corrija o problema (ou aguarde a correção na branch) e rode o instalador de novo para retomar." \
         "The install failed. The disk stays prepared: fix the problem (or wait for the fix on the branch) and run the installer again to resume.")"
     exit 1
