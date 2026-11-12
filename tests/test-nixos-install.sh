@@ -127,7 +127,7 @@ echo old-nixos >"$E/EFI/NixOS-boot-efi/grubx64.efi"; echo fallback >"$E/EFI/BOOT
     echo 'set -euo pipefail; B="" D="" R="" N="" W="" L="" MK_OK=ok MK_WARN=! MK_ERR=x LANGX=en DRY=0 ESPDEV=/dev/x ESPMNT=/boot/efi'
     printf 'MNT=%q STATE=%q\n' "$TMP/esp/mnt" "$TMP/esp/mnt/var/lib/monolith-install"
     sed -n '/^t() {/p;/^ok() {/p;/^warn() {/p;/^die() {/p' "$INST"
-    sed -n '/^run() {/,/^}/p;/^esp_snapshot() {/,/^}/p;/^nixos_owned() {/p;/^esp_diff() {/,/^}/p;/^esp_verify() {/,/^}/p' "$INST"
+    sed -n '/^run() {/,/^}/p;/^esp_shared() {/p;/^esp_snapshot() {/,/^}/p;/^nixos_owned() {/p;/^esp_diff() {/,/^}/p;/^esp_verify() {/,/^}/p' "$INST"
     echo 'esp_snapshot'
     echo 'echo HIJACK >"$MNT$ESPMNT/EFI/BOOT/BOOTX64.EFI"; rm "$MNT$ESPMNT/initramfs-linux.img"'
     echo 'echo new-nixos >"$MNT$ESPMNT/EFI/NixOS-boot-efi/grubx64.efi"; echo x >"$MNT$ESPMNT/EFI/stray.efi"'
@@ -139,6 +139,33 @@ check "a deleted file of the other system is put back (Arch initramfs)" grep -qx
 check "untouched files stay" grep -qx arch-grub "$E/EFI/GRUB/grubx64.efi"
 check "NixOS's own folder may change" grep -qx new-nixos "$E/EFI/NixOS-boot-efi/grubx64.efi"
 check "a new file outside NixOS's folder is removed" test ! -e "$E/EFI/stray.efi"
+
+echo "== installer: NixOS's own ESP (whole disk, /boot) is never checked against a snapshot"
+# A whole-disk install with another system on another disk (or the Ventoy stick taken for one) used to
+# snapshot the freshly formatted ESP and then delete grub/, kernels/ and theme/: grub rescue, normal.mod not found
+O=$TMP/own/mnt/boot
+mkdir -p "$O/EFI/Lenovo"; echo fw >"$O/EFI/Lenovo/BIOS.bin"
+{
+    echo 'set -euo pipefail; B="" D="" R="" N="" W="" L="" MK_OK=ok MK_WARN=! MK_ERR=x LANGX=en DRY=0 ESPDEV=/dev/x ESPMNT=/boot'
+    printf 'MNT=%q STATE=%q\n' "$TMP/own/mnt" "$TMP/own/mnt/var/lib/monolith-install"
+    sed -n '/^t() {/p;/^ok() {/p;/^warn() {/p;/^die() {/p' "$INST"
+    sed -n '/^run() {/,/^}/p;/^esp_shared() {/p;/^esp_snapshot() {/,/^}/p;/^nixos_owned() {/p;/^esp_diff() {/,/^}/p;/^esp_verify() {/,/^}/p' "$INST"
+    echo 'esp_snapshot'
+    echo 'mkdir -p "$MNT$ESPMNT/grub/x86_64-efi" "$MNT$ESPMNT/kernels" "$MNT$ESPMNT/EFI/NixOS-boot"'
+    echo 'echo mod >"$MNT$ESPMNT/grub/x86_64-efi/normal.mod"; echo k >"$MNT$ESPMNT/kernels/bzImage"; echo g >"$MNT$ESPMNT/EFI/NixOS-boot/grubx64.efi"'
+    echo 'esp_verify'
+} >"$TMP/own/run.sh"
+check "own ESP: snapshot and check run" bash "$TMP/own/run.sh"
+check "own ESP: no snapshot is taken" test ! -e "$TMP/own/mnt/var/lib/monolith-install/esp-before.sha256"
+check "own ESP: GRUB's modules stay (normal.mod)" grep -qx mod "$O/grub/x86_64-efi/normal.mod"
+check "own ESP: the kernels stay" grep -qx k "$O/kernels/bzImage"
+# a snapshot left by an older installer (resume) must not delete them either
+mkdir -p "$TMP/own/mnt/var/lib/monolith-install"
+(cd "$O" && find . -type f -path ./EFI/Lenovo/\* -print0 | xargs -0 sha256sum) >"$TMP/own/mnt/var/lib/monolith-install/esp-before.sha256"
+check "own ESP: an old snapshot is ignored" bash "$TMP/own/run.sh"
+check "own ESP: GRUB's modules stay with an old snapshot" grep -qx mod "$O/grub/x86_64-efi/normal.mod"
+check "snapshot and check only on existing partitions" bash -c "grep -q 'if \[\[ \$TARGET == parts \]\] && ((!ESPNEW)); then esp_snapshot' '$INST' && grep -q 'if \[\[ \$TARGET == parts \]\]; then esp_verify' '$INST'"
+check "the Ventoy stick is the live medium too (inverse tree)" grep -q 'lsblk -snro NAME' "$INST"
 
 echo "== installer: the configuration follows the installer's source (branch / commit)"
 check "default: the template's URL is kept" hasf uefi 'url = "github:jhonatanoliveira2/monolith-dotfiles";'

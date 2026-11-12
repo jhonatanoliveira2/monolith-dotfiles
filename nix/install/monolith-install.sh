@@ -25,7 +25,8 @@
 #     hibernated system are never offered for formatting; one with other data needs ERASE / APAGAR typed too;
 #   * UEFI: NixOS's GRUB only goes into its own EFI/NixOS-* folder (grub-install --no-nvram: canTouchEfiVariables
 #     is off), the firmware boot order is restored with NixOS added at its END, the files already on a shared
-#     ESP are checksummed and copied before the install and checked after it (anything changed is restored);
+#     ESP (existing partitions, mounted at /boot/efi) are checksummed and copied before the install and checked
+#     after it (anything changed is restored); an ESP the installer formatted is NixOS's own and is never checked;
 #     os-prober is not used (its guessed entries for another Linux boot it with the wrong kernel / initrd: kernel
 #     panic), the other boot loaders on the ESP are chainloaded instead;
 #   * BIOS: the MBR is left alone (GRUB only writes /boot/grub/grub.cfg) unless replacing it is asked for;
@@ -423,10 +424,18 @@ if [[ -z $LIVE_SRC ]] && ! ((DRY)); then
     die "$(t "Não parece a ISO de instalação (sem /iso): por segurança o instalador só roda nela." \
         "This does not look like the installer ISO (no /iso): for safety the installer only runs there.")"
 fi
-LIVE_DISKS=" "
-if [[ -b $LIVE_SRC ]]; then
-    LIVE_DISKS+="$(basename "$LIVE_SRC") $(lsblk -no PKNAME "$LIVE_SRC" 2>/dev/null | tr '\n' ' ')"
-fi
+# live_disks <dev>: the device and every device under it (partition, disk) and, for a loop device, the ones that
+# hold its backing file. An ISO opened from a file is still the stick it is on: with Ventoy /iso is
+# /dev/mapper/ventoy, whose parent is sda1, and only the inverse tree (lsblk -s) reaches the disk sda
+live_disks() {
+    local dev=$1 back depth=${2:-0}
+    [[ -b $dev ]] && ((depth < 4)) || return 0
+    lsblk -snro NAME "$dev" 2>/dev/null || true
+    back=$(losetup -nO BACK-FILE "$dev" 2>/dev/null | sed 's/ *$//' || true)
+    [[ -n $back && -e $back ]] && live_disks "$(findmnt -no SOURCE -T "$back" 2>/dev/null | head -n1)" $((depth + 1))
+    return 0
+}
+LIVE_DISKS=" $(live_disks "$LIVE_SRC" | sort -u | tr '\n' ' ')"
 ok "$(t "ISO do NixOS" "NixOS ISO") ${LIVE_SRC:+($LIVE_SRC)}"
 if [[ -d /sys/firmware/efi ]]; then BOOTMODE=uefi; else BOOTMODE=bios; fi
 ok "$(t "Firmware" "Firmware"): ${BOOTMODE^^}"
@@ -473,8 +482,13 @@ load_state() {   # only known keys, only plain values (the file is never sourced
 # ── another system's boot (dual boot) ─────────────────────────────────────────────────────────────────────
 # esp_snapshot: checksums and a copy of every file already on the ESP, taken once, before anything is installed
 # (a resume keeps the first one: it is the state of before the first attempt)
+# Only for a SHARED ESP (existing partitions: /boot/efi). The ESP mounted at /boot is NixOS's own: its grub/,
+# kernels/ and theme/ are written by the install itself, and checking them against a snapshot of the empty ESP
+# deleted them all (grub rescue: "/grub/x86_64-efi/normal.mod not found")
+esp_shared() { [[ $ESPMNT != /boot && $ESPMNT != /boot/ ]]; }
 esp_snapshot() {
     local esp=$MNT$ESPMNT
+    esp_shared || return 0
     ((DRY)) && { run tar -C "$esp" -cf "$STATE/esp-before.tar" .; return 0; }
     [[ -f $STATE/esp-before.sha256 ]] && return 0
     mkdir -p "$STATE" && chmod 700 "$STATE"
@@ -509,6 +523,7 @@ esp_diff() {
 # outside its own folder is removed, and the result is checked again
 esp_verify() {
     local esp=$MNT$ESPMNT
+    esp_shared || return 0   # also with a snapshot left by an older installer on a resume
     [[ -f $STATE/esp-before.sha256 ]] || return 0
     esp_diff
     if ((${#ESP_BAD[@]})); then
@@ -1049,7 +1064,7 @@ EOF
         else
             warn "$(t "efibootmgr ausente: a ordem de boot não pôde ser registrada." "efibootmgr missing: the boot order could not be recorded.")"
         fi
-        ((ESPNEW)) || esp_snapshot
+        if [[ $TARGET == parts ]] && ((!ESPNEW)); then esp_snapshot; fi   # a formatted ESP is NixOS's own
     fi
     save_state
 
@@ -1138,7 +1153,10 @@ if ((DUALBOOT)); then
         printf '%s  [dry-run]%s %s\n' "$D" "$N" "$(t "conferir a ESP, NixOS no fim da ordem de boot, /etc/nixos/DUAL-BOOT.txt" "check the ESP, NixOS at the end of the boot order, /etc/nixos/DUAL-BOOT.txt")"
     else
         step "$(t "Boot do outro sistema: conferência" "The other system's boot: checks")"
-        if [[ $BOOTMODE == uefi ]]; then esp_verify; nvram_add; fi
+        if [[ $BOOTMODE == uefi ]]; then
+            if [[ $TARGET == parts ]]; then esp_verify; fi
+            nvram_add
+        fi
         dualboot_notes
     fi
 fi

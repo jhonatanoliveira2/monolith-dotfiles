@@ -365,3 +365,15 @@ nixos-rebuild build-vm --flake .#host   # testa o boot inteiro numa VM
 - **Sem splash com LUKS**: confira `monolith.boot.plymouth.enable` e se o driver de vídeo carrega no initrd
   (`boot.initrd.kernelModules`, ex.: `amdgpu`, `i915`).
 - **Texto do GRUB pequeno ou grande demais**: ajuste `monolith.boot.grub.resolution` para a resolução da tela.
+- **`grub rescue>` com "file '/grub/x86_64-efi/normal.mod' not found" logo depois de instalar no disco inteiro**:
+  instaladores anteriores a esta correção apagavam os módulos do GRUB e os kernels da ESP do próprio NixOS
+  quando havia outro sistema (ou o pendrive Ventoy) em outro disco. O sistema em si está intacto; recoloque os
+  arquivos de boot a partir de uma ISO live (na ISO do NixOS, o `nixos-enter` faz as montagens e o chroot):
+
+  ```bash
+  mount /dev/nvme0n1p2 /mnt && mount /dev/nvme0n1p1 /mnt/boot      # raiz (ext4 "nixos"), ESP (FAT32 "BOOT")
+  nixos-enter --root /mnt -c 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'
+  # outra ISO live (Arch): for d in dev proc sys; do mount --rbind /$d /mnt/$d; done
+  #   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash, depois /nix/var/nix/profiles/system/activate
+  #   e o mesmo NIXOS_INSTALL_BOOTLOADER=1 ... switch-to-configuration boot
+  ```
