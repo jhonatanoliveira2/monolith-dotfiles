@@ -12,7 +12,7 @@
 #
 # Steps: checks (root, live ISO, network) -> target -> questions -> summary -> confirmation (type the disk or
 # partition name) -> partitions, ext4 -> nixos-generate-config -> MONOLITH template filled with the answers ->
-# nixos-install (a temporary swap file on the new root when RAM is short) -> user password -> reboot. Two targets:
+# nixos-install (a temporary swap file and builds sized to the RAM when it is short) -> user password -> reboot. Two targets:
 #   * a whole disk, erased: GPT + ESP on UEFI (msdos on BIOS), optional LUKS;
 #   * existing partitions (next to another system): only the partition chosen for NixOS is formatted (ext4);
 #     on UEFI an existing ESP (Windows', another Linux's) is kept and mounted at /boot/efi (the kernels stay on
@@ -608,6 +608,16 @@ tmp_swap_gib() {
     ((need > room)) && need=$room
     ((need >= 2)) && printf '%d' "$need" || printf 0
 }
+# build_cores <ram KiB> <threads>: compiler processes per build (nix --cores). The default (0 = every thread)
+# runs make -j16 on an 8-core laptop; one C++ compiler on Hyprland takes 1-1.5 GiB, so a package missing from
+# the binary cache ran out of memory even with swap. About 2 GiB of RAM per process, at least 1, at most every
+# thread; prints nothing when every thread fits.
+build_cores() {
+    local c=$(($1 / 2097152))
+    ((c < 1)) && c=1
+    ((c < $2)) && printf '%d' "$c"
+    return 0
+}
 tmp_swap_on() {
     local ram swp free gib
     ram=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
@@ -1101,13 +1111,22 @@ else
     run nix flake lock "$cfgdir" || die "$(t "Não foi possível criar o flake.lock (rede? origem: $FLAKE_REF)." "Could not create flake.lock (network? source: $FLAKE_REF).")"
 fi
 tmp_swap_on
-trap 'tmp_swap_off >/dev/null 2>&1' EXIT
+trap 'tmp_swap_off >/dev/null 2>&1; rm -rf "${TMPBUILD:-/nonexistent}" 2>/dev/null' EXIT
 # under 8 GiB of RAM, one build at a time (downloads still run in parallel)
+# under 8 GiB of RAM, one build at a time (downloads still run in parallel); compiler processes per build
+# limited by the RAM (build_cores)
+ram_kib=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo)
 jobs=()
-(($(awk '/^MemTotal:/ { print $2 }' /proc/meminfo) < 8 * 1048576)) && jobs=(--max-jobs 1)
+((ram_kib < 8 * 1048576)) && jobs=(--max-jobs 1)
+cores=$(build_cores "$ram_kib" "$(nproc 2>/dev/null || echo 1)")
+[[ -n $cores ]] && { jobs+=(--cores "$cores"); ok "$(t "Compilação limitada a $cores processos por pacote (RAM)" "Builds limited to $cores processes per package (RAM)")"; }
+# build trees on the new root, not in the live ISO's /tmp (a tmpfs: RAM)
+TMPBUILD=$MNT/.monolith-install-build
+run mkdir -p -m 700 "$TMPBUILD"
 install_ok=1
-run nixos-install --no-root-passwd --no-channel-copy "${jobs[@]}" --flake "$cfgdir#$HOST" || install_ok=0
+TMPDIR=$TMPBUILD run nixos-install --no-root-passwd --no-channel-copy "${jobs[@]}" --flake "$cfgdir#$HOST" || install_ok=0
 tmp_swap_off
+run rm -rf "$TMPBUILD"
 if ((!install_ok)); then
     warn "$(t "A instalação falhou. O disco continua preparado: corrija o problema (ou aguarde a correção na branch) e rode o instalador de novo para retomar." \
         "The install failed. The disk stays prepared: fix the problem (or wait for the fix on the branch) and run the installer again to resume.")"

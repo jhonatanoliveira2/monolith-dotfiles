@@ -175,6 +175,12 @@ check "16 GiB of RAM: none" test "$(swapgib $((K * 16)) 0 $((K * 200)))" = 0
 check "swap already active counts" test "$(swapgib $((K * 6)) $((K * 10)) $((K * 200)))" = 0
 check "20 GiB root: leaves 15 GiB free" test "$(swapgib $((K * 6)) 0 $((K * 20)))" = 5
 check "16 GiB root: too small, none" test "$(swapgib $((K * 6)) 0 $((K * 16)))" = 0
+cores() { bash -c "$(sed -n '/^build_cores() {/,/^}/p' "$INST"); build_cores $1 $2"; }
+check "5.5 GiB of RAM, 16 threads: 2 compiler processes" test "$(cores $((K * 11 / 2)) 16)" = 2
+check "1.5 GiB of RAM: at least 1" test "$(cores $((K * 3 / 2)) 8)" = 1
+check "16 GiB of RAM, 16 threads: 8" test "$(cores $((K * 16)) 16)" = 8
+check "64 GiB of RAM: every thread (no --cores)" test -z "$(cores $((K * 64)) 16)"
+check "builds outside the live ISO's tmpfs" grep -q 'TMPDIR=\$TMPBUILD run nixos-install' "$INST"
 check "swap file switched off before reboot" bash -c "grep -n 'tmp_swap_off\$' '$INST' | head -1 | cut -d: -f1 | xargs -I{} test {} -lt \$(grep -n 'umount -R \"\$MNT\"' '$INST' | tail -1 | cut -d: -f1)"
 
 fresh broken

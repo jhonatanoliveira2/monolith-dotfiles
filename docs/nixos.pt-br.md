@@ -106,10 +106,12 @@ template com as respostas, instala, define a senha do usuário (o root fica bloq
   20 GiB nunca são oferecidos; `-- --dry-run` mostra cada comando sem alterar nada.
 - Pouca RAM (8 GB com parte dela tomada por uma GPU integrada): a swap perguntada só existe no sistema instalado,
   então durante a instalação o instalador cria uma swap temporária em arquivo na nova raiz
-  (`/mnt/.monolith-install-swap`, até 8 GiB, o bastante para 16 GiB de RAM + swap, deixando 15 GiB livres) e, com
-  menos de 8 GiB de RAM, compila um pacote por vez (`--max-jobs 1`). O arquivo é desligado e apagado logo depois do
+  (`/mnt/.monolith-install-swap`, até 8 GiB, o bastante para 16 GiB de RAM + swap, deixando 15 GiB livres), compila
+  um pacote por vez com menos de 8 GiB de RAM (`--max-jobs 1`), limita os processos de compilador de cada pacote a
+  cerca de um por 2 GiB de RAM (`--cores`: um pacote que falta no cache binário, como o Hyprland, compilaria com
+  todos os threads) e deixa as árvores de build na raiz nova (`TMPDIR`), fora da RAM da ISO. O arquivo é desligado e apagado logo depois do
   `nixos-install`. Instalando à mão: `fallocate -l 8G /mnt/swapfile && chmod 600 /mnt/swapfile && mkswap /mnt/swapfile
-  && swapon /mnt/swapfile` antes do `nixos-install`, depois `swapoff` e `rm` antes de reiniciar.
+  && swapon /mnt/swapfile` antes do `nixos-install`, depois `swapoff` e `rm` antes de reiniciar; `NIX_CONFIG=$'cores = 2\nmax-jobs = 1'` limita as compilações.
 - Se a instalação parar depois de o disco ser preparado (rede, um erro corrigido na branch), rode o mesmo comando
   de novo: ele oferece retomar e busca a versão mais recente da branch (`--refresh`).
 - A configuração busca o MONOLITH no mesmo lugar que o instalador: rodado com `?ref=<branch>`, o
