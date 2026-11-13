@@ -82,6 +82,12 @@ fd                          # LazyVim: file finder (recommended)
 nwg-look                    # nwg-look/config (GTK settings manager, run by hand)
 pavucontrol                 # "Audio mixer" button in the Quickshell audio menu
 cava                        # audio spectrum shown when a song has no lyrics (falls back to the peak level)
+# Opening files from Nautilus (double-click): images, videos, PDFs, office documents, video thumbnails
+loupe                       # images (GNOME Image Viewer)
+mpv                         # videos and audio
+papers                      # PDFs (GNOME Document Viewer; also draws the PDF thumbnails)
+libreoffice-fresh           # documents, spreadsheets and presentations (.odt, .docx, .xlsx, .pptx...)
+ffmpegthumbnailer           # video thumbnails in Nautilus
 # Nothing theme (scripts/nothing-theme.sh, off unless turned on)
 python-numpy                # monolith-dotmatrix: wallpapers as LED dot matrices
 python-pillow               # monolith-dotmatrix and the MONOLITH Dots cursor (drawn by nix/nothing/cursor.py)

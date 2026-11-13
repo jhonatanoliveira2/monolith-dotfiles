@@ -231,7 +231,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 | Opção | Padrão | O que faz |
 |---|---|---|
 | `enable` | `false` | configs, shell, utilitários e pacotes |
-| `optionalPackages` | `true` | o grupo opcional do `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim...) |
+| `optionalPackages` | `true` | o grupo opcional do `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim, e Loupe, mpv, Papers, LibreOffice e ffmpegthumbnailer para abrir arquivos pelo Nautilus...) |
 | `extraPackages` | `[ ]` | mais pacotes |
 | `apps` | `{ browser = "firefox"; }` | programas dos atalhos (`terminal`, `fileManager`, `ide`, `browser`, `lockScreen`) |
 | `browserPackage` | `pkgs.firefox` | pacote de `apps.browser` (`null` se instalado de outro jeito, ex.: Zen pelo flake dele) |

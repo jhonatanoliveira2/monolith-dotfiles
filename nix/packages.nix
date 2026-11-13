@@ -70,5 +70,11 @@ pkgs: {
     ripgrep
     fd
     nwg-look
+    # opening files from Nautilus (double-click): images, videos, PDFs, office documents, video thumbnails
+    loupe # images (GNOME Image Viewer)
+    mpv # videos and audio
+    papers # PDFs (GNOME Document Viewer; also draws the PDF thumbnails)
+    libreoffice # documents, spreadsheets and presentations
+    ffmpegthumbnailer # video thumbnails in Nautilus
   ];
 }

@@ -42,6 +42,7 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 | `nwg-look` | Para ajustar temas GTK pela interface gráfica |
 | `pavucontrol` | Para abrir o mixer de áudio do menu do Quickshell |
 | `cava` | Para ver o espectro real do áudio quando a música não tem letra (sem ele, as barras seguem o pico de volume) |
+| `loupe`, `mpv`, `papers`, `libreoffice-fresh`, `ffmpegthumbnailer` | Para abrir arquivos pelo Nautilus: imagens, vídeos, PDFs e documentos de escritório, com miniaturas de vídeo (no NixOS: `libreoffice`) |
 | `python-numpy`, `python-pillow` | Para ligar o [tema Nothing](nothing-theme.pt-br.md) (`scripts/nothing-theme.sh`): wallpapers em matriz de pontos e o cursor de LEDs |
 | `noise-suppression-for-voice` | Para ativar a supressão de ruído do microfone em Configurações > Microfone |
 | `power-profiles-daemon` | Para controles de perfil de energia em equipamentos compatíveis |

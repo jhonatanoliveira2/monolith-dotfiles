@@ -42,6 +42,7 @@ The installer does not run `pacman -Sy`. If a package cannot be found, update th
 | `nwg-look` | You want to adjust GTK themes through a graphical interface |
 | `pavucontrol` | You open the audio mixer from a Quickshell menu |
 | `cava` | You want the real audio spectrum when a song has no lyrics (without it, bars follow the volume peak) |
+| `loupe`, `mpv`, `papers`, `libreoffice-fresh`, `ffmpegthumbnailer` | You open files from Nautilus: images, videos, PDFs and office documents, with video thumbnails (on NixOS: `libreoffice`) |
 | `python-numpy`, `python-pillow` | You turn on the [Nothing theme](nothing-theme.md) (`scripts/nothing-theme.sh`): dot-matrix wallpapers and the LED cursor |
 | `noise-suppression-for-voice` | You turn on microphone noise suppression in Settings > Microphone |
 | `power-profiles-daemon` | You use power-profile controls on supported hardware |

@@ -227,7 +227,7 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | Option | Default | What it does |
 |---|---|---|
 | `enable` | `false` | configs, shell, helpers and packages |
-| `optionalPackages` | `true` | the optional group of `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim...) |
+| `optionalPackages` | `true` | the optional group of `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim, and Loupe, mpv, Papers, LibreOffice and ffmpegthumbnailer to open files from Nautilus...) |
 | `extraPackages` | `[ ]` | more packages |
 | `apps` | `{ browser = "firefox"; }` | programs of the binds (`terminal`, `fileManager`, `ide`, `browser`, `lockScreen`) |
 | `browserPackage` | `pkgs.firefox` | package for `apps.browser` (`null` if installed otherwise, e.g. Zen from its flake) |
