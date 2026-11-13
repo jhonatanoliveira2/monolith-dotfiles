@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """previews.py - regenerate the SVG previews of assets/previews/ (shown in the README) from the real programs.
 
-    python3 tools/previews.py [--only fastfetch,cava,...] [--out DIR]
+    python3 tools/previews.py [--only default/fastfetch,nothing/cava,...] [--out DIR]
 
 Needs fastfetch, fish, script (util-linux) and Python with Pillow and numpy (python-pillow, python-numpy).
 Nothing outside a temporary directory is read or written but the repository's own files and --out: the
 installers run in --dry-run mode against a throw-away home.
 
-  fastfetch          fastfetch with the default theme (configs/.config/fastfetch)
-  fastfetch-nothing  fastfetch with the Nothing theme (nix/nothing/fastfetch.jsonc, Arch LED logo)
-  cava-nothing       monolith-cava, one frame drawn from a made-up spectrum
-  nautilus-nothing   a Nautilus-like window with the MONOLITH Dots icons and cursor (Nothing theme)
-  wallpaper-nothing  a wallpaper as it is and as an LED dot matrix (monolith-dotmatrix)
-  installer          scripts/install.sh: welcome and the theme question (Arch Linux / CachyOS)
-  installer-nixos    the NixOS installer's banner in the Nothing look
-  logo               MONOLITH as a dot matrix (the README's title; the letters of the NixOS installer's banner)
+Each preview is written to <out>/<name>.svg; default/ is the default theme, nothing/ the optional Nothing theme.
+
+  logo                    MONOLITH as a dot matrix (the README's title; the letters of the NixOS installer's banner)
+  default/fastfetch       fastfetch (configs/.config/fastfetch) as on NixOS: the Nix icon, NixOS rows
+  default/nautilus        Nautilus in the default theme: dark glass over the wallpaper, Monolith-Icons
+  default/installer       scripts/install.sh: welcome and the theme question (Arch Linux / CachyOS)
+  default/installer-nixos the NixOS installer's banner in the default look
+  nothing/fastfetch       fastfetch of the Nothing theme on NixOS (nix/nothing/fastfetch.jsonc, snowflake as LEDs)
+  nothing/nautilus        Nautilus in the Nothing theme: opaque OLED black, MONOLITH Dots icons and cursor
+  nothing/wallpaper       a wallpaper (assets/previews/src/night-peaks.jpg) as it is and as an LED dot matrix
+  nothing/cava            monolith-cava, one frame drawn from a made-up spectrum
+  nothing/installer-nixos the NixOS installer's banner in the Nothing look
+
+The fastfetch previews show NixOS whatever machine draws them: the distribution, kernel and package rows are
+fixed (NIXOS below); the rest (window manager, memory, CPU...) is read from the machine.
 """
 import argparse
 import base64
@@ -24,6 +31,7 @@ import json
 import math
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -37,6 +45,11 @@ import ansi2svg  # noqa: E402
 
 OLED, BAR_N = "#000000", "#0e0e0e"
 FONT = "Space Mono, JetBrains Mono, DejaVu Sans Mono, Menlo, Consolas, monospace"
+SANS = "Adwaita Sans, Inter, Cantarell, DejaVu Sans, Helvetica, Arial, sans-serif"
+# what fastfetch prints on a NixOS of the flake's nixos-unstable (os, kernel, packages as {all} / as a list)
+NIXOS = {"os": "NixOS 26.05 (Yarara)", "kernel": "6.18.12",
+         "packages": ("1903", "1386 (nix-system), 517 (nix-user)")}
+ARCH_ICON, NIX_ICON = "\U000f08c7", "\uf313"   # nerd-font glyphs: md-arch, linux-nixos
 
 
 def load(name, path):
@@ -64,6 +77,7 @@ def term_svg(ansi, out, title, nothing=False, start="", until="", extra=0):
 
 
 def write(path, svg):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(svg + "\n")
     print(f"wrote {os.path.relpath(path, ROOT)} ({os.path.getsize(path) // 1024} KiB)", file=sys.stderr)
@@ -87,6 +101,25 @@ def fixed_terminal(cfg, name="Ghostty"):
     return cfg
 
 
+def as_nixos(cfg):
+    """The distribution, kernel and package rows as NixOS prints them (fixed text), the Nix icon instead of
+    Arch's (home.nix swaps it the same way in the config it links on NixOS)."""
+    for n, m in enumerate(cfg["modules"]):
+        if not isinstance(m, dict):
+            continue
+        if "key" in m:
+            m["key"] = m["key"].replace(ARCH_ICON, NIX_ICON)
+        t, fmt = m.get("type"), m.get("format", "")
+        if t not in ("os", "kernel", "packages"):
+            continue
+        text = NIXOS[t] if t != "packages" else NIXOS[t][0 if "{all" in fmt else 1]
+        new = {"type": "command", "key": m.get("key", t.upper()), "text": "printf %s " + shlex.quote(text)}
+        if fmt:
+            new["format"] = re.sub(r"\{(?:pretty-name|release|all)", "{", fmt)
+        cfg["modules"][n] = new
+    return cfg
+
+
 def fastfetch(home, cfg):
     path = os.path.join(home, "preview.jsonc")
     with open(path, "w", encoding="utf-8") as f:
@@ -96,33 +129,20 @@ def fastfetch(home, cfg):
                           env=env, capture_output=True, text=True, check=True).stdout
 
 
-def distro_label():
-    name = "Linux"
-    try:
-        with open("/etc/os-release") as f:
-            for l in f:
-                if l.startswith("NAME="):
-                    name = l.split("=", 1)[1].strip().strip('"')
-    except OSError:
-        pass
-    return " ".join(re.sub(r"[^A-Z0-9 ]", "", name.upper()))
-
-
 # ── previews ───────────────────────────────────────────────────────────────────────────────────────────────
 def p_fastfetch(tmp, out):
     home = os.path.join(tmp, "ff")
     shutil.copytree(os.path.join(ROOT, "configs", ".config", "fastfetch"), os.path.join(home, ".config", "fastfetch"))
-    cfg = fixed_terminal(jsonc(os.path.join(ROOT, "configs", ".config", "fastfetch", "config.jsonc")))
-    term_svg(fastfetch(home, cfg), os.path.join(out, "fastfetch.svg"), "fastfetch")
+    cfg = as_nixos(fixed_terminal(jsonc(os.path.join(ROOT, "configs", ".config", "fastfetch", "config.jsonc"))))
+    term_svg(fastfetch(home, cfg), os.path.join(out, "default", "fastfetch.svg"), "fastfetch · NixOS")
 
 
 def p_fastfetch_nothing(tmp, out):
     home = os.path.join(tmp, "ffn")
     os.makedirs(os.path.join(home, ".config", "fastfetch"))
-    shutil.copy(os.path.join(NOTHING, "fastfetch-logo-arch.txt"), os.path.join(home, ".config", "fastfetch", "nothing-logo.txt"))
-    raw = open(os.path.join(NOTHING, "fastfetch.jsonc"), encoding="utf-8").read().replace("N I X O S", distro_label())
-    cfg = fixed_terminal(json.loads("".join(l for l in raw.splitlines(True) if not l.lstrip().startswith("//"))))
-    term_svg(fastfetch(home, cfg), os.path.join(out, "fastfetch-nothing.svg"), "fastfetch · Nothing", nothing=True)
+    shutil.copy(os.path.join(NOTHING, "fastfetch-logo.txt"), os.path.join(home, ".config", "fastfetch", "nothing-logo.txt"))
+    cfg = as_nixos(fixed_terminal(jsonc(os.path.join(NOTHING, "fastfetch.jsonc"))))
+    term_svg(fastfetch(home, cfg), os.path.join(out, "nothing", "fastfetch.svg"), "fastfetch · Nothing · NixOS", nothing=True)
 
 
 def p_cava_nothing(tmp, out):
@@ -148,7 +168,105 @@ def p_cava_nothing(tmp, out):
                 cur = col
             buf.append(ch + " ")
         buf.append("\x1b[0m\n")
-    term_svg("".join(buf), os.path.join(out, "cava-nothing.svg"), "monolith-cava · Nothing", nothing=True)
+    term_svg("".join(buf), os.path.join(out, "nothing", "cava.svg"), "monolith-cava · Nothing", nothing=True)
+
+
+def icon_symbols(icons):
+    """icon(name) -> the id of a <symbol> holding that icon of the theme drawn in `icons`; symbols() -> the defs."""
+    used = {}
+
+    def icon(name):
+        if name not in used:
+            path = next(os.path.join(icons, "scalable", d, name + ".svg") for d in ("places", "mimetypes", "devices")
+                        if os.path.exists(os.path.join(icons, "scalable", d, name + ".svg")))
+            inner = re.sub(r"^<svg[^>]*>|</svg>\s*$", "", open(path).read().strip())
+            used[name] = f'<symbol id="{name}" viewBox="0 0 64 64">{inner}</symbol>'
+        return name
+    return icon, lambda: "".join(used.values())
+
+
+def jpeg_b64(path, w, h, quality=80):
+    """`path` cover-cropped to w x h, as base64 JPEG."""
+    from PIL import Image
+    im = Image.open(path).convert("RGB")
+    s = max(w / im.width, h / im.height)
+    im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+    l, t = (im.width - w) // 2, (im.height - h) // 2
+    buf = io.BytesIO()
+    im.crop((l, t, l + w, t + h)).save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def p_nautilus(tmp, out):
+    """Nautilus in the default theme (configs/.config/gtk-4.0/gtk.css): the window is transparent, the sidebar
+    black at 55 %, the content #111111 at 45 %, no blur (the wallpaper behind it is sharp), Monolith-Icons."""
+    icons = os.path.join(tmp, "monolith-icons")
+    subprocess.run([sys.executable, "-I", os.path.join(ROOT, "branding", "icons.py"), icons], check=True, capture_output=True)
+    icon, symbols = icon_symbols(icons)
+
+    CW, CH = 1000, 600                    # the screen: wallpaper, the window floating on it
+    X, Y, W, H, SIDE = 90, 56, 820, 488, 200
+    wall = jpeg_b64(os.path.join(ROOT, "wallpapers", "static", "blue_sky.png"), CW, CH, 78)
+    side = [("user-home", "Home", True), ("folder-documents", "Documents", False),
+            ("folder-download", "Downloads", False), ("folder-music", "Music", False),
+            ("folder-pictures", "Pictures", False), ("folder-videos", "Videos", False),
+            ("user-trash", "Trash", False)]
+    devices = [("drive-harddisk", "System"), ("drive-removable-media", "USB stick")]
+    grid = [("folder-desktop", "Desktop"), ("folder-documents", "Documents"), ("folder-download", "Downloads"),
+            ("folder-music", "Music"), ("folder-pictures", "Pictures"), ("folder-videos", "Videos"),
+            ("folder-templates", "Templates"), ("folder-publicshare", "Public"), ("folder", "Projects"),
+            ("text-x-generic", "notes.txt"), ("image-x-generic", "sky.png"), ("audio-x-generic", "song.flac"),
+            ("application-pdf", "report.pdf"), ("text-x-script", "build.sh"), ("package-x-generic", "dots.zip")]
+    b = [f'<rect x="{X}" y="{Y}" width="{SIDE}" height="{H}" fill="#000000" fill-opacity="0.55"/>',
+         f'<rect x="{X + SIDE}" y="{Y}" width="{W - SIDE}" height="{H}" fill="#111111" fill-opacity="0.45"/>',
+         f'<line x1="{X + SIDE}" y1="{Y}" x2="{X + SIDE}" y2="{Y + H}" stroke="#ffffff" stroke-opacity="0.06"/>']
+    # header: title and buttons of the sidebar, the path pill, the view buttons and close
+    b.append(f'<text x="{X + SIDE / 2}" y="{Y + 30}" text-anchor="middle" fill="#eeeeee" font-size="13" font-weight="bold">Files</text>')
+    px = X + SIDE + 70
+    b.append(f'<rect x="{px}" y="{Y + 11}" width="380" height="30" rx="15" fill="#ffffff" fill-opacity="0.06"/>'
+             f'<text x="{px + 18}" y="{Y + 31}" fill="#ffffff" font-size="13" font-weight="bold">Home</text>'
+             f'<circle cx="{px + 362}" cy="{Y + 21}" r="1.4" fill="#cccccc"/><circle cx="{px + 362}" cy="{Y + 26}" r="1.4" fill="#cccccc"/>'
+             f'<circle cx="{px + 362}" cy="{Y + 31}" r="1.4" fill="#cccccc"/>')
+    for k, ch in enumerate("‹›"):
+        b.append(f'<text x="{X + SIDE + 22 + k * 24}" y="{Y + 32}" text-anchor="middle" fill="{"#888888" if k else "#cccccc"}" font-size="20">{ch}</text>')
+    b.append(f'<circle cx="{X + W - 24}" cy="{Y + 26}" r="11" fill="#ffffff" fill-opacity="0.1"/>'
+             f'<path d="M{X + W - 28} {Y + 22}l8 8m0 -8l-8 8" stroke="#eeeeee" stroke-width="1.6" stroke-linecap="round"/>')
+    for k in range(3):   # list / grid / sort, as three small bars
+        b.append(f'<rect x="{X + W - 86 + k * 0}" y="{Y + 19 + k * 5}" width="14" height="2" rx="1" fill="#cccccc"/>')
+    y = Y + 62
+    for ic, label, cur in side:
+        if cur:
+            b.append(f'<rect x="{X + 8}" y="{y - 7}" width="{SIDE - 16}" height="32" rx="6" fill="#ffffff" fill-opacity="0.12"/>')
+        b.append(f'<use href="#{icon(ic)}" x="{X + 18}" y="{y - 1}" width="20" height="20"/>'
+                 f'<text x="{X + 48}" y="{y + 14}" fill="{"#ffffff" if cur else "#cccccc"}" font-size="13">{escape(label)}</text>')
+        y += 36
+    b.append(f'<line x1="{X + 14}" y1="{y - 6}" x2="{X + SIDE - 14}" y2="{y - 6}" stroke="#ffffff" stroke-opacity="0.08"/>')
+    y += 8
+    for ic, label in devices:
+        b.append(f'<use href="#{icon(ic)}" x="{X + 18}" y="{y - 1}" width="20" height="20"/>'
+                 f'<text x="{X + 48}" y="{y + 14}" fill="#cccccc" font-size="13">{escape(label)}</text>')
+        y += 36
+    cols, cw, chh = 5, 118, 126
+    for n, (ic, label) in enumerate(grid):
+        gx = X + SIDE + 22 + (n % cols) * cw
+        gy = Y + 70 + (n // cols) * chh
+        if n in (2, 10):   # selected: white at 14 %; hovered: 6 %
+            b.append(f'<rect x="{gx + 4}" y="{gy - 8}" width="{cw - 12}" height="{chh - 18}" rx="10" fill="#ffffff" '
+                     f'fill-opacity="{0.14 if n == 2 else 0.06}"/>')
+        b.append(f'<use href="#{icon(ic)}" x="{gx + 23}" y="{gy}" width="64" height="64"/>'
+                 f'<text x="{gx + 55}" y="{gy + 86}" text-anchor="middle" fill="{"#ffffff" if n == 2 else "#eeeeee"}" font-size="12">{escape(label)}</text>')
+    b.append(f'<rect x="{X + W - 210}" y="{Y + H - 40}" width="196" height="28" rx="8" fill="#000000" fill-opacity="0.75" stroke="#ffffff" stroke-opacity="0.08"/>'
+             f'<text x="{X + W - 112}" y="{Y + H - 21}" text-anchor="middle" fill="#cccccc" font-size="12">“Downloads” selected</text>')
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{CW}" height="{CH}" viewBox="0 0 {CW} {CH}" role="img" '
+           f'aria-label="Nautilus in the default theme: dark glass over the wallpaper, Monolith-Icons">'
+           f'<defs>{symbols()}<clipPath id="screen"><rect width="{CW}" height="{CH}" rx="20"/></clipPath>'
+           f'<clipPath id="win"><rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="14"/></clipPath>'
+           f'<filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-opacity="0.45"/></filter></defs>'
+           f'<g clip-path="url(#screen)"><image width="{CW}" height="{CH}" href="data:image/jpeg;base64,{wall}"/>'
+           f'<rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="14" fill="#000000" fill-opacity="0.01" filter="url(#sh)"/>'
+           f'<g clip-path="url(#win)" font-family="{SANS}">{"".join(b)}</g>'
+           f'<rect x="{X + 0.5}" y="{Y + 0.5}" width="{W - 1}" height="{H - 1}" rx="14" fill="none" stroke="#ffffff" stroke-opacity="0.18"/></g></svg>')
+    write(os.path.join(out, "default", "nautilus.svg"), svg)
 
 
 def p_nautilus_nothing(tmp, out):
@@ -208,14 +326,14 @@ def p_nautilus_nothing(tmp, out):
     body.append(f'<image x="{cx - 24}" y="{cy - 24}" width="48" height="48" href="data:image/png;base64,{pointer}"/>')
     body.append(f'<text x="{W - 20}" y="{H - 16}" text-anchor="end" fill="#333333" font-size="11" letter-spacing="2">15 ITEMS</text>')
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" '
-           f'aria-label="Nautilus with the MONOLITH Dots icons and cursor (Nothing theme)">'
+           f'aria-label="Nautilus in the Nothing theme: opaque, with the MONOLITH Dots icons and cursor">'
            f'<defs>{"".join(used.values())}</defs><g font-family="{FONT}">{"".join(body)}</g></svg>')
-    write(os.path.join(out, "nautilus-nothing.svg"), svg)
+    write(os.path.join(out, "nothing", "nautilus.svg"), svg)
 
 
 def p_wallpaper_nothing(tmp, out):
     from PIL import Image
-    src = os.path.join(ROOT, "wallpapers", "static", "blue_sky.png")
+    src = os.path.join(ROOT, "assets", "previews", "src", "night-peaks.jpg")
     dots = os.path.join(tmp, "dots.png")
     subprocess.run([sys.executable, "-I", os.path.join(NOTHING, "dotmatrix.py"), src, "-o", dots,
                     "--resolution", "480x270", "--size", "3", "--spacing", "1",
@@ -243,7 +361,7 @@ def p_wallpaper_nothing(tmp, out):
            f'<g font-family="{FONT}" font-size="12" letter-spacing="2" fill="#7a7a7a">'
            f'<text x="254" y="312" text-anchor="middle">ORIGINAL</text>'
            f'<circle cx="668" cy="308" r="3.2" fill="#f2f2f2"/><text x="680" y="312">LED MATRIX · CONTRAST 130 %</text></g></svg>')
-    write(os.path.join(out, "wallpaper-nothing.svg"), svg)
+    write(os.path.join(out, "nothing", "wallpaper.svg"), svg)
 
 
 def pty(cmd, answers, cols=100):
@@ -263,14 +381,20 @@ def p_installer(tmp, out):
     os.makedirs(home, exist_ok=True)
     raw = pty(f"MONOLITH_TARGET_HOME={home} LANG=en_US.UTF-8 bash {ROOT}/scripts/install.sh --lang en --no-deps "
               "--dry-run --no-clear", "y\n2\n")
-    term_svg(raw, os.path.join(out, "installer.svg"), "MONOLITH · scripts/install.sh", start="█",
+    term_svg(raw, os.path.join(out, "default", "installer.svg"), "MONOLITH · scripts/install.sh", start="█",
              until="Choose the theme")
 
 
 def p_installer_nixos(tmp, out):
+    raw = pty(f"MONOLITH_INSTALL_THEME=monolith bash {ROOT}/nix/install/monolith-install.sh --lang en --dry-run", "", cols=110)
+    term_svg(raw, os.path.join(out, "default", "installer-nixos.svg"), "MONOLITH · NixOS installer", start="█",
+             until="installer", extra=1)
+
+
+def p_installer_nixos_nothing(tmp, out):
     raw = pty(f"MONOLITH_INSTALL_THEME=nothing bash {ROOT}/nix/install/monolith-install.sh --lang en --dry-run", "", cols=110)
-    term_svg(raw, os.path.join(out, "installer-nixos.svg"), "MONOLITH · NixOS installer", nothing=True, start="●",
-             until="I N S T A L L E R")
+    term_svg(raw, os.path.join(out, "nothing", "installer-nixos.svg"), "MONOLITH · NixOS installer · Nothing",
+             nothing=True, start="●", until="I N S T A L L E R")
 
 
 def p_logo(tmp, out):
@@ -293,9 +417,12 @@ def p_logo(tmp, out):
 
 
 PREVIEWS = {
-    "fastfetch": p_fastfetch, "fastfetch-nothing": p_fastfetch_nothing, "cava-nothing": p_cava_nothing,
-    "nautilus-nothing": p_nautilus_nothing, "wallpaper-nothing": p_wallpaper_nothing,
-    "installer": p_installer, "installer-nixos": p_installer_nixos, "logo": p_logo,
+    "logo": p_logo,
+    "default/fastfetch": p_fastfetch, "default/nautilus": p_nautilus, "default/installer": p_installer,
+    "default/installer-nixos": p_installer_nixos,
+    "nothing/fastfetch": p_fastfetch_nothing, "nothing/nautilus": p_nautilus_nothing,
+    "nothing/wallpaper": p_wallpaper_nothing, "nothing/cava": p_cava_nothing,
+    "nothing/installer-nixos": p_installer_nixos_nothing,
 }
 
 

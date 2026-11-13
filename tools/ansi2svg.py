@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """ansi2svg.py - turn a terminal capture (ANSI escapes) into a standalone SVG.
 
-Maintainer tool used to generate assets/previews/*.svg from a real installer run:
+Maintainer tool used to generate assets/previews/{default,nothing}/*.svg from a real installer run:
 
     script -qec "stty cols 100; " /tmp/run.typescript
-    python3 tools/ansi2svg.py /tmp/run.typescript assets/previews/installer.svg \
+    python3 tools/ansi2svg.py /tmp/run.typescript assets/previews/default/installer.svg \
         --title "MONOLITH installer" [--from "M O N O"] [--lines 60]
 
 Interpreted: SGR colours (16, 256, truecolor), bold, dim, carriage return, "erase to end of line" and cursor

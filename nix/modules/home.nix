@@ -43,6 +43,16 @@ let
   isMutable = rel: lib.any (m: rel == m || (lib.hasSuffix "/" m && lib.hasPrefix m rel)) cfg.mutableFiles;
   files = lib.filter (rel: !ignored rel) (map relative (lib.filesystem.listFilesRecursive root));
   linked = lib.filter (rel: !isMutable rel) files;
+  # the store copy of a linked file; fastfetch shows the Nix icon (nf-linux-nixos, U+F313) instead of Arch's
+  # (nf-md-arch, U+F08C7) on the distro row
+  storeFile =
+    rel:
+    if rel == "fastfetch/config.jsonc" then
+      pkgs.writeText "fastfetch-config.jsonc" (
+        builtins.replaceStrings [ "󰣇" ] [ "" ] (builtins.readFile (root + "/${rel}"))
+      )
+    else
+      "${src}/${rel}";
   seeded = lib.filter isMutable files;
 
   manifest = pkgs.writeText "monolith-seed-manifest" (
@@ -213,7 +223,7 @@ in
             source = dev.link {
               module = lib.head (lib.splitString "/" rel);
               path = "configs/.config/${rel}";
-              store = "${src}/${rel}";
+              store = storeFile rel;
             };
           }
         ) linked

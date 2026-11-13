@@ -42,25 +42,47 @@ branch antiga? [Atualizar a partir de uma branch antiga](docs/migracao.md).
 
 ## Prévia
 
+### Tema padrão
+
 <table>
   <tr>
-    <td width="50%"><img src="assets/previews/fastfetch.svg" alt="fastfetch, tema padrão"></td>
-    <td width="50%"><img src="assets/previews/fastfetch-nothing.svg" alt="fastfetch, tema Nothing"></td>
+    <td colspan="2"><img src="assets/previews/default/nautilus.svg" alt="Nautilus no tema padrão: vidro escuro sobre o wallpaper, Monolith-Icons em cinza"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/nautilus-nothing.svg" alt="Nautilus com os ícones e o cursor MONOLITH Dots"></td>
+    <td width="50%"><img src="assets/previews/default/fastfetch.svg" alt="fastfetch no NixOS, tema padrão"></td>
+    <td width="50%"><img src="assets/previews/default/installer-nixos.svg" alt="Instalador do NixOS, visual padrão"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/wallpaper-nothing.svg" alt="Um wallpaper como é e em matriz de LEDs"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/cava-nothing.svg" alt="monolith-cava"></td>
-    <td width="50%"><img src="assets/previews/installer-nixos.svg" alt="Instalador do NixOS, visual Nothing"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/installer.svg" alt="Instalador do Arch: boas-vindas e escolha do tema"></td>
+    <td colspan="2"><img src="assets/previews/default/installer.svg" alt="Instalador do Arch: boas-vindas e escolha do tema"></td>
   </tr>
 </table>
+
+### Tema Nothing (opcional)
+
+LEDs e matriz de pontos, desligado a menos que você o escolha no instalador ou o ligue depois
+([Tema Nothing](docs/nothing-theme.pt-br.md)).
+
+<details>
+<summary>Mostrar as prévias do tema Nothing</summary>
+<br>
+
+<table>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/wallpaper.svg" alt="Um wallpaper como é e em matriz de LEDs"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch no NixOS, tema Nothing: o floco de neve em LEDs"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus no tema Nothing: opaco, ícones e cursor MONOLITH Dots"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>
+    <td width="50%"><img src="assets/previews/nothing/installer-nixos.svg" alt="Instalador do NixOS, visual Nothing"></td>
+  </tr>
+</table>
+
+</details>
 
 ## Documentação
 

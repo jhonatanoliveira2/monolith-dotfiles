@@ -42,25 +42,47 @@ Both installers ask for the theme: **default** or **Nothing** (LEDs and dot matr
 
 ## Preview
 
+### Default theme
+
 <table>
   <tr>
-    <td width="50%"><img src="assets/previews/fastfetch.svg" alt="fastfetch, default theme"></td>
-    <td width="50%"><img src="assets/previews/fastfetch-nothing.svg" alt="fastfetch, Nothing theme"></td>
+    <td colspan="2"><img src="assets/previews/default/nautilus.svg" alt="Nautilus in the default theme: dark glass over the wallpaper, grey Monolith-Icons"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/nautilus-nothing.svg" alt="Nautilus with the MONOLITH Dots icons and cursor"></td>
+    <td width="50%"><img src="assets/previews/default/fastfetch.svg" alt="fastfetch on NixOS, default theme"></td>
+    <td width="50%"><img src="assets/previews/default/installer-nixos.svg" alt="NixOS installer, default look"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/wallpaper-nothing.svg" alt="A wallpaper as it is and as an LED dot matrix"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/cava-nothing.svg" alt="monolith-cava"></td>
-    <td width="50%"><img src="assets/previews/installer-nixos.svg" alt="NixOS installer, Nothing look"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/installer.svg" alt="Arch installer: welcome and theme choice"></td>
+    <td colspan="2"><img src="assets/previews/default/installer.svg" alt="Arch installer: welcome and theme choice"></td>
   </tr>
 </table>
+
+### Nothing theme (optional)
+
+LEDs and dot matrix, off unless you pick it in the installer or turn it on later
+([Nothing theme](docs/nothing-theme.md)).
+
+<details>
+<summary>Show the Nothing theme previews</summary>
+<br>
+
+<table>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/wallpaper.svg" alt="A wallpaper as it is and as an LED dot matrix"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch on NixOS, Nothing theme: the snowflake as LEDs"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus in the Nothing theme: opaque, MONOLITH Dots icons and cursor"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>
+    <td width="50%"><img src="assets/previews/nothing/installer-nixos.svg" alt="NixOS installer, Nothing look"></td>
+  </tr>
+</table>
+
+</details>
 
 ## Docs
 

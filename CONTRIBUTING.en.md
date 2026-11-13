@@ -49,4 +49,4 @@ The tests use temporary environments and never touch your session. If you change
 
 ## Previews
 
-The README's previews live in `assets/previews/` and are generated from the real programs by `python3 tools/previews.py` (needs fastfetch, fish, `script` and Python with Pillow and numpy; `--only name` redoes one). They never show the user's name or hostname; check the result before sending, and remove personal data from any new image.
+The README's previews live in `assets/previews/` and are generated from the real programs by `python3 tools/previews.py` (needs fastfetch, fish, `script` and Python with Pillow and numpy; `--only default/nautilus` redoes one). `default/` holds the default theme and `nothing/` the optional Nothing theme; the photo of the Nothing wallpaper preview is `assets/previews/src/night-peaks.jpg`. The fastfetch previews always show NixOS (fixed distribution, kernel and package rows). They never show the user's name or hostname; check the result before sending, and remove personal data from any new image.
