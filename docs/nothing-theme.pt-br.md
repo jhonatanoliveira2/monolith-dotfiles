@@ -85,7 +85,7 @@ Manager). As opções "na hora" também mudam pelo app de Configurações; o val
 | `led.shape` | `"circle"` | na hora | `circle`, `rounded` ou `square` (wallpapers e LEDs da interface) |
 | `monochrome` | `true` | na hora | paleta cinza no shell e LEDs cinza nos wallpapers; desligado: o tema de cores fica e os LEDs pegam as cores da imagem |
 | `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | o tema de cursor de LEDs (Monolith-Dots) e o tamanho; entre de novo na sessão para vê-lo em tudo |
-| `icons`, `fastfetch`, `cava` | `true`, `true`, `true` | rebuild | o tema de ícones de LEDs (Monolith-Dots-Icons), a config Nothing do fastfetch e o cava em LEDs |
+| `icons`, `nautilus`, `fastfetch`, `cava` | `true`, `true`, `true`, `true` | rebuild | o tema de ícones de LEDs (Monolith-Dots-Icons), o Nautilus opaco em preto OLED (sem vidro), a config Nothing do fastfetch e o cava em LEDs |
 | `edgeGlow` | `true` | na hora | luz na borda da tela nas notificações |
 | `wallpaper.style` | `"dotmatrix"` | na hora | `dotmatrix` ou `original` |
 | `wallpaper.dither` | `"none"` | na hora | `none` (tamanho e brilho do LED seguem a imagem), `floyd` (Floyd-Steinberg), `bayer` (ordenado) |
@@ -212,6 +212,7 @@ Ele faz na sua home o que o módulo do Home Manager faz no NixOS, a partir dos m
 | conversor | `~/.local/bin/monolith-dotmatrix` (precisa de `python-numpy`, `python-pillow`) | — |
 | cursor | MONOLITH Dots em `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, tamanho: `--cursor-size 32` |
 | ícones | MONOLITH Dots Icons em `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
+| nautilus | `~/.config/gtk-4.0/gtk.css`: o padrão com o `nix/nothing/nautilus.css` depois dele, então o Nautilus fica opaco em preto OLED em vez do vidro do tema padrão; o `off` devolve o arquivo padrão | `--no-nautilus` |
 | fastfetch | `~/.config/fastfetch/nothing.jsonc`: o logo do Arch em LEDs e o nome da distribuição; a função `fastfetch` do fish o usa quando chamada sem argumentos | `--no-fastfetch` |
 | cava | `~/.config/cava/config` em cinzas, `~/.local/bin/monolith-cava`, a função `cava` do fish (`command cava` é o comum) | `--no-cava` |
 

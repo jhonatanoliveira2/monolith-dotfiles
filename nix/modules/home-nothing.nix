@@ -97,6 +97,14 @@ in
         cursor-size = cfg.cursor.size;
       }
       // lib.optionalAttrs cfg.icons { icon-theme = "Monolith-Dots-Icons"; };
+    # Nautilus without the glass: the default gtk.css with the Nothing block after it (same file as nothing-theme.sh)
+    xdg.configFile."gtk-4.0/gtk.css" = lib.mkIf cfg.nautilus {
+      source = lib.mkForce (
+        pkgs.writeText "monolith-nothing-gtk.css" (
+          builtins.readFile ../../configs/.config/gtk-4.0/gtk.css + builtins.readFile ../nothing/nautilus.css
+        )
+      );
+    };
     # fastfetch: replaces the shell's plain config (configs/.config/fastfetch) while the theme is on
     # (dev mode, programs.monolith.dev: these come from nix/nothing/ in the checkout, editable in place)
     xdg.configFile."fastfetch/config.jsonc" = lib.mkIf cfg.fastfetch {

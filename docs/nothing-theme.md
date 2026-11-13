@@ -84,7 +84,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
 | `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
-| `icons`, `fastfetch`, `cava` | `true`, `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons), the Nothing fastfetch config and cava as LEDs |
+| `icons`, `nautilus`, `fastfetch`, `cava` | `true`, `true`, `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons), Nautilus opaque in OLED black (no glass), the Nothing fastfetch config and cava as LEDs |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |
@@ -210,6 +210,7 @@ It does in your home what the Home Manager module does on NixOS, from the same f
 | renderer | `~/.local/bin/monolith-dotmatrix` (needs `python-numpy`, `python-pillow`) | — |
 | cursor | MONOLITH Dots in `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, size: `--cursor-size 32` |
 | icons | MONOLITH Dots Icons in `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
+| nautilus | `~/.config/gtk-4.0/gtk.css`: the default one with `nix/nothing/nautilus.css` after it, so Nautilus is opaque in OLED black instead of the default theme's glass; `off` puts the default file back | `--no-nautilus` |
 | fastfetch | `~/.config/fastfetch/nothing.jsonc`: the Arch logo as LEDs and the distribution's name; the fish function `fastfetch` uses it when called with no arguments | `--no-fastfetch` |
 | cava | `~/.config/cava/config` in greys, `~/.local/bin/monolith-cava`, the fish function `cava` (`command cava` is the plain one) | `--no-cava` |
 

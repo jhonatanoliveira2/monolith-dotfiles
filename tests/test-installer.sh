@@ -275,6 +275,9 @@ chmod +x "$TMP/nothing/bin/curl"
 printf 'org.gnome.desktop.interface icon-theme=%s\n' "'Adwaita'" >"$GSETTINGS_STATE"
 mkdir -p "$NT_HOME/.config/cava"
 printf 'my own cava config\n' >"$NT_HOME/.config/cava/config"
+mkdir -p "$NT_HOME/.config/gtk-4.0"   # the default gtk.css, as install.sh deploys it
+cp "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_HOME/.config/gtk-4.0/gtk.css"
+NT_GTK=$(cat "$ROOT/configs/.config/gtk-4.0/gtk.css" "$ROOT/nix/nothing/nautilus.css" | md5sum)
 nt() { PATH="$TMP/nothing/bin:$PATH" MONOLITH_APPLY_GSETTINGS=1 bash "$ROOT/scripts/nothing-theme.sh" --lang en --yes --no-color "$@" </dev/null; }
 has_pil=0; python3 -I -c 'import PIL' 2>/dev/null && has_pil=1
 
@@ -316,6 +319,9 @@ check "fish functions for cava and fastfetch" test -f "$NT_HOME/.config/fish/fun
 check "fastfetch: valid JSON, the distribution's name instead of NixOS" \
     bash -c '! grep -q "N I X O S" "$1" && grep -v "^//" "$1" | jq -e ".logo.source" >/dev/null' _ "$NT_HOME/.config/fastfetch/nothing.jsonc"
 check "fastfetch: the Arch LED logo" cmp -s "$ROOT/nix/nothing/fastfetch-logo-arch.txt" "$NT_HOME/.config/fastfetch/nothing-logo.txt"
+check "nautilus: gtk.css is the default one with the Nothing block after it" \
+    test "$(md5sum <"$NT_HOME/.config/gtk-4.0/gtk.css")" = "$NT_GTK"
+check "... and the default gtk.css is saved for off" cmp -s "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_STATE/saved/.config/gtk-4.0/gtk.css"
 check "icon theme drawn" test -f "$NT_HOME/.local/share/icons/Monolith-Dots-Icons/index.theme"
 check "gsettings icon-theme set" grep -q "set icon-theme Monolith-Dots-Icons" "$GSETTINGS_STATE.calls"
 if (( has_pil )); then
@@ -339,11 +345,19 @@ check "... and puts the previous icon-theme back" bash -c 'tail -n1 "$1" | grep 
 inst >"$TMP/nt-inst.out" 2>&1
 check "install.sh refreshes the theme when it is on" grep -qE "nothing-theme.sh on .*--refresh" "$NT_HOME"/.local/state/monolith-dotfiles/install-*.log
 check "... keeping the parts chosen before" bash -c 'grep -qx icons=0 "$1" && test ! -e "$2"' _ "$NT_STATE/parts" "$NT_HOME/.local/share/icons/Monolith-Dots-Icons"
+check "... and Nautilus stays opaque after install.sh deploys the default gtk.css" \
+    test "$(md5sum <"$NT_HOME/.config/gtk-4.0/gtk.css")" = "$NT_GTK"
+nt on --refresh --no-nautilus >/dev/null 2>&1
+check "--no-nautilus puts the default gtk.css back" cmp -s "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_HOME/.config/gtk-4.0/gtk.css"
+nt on --refresh >/dev/null 2>&1
+check "--refresh keeps Nautilus out once left out" grep -qx nautilus=0 "$NT_STATE/parts"
+nt on >/dev/null 2>&1
 
 nt off >/dev/null 2>&1
 check "off removes nothing.json and the record" test ! -e "$J" -a ! -e "$NT_STATE"
 check "off removes the renderer and the fish functions" test ! -e "$NT_HOME/.local/bin/monolith-dotmatrix" -a ! -e "$NT_HOME/.config/fish/functions"
 check "off puts the user's cava config back" grep -qx "my own cava config" "$NT_HOME/.config/cava/config"
+check "off puts the default gtk.css back" cmp -s "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_HOME/.config/gtk-4.0/gtk.css"
 check "off leaves no theme folder" test ! -e "$NT_HOME/.icons/Monolith-Dots" -a ! -e "$NT_HOME/.config/fastfetch/nothing.jsonc"
 nt off >"$TMP/nt-off2.out" 2>&1
 check "off when it is off: nothing to do" grep -q "is not on" "$TMP/nt-off2.out"

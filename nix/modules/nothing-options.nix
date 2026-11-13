@@ -62,6 +62,11 @@ in
     default = true;
     description = "MONOLITH Dots Icons: folders, files and devices as LED matrices (Nautilus, GTK apps). Requires a rebuild.";
   };
+  nautilus = mkOption {
+    type = types.bool;
+    default = true;
+    description = "Nautilus opaque in OLED black (nix/nothing/nautilus.css after the default gtk-4.0/gtk.css), without the default theme's glass. Requires a rebuild.";
+  };
   fastfetch = mkOption {
     type = types.bool;
     default = true;

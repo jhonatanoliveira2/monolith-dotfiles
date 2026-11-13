@@ -7,7 +7,7 @@
 #   nothing-theme.sh off            turn it off: remove what it installed, put back what it replaced
 #   nothing-theme.sh status         show whether it is on and what it installed
 # Options of "on":
-#   --no-cursor --no-icons --no-fastfetch --no-cava    leave that part out (removed if it was there)
+#   --no-cursor --no-icons --no-nautilus --no-fastfetch --no-cava    leave that part out (removed if it was there)
 #   --cursor-size N    cursor size in px, 16-96 (default 24)
 #   --refresh          only when it is on: keep the parts chosen last time (install.sh runs this)
 # Common: -y/--yes (never ask)  -n/--dry-run  --lang en|pt_BR  --no-color
@@ -18,6 +18,7 @@
 #   ~/.local/bin/monolith-dotmatrix      the wallpaper renderer (wallpaper-menu; needs python-numpy, python-pillow)
 #   cursor:    ~/.icons/Monolith-Dots, ~/.icons/default/index.theme, ~/.config/monolith/cursor, gsettings
 #   icons:     ~/.local/share/icons/Monolith-Dots-Icons, gsettings icon-theme
+#   nautilus:  ~/.config/gtk-4.0/gtk.css, the default one plus nix/nothing/nautilus.css (opaque, no glass)
 #   fastfetch: ~/.config/fastfetch/nothing.jsonc + nothing-logo.txt, fish function `fastfetch`
 #   cava:      ~/.config/cava/config, ~/.local/bin/monolith-cava, fish function `cava`
 # Its record (what it installed, what it saved, the previous gsettings) is in
@@ -62,17 +63,18 @@ FONTS=(
 : "${MONOLITH_FONTS_URL:=https://raw.githubusercontent.com/google/fonts/$FONT_REV}"
 
 CMD="" OPT_YES=0 OPT_DRY=0 OPT_LANG="" OPT_NO_COLOR=0 OPT_REFRESH=0
-P_CURSOR=1 P_ICONS=1 P_FASTFETCH=1 P_CAVA=1 CURSOR_SIZE=24
+P_CURSOR=1 P_ICONS=1 P_NAUTILUS=1 P_FASTFETCH=1 P_CAVA=1 CURSOR_SIZE=24
 declare -A SET_BY_FLAG=()
 WARN=0 TMP=""
 
-usage() { sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while (( $# )); do
     case $1 in
         on | off | status) CMD=$1; shift ;;
         --no-cursor) P_CURSOR=0; SET_BY_FLAG[cursor]=1; shift ;;
         --no-icons) P_ICONS=0; SET_BY_FLAG[icons]=1; shift ;;
+        --no-nautilus) P_NAUTILUS=0; SET_BY_FLAG[nautilus]=1; shift ;;
         --no-fastfetch) P_FASTFETCH=0; SET_BY_FLAG[fastfetch]=1; shift ;;
         --no-cava) P_CAVA=0; SET_BY_FLAG[cava]=1; shift ;;
         --cursor-size) CURSOR_SIZE=${2:?--cursor-size needs a value}; SET_BY_FLAG[size]=1; shift 2 ;;
@@ -291,6 +293,14 @@ part_icons() {
     ui_ok "$(t nt.icons)"
 }
 
+# Nautilus without the glass: the default gtk.css (the one install.sh deploys) with the Nothing block after it,
+# so a reinstall followed by "on --refresh" ends up with the same file and "off" puts the default one back
+part_nautilus() {
+    cat "$MONOLITH_ROOT/configs/.config/gtk-4.0/gtk.css" "$SRC/nautilus.css" >"$TMP/gtk.css"
+    put nautilus .config/gtk-4.0/gtk.css "$TMP/gtk.css"
+    ui_ok "$(t nt.nautilus)"
+}
+
 # the distribution's name in the title, spaced like the rest ("A R C H   L I N U X")
 distro_label() {
     local name
@@ -343,11 +353,12 @@ is_on() { [[ -f $PARTS ]]; }
 cmd_on() {
     if (( OPT_REFRESH )); then
         is_on || { ui_info "$(t nt.not_on)"; return 0; }
-        local cursor=1 icons=1 fastfetch=1 cava=1 cursor_size=24
+        local cursor=1 icons=1 nautilus=1 fastfetch=1 cava=1 cursor_size=24
         # shellcheck disable=SC1090
         source "$PARTS"
         [[ -n ${SET_BY_FLAG[cursor]-} ]] || P_CURSOR=$cursor
         [[ -n ${SET_BY_FLAG[icons]-} ]] || P_ICONS=$icons
+        [[ -n ${SET_BY_FLAG[nautilus]-} ]] || P_NAUTILUS=$nautilus
         [[ -n ${SET_BY_FLAG[fastfetch]-} ]] || P_FASTFETCH=$fastfetch
         [[ -n ${SET_BY_FLAG[cava]-} ]] || P_CAVA=$cava
         [[ -n ${SET_BY_FLAG[size]-} ]] || CURSOR_SIZE=$cursor_size
@@ -361,11 +372,12 @@ cmd_on() {
     part_base
     if (( P_CURSOR )); then part_cursor; else drop_part cursor; fi
     if (( P_ICONS )); then part_icons; else drop_part icons; fi
+    if (( P_NAUTILUS )); then part_nautilus; else drop_part nautilus; fi
     if (( P_FASTFETCH )); then part_fastfetch; else drop_part fastfetch; fi
     if (( P_CAVA )); then part_cava; else drop_part cava; fi
     if (( ! OPT_DRY )); then
-        printf 'cursor=%s\nicons=%s\nfastfetch=%s\ncava=%s\ncursor_size=%s\n' \
-            "$P_CURSOR" "$P_ICONS" "$P_FASTFETCH" "$P_CAVA" "$CURSOR_SIZE" >"$PARTS"
+        printf 'cursor=%s\nicons=%s\nnautilus=%s\nfastfetch=%s\ncava=%s\ncursor_size=%s\n' \
+            "$P_CURSOR" "$P_ICONS" "$P_NAUTILUS" "$P_FASTFETCH" "$P_CAVA" "$CURSOR_SIZE" >"$PARTS"
     fi
     py_has numpy || ui_dim "$(t nt.no_numpy)"
     ui_ok "$(t nt.on_done)"
@@ -376,7 +388,7 @@ cmd_off() {
     if ! is_on && [[ ! -f $MANIFEST ]]; then ui_info "$(t nt.not_on)"; return 0; fi
     ui_info "$(t nt.turning_off)"
     local part
-    for part in cava fastfetch icons cursor base; do drop_part "$part"; done
+    for part in cava fastfetch nautilus icons cursor base; do drop_part "$part"; done
     if (( OPT_DRY )); then return 0; fi
     if real_session && has fc-cache; then fc-cache -f "$TARGET_HOME/.local/share/fonts" >/dev/null 2>&1 || true; fi
     rm -rf -- "${NT_STATE:?}"
