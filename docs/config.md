@@ -92,7 +92,8 @@ Microphone, Widgets, Notifications, Network, Bluetooth, Power (laptops only), St
 - **Audio** has the same equalizer for the output (10 bands, 31 Hz – 16 kHz) with presets (Bass boost, Extreme
   bass, Funk, Trap, Rock, Vocal boost, Deep house, ASMR, Pop, Electronic, Jazz, Classical, Lo-fi, Podcast, Late
   night, Treble). The **More effects** drawer holds bass boost, volume boost (pre-gain; high values can clip) and
-  a headphone virtualizer (crossfeed). The output **Monolith Audio** becomes the default while the effects are
+  two headphone effects: the virtualizer (moves the music away: less direct sound, softer highs and reverb) and
+  **8D** (the music circles the head, with an adjustable time per turn). The output **Monolith Audio** becomes the default while the effects are
   on, and picking another output changes the device it plays into.
 - **Effect persistence**: each chain is a PipeWire filter-chain run by a systemd user unit
   (`~/.config/systemd/user/monolith-micfx.service` / `monolith-audiofx.service`, `WantedBy=pipewire.service`)

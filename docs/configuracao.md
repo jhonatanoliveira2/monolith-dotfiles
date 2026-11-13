@@ -92,7 +92,9 @@ Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`)
 - **Áudio** tem o mesmo equalizador para a saída (10 faixas, 31 Hz – 16 kHz) com predefinições (Bass boost,
   Extreme bass, Funk, Trap, Rock, Vocal boost, Deep house, ASMR, Pop, Eletrônica, Jazz, Clássica, Lo-fi, Podcast,
   Volume baixo, Agudos). A gaveta **Mais efeitos** guarda o reforço de grave, o reforço de volume (pré-ganho;
-  valores altos podem distorcer) e um virtualizador para fones (crossfeed). A saída **Monolith Audio** vira a
+  valores altos podem distorcer) o virtualizador
+  (afasta a música: menos som direto, agudos mais suaves e reverberação) e o **8D** (a música gira pela cabeça, com
+  o tempo de cada volta ajustável), ambos para fones. A saída **Monolith Audio** vira a
   padrão enquanto os efeitos estão ligados, e escolher outra saída muda o dispositivo para onde o som vai.
 - **Persistência dos efeitos**: cada cadeia é um filter-chain do PipeWire rodado por uma unit de usuário do
   systemd (`~/.config/systemd/user/monolith-micfx.service` / `monolith-audiofx.service`,

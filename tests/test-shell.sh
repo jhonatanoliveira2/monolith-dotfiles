@@ -178,6 +178,12 @@ run_harness services MONOLITH_TEST=bt
 check "prompts are parsed without QML errors" no_qml_errors
 [[ $(result bt) == ok,ok,ok,ok,ok,ok,ok,ok,ok,ok,ok ]] && ok "confirm, PIN, passkey, authorize, service, displayed codes, split and coloured prompts" || ko "prompt parsing [$(result bt)]"
 
+echo "== audio effects graph (equalizer, virtualizer, 8D)"
+new_home
+run_harness services MONOLITH_TEST=audiofx
+check "graph built without QML errors" no_qml_errors
+[[ $(result audiofx) == "ok,ok,ok,ok,ok neutral=true "* ]] && ok "links and live parameters name existing nodes, the pan stays positive, 0 % is neutral" || ko "audio effects graph [$(result audiofx)]"
+
 echo
 printf 'passed: %s   failed: %s\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

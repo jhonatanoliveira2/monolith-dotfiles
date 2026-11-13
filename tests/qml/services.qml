@@ -69,6 +69,27 @@ ShellRoot {
                     got.push((r ? r.kind + ":" + r.code : "-") === (st[1] === null ? "-" : st[1]) ? "ok" : "BAD(" + (r ? r.kind + ":" + r.code : "-") + ")")
                 }
                 console.log("RESULT bt=" + got.join(","))
+            } else if (root.action === "audiofx") {
+                // the generated filter graph: every link and live parameter names a node of the graph, the pan
+                // never takes the square root of a negative number, and 0 % leaves the sound untouched
+                const out = []
+                for (const vs of [[0, 0], [100, 100], [30, 70], [100, 0], [0, 100]]) {
+                    Settings.audioVirt = vs[0]; Settings.audioSpin = vs[1]; Settings.audioSpinSpeed = 2
+                    const gr = AudioFx.graph(), names = {}
+                    // (no String.matchAll in Qt's JS engine)
+                    for (const m of gr.match(/name = [A-Za-z0-9_]+ label/g)) names[m.split(" ")[2]] = true
+                    const ends = gr.match(/"[A-Za-z0-9_]+:[A-Za-z0-9 ]+"/g).map(m => m.slice(1).split(":")[0])
+                    const params = AudioFx.params()
+                    const k = AudioFx.controls()
+                    const bad = ends.filter(n => !names[n]).concat(params.map(p => p[0].split(":")[0]).filter(n => !names[n]))
+                    out.push(bad.length === 0 && 1 - k["lfo:Ampl"] > 0.01 && k["lfod:Delay (s)"] <= 8 ? "ok" : "BAD(" + bad.join(" ") + ")")
+                }
+                Settings.audioVirt = 0; Settings.audioSpin = 0
+                const z = AudioFx.controls()
+                const flat = z["lfo:Ampl"] === 0 && z["fb:Ampl"] === 0 && z["fb:Offset"] === 0 && ["L", "R"].every(c =>
+                    z["nar_" + c + ":Gain 1"] === 1 && z["nar_" + c + ":Gain 2"] === 0 && z["air_" + c + ":Gain"] === 0
+                    && z["mix_" + c + ":Gain 1"] === 1 && z["mix_" + c + ":Gain 2"] === 0 && z["mix_" + c + ":Gain 3"] === 0 && z["mix_" + c + ":Gain 4"] === 0)
+                console.log("RESULT audiofx=" + out.join(",") + " neutral=" + flat + " structure=" + AudioFx.graph().split("\n").length)
             }
             done.start()
         }

@@ -24,14 +24,15 @@ Column {
         Behavior on opacity { NumberAnimation { duration: Theme.dur(200) } }
         Behavior on scale { NumberAnimation { duration: Theme.dur(200); easing.type: Easing.OutCubic } }
     }
-    // bass / volume boost and virtualizer stay in a drawer so the page is not crowded
+    // bass / volume boost, virtualizer and 8D stay in a drawer so the page is not crowded
     Drawer {
         visible: Settings.audioFx
         width: parent.width
         title: Labels.t("audioMore")
         summary: [Settings.audioBass > 0 ? Labels.pick(["Grave", "Bass"]) + " +" + Settings.audioBass + " dB" : "",
                   Settings.audioBoost > 0 ? Labels.pick(["Volume", "Volume"]) + " +" + Settings.audioBoost + " dB" : "",
-                  Settings.audioVirt > 0 ? Labels.pick(["Virtualizador", "Virtualizer"]) + " " + Settings.audioVirt + "%" : ""].filter(x => x).join("  ·  ")
+                  Settings.audioVirt > 0 ? Labels.pick(["Virtualizador", "Virtualizer"]) + " " + Settings.audioVirt + "%" : "",
+                  Settings.audioSpin > 0 ? "8D " + Settings.audioSpin + "%" : ""].filter(x => x).join("  ·  ")
         Repeater {
             model: root.extras
             delegate: SettingRow { required property var modelData; entry: modelData; width: parent.width }

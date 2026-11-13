@@ -120,6 +120,8 @@ Singleton {
     property alias audioBass: adapter.audioBass
     property alias audioBoost: adapter.audioBoost
     property alias audioVirt: adapter.audioVirt
+    property alias audioSpin: adapter.audioSpin
+    property alias audioSpinSpeed: adapter.audioSpinSpeed
     property alias audioFxTarget: adapter.audioFxTarget
     property alias welcomeDone: adapter.welcomeDone   // first-run welcome seen (menus/Welcome.qml)
     property alias wpDefaultDone: adapter.wpDefaultDone   // first-run default wallpaper handled (services/Wallpapers.qml)
@@ -338,7 +340,9 @@ Singleton {
             property var audioEqGains: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]   // dB, 31 Hz .. 16 kHz
             property int audioBass: 0              // bass boost, dB (low shelf at 90 Hz)
             property int audioBoost: 0             // volume boost, dB (pre-gain; may clip when high)
-            property int audioVirt: 0              // headphone virtualizer (crossfeed), %
+            property int audioVirt: 0              // virtualizer: distance (reverb, softer highs), %
+            property int audioSpin: 0              // 8D: the music circles the head, %
+            property int audioSpinSpeed: 8         // 8D: seconds per turn (2–30)
             property string audioFxTarget: ""      // physical output the chain plays into
             property bool welcomeDone: false
             property bool wpDefaultDone: false
