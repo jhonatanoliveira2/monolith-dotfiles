@@ -10,7 +10,9 @@ import Quickshell.Io
 // the default back to the physical device. Used by MicFx and AudioFx.
 // While the chain runs with the same node layout (`makeStructure`), value changes are sent live to the filter
 // (pw-cli set-param Props on `paramNode`) and only the config file is rewritten: no restart, so playback and
-// recording are not interrupted. A failed live update falls back to a restart.
+// recording are not interrupted. Picking another physical device is live too: the chain's own stream
+// (`streamNode`, the side linked to the device) is moved with the target.object metadata. A failed live update
+// falls back to a restart.
 QtObject {
     id: root
     property string tag: "fx"                // log prefix
@@ -25,8 +27,11 @@ QtObject {
     property var makeStructure: () => ""     // node layout; a change needs a restart
     property var makeParams: () => []        // [["node:Control", value], ...] for live updates
     property string paramNode: nodeName      // node.name holding the filter controls (the capture side)
+    property string streamNode: ""           // node.name of the stream linked to the physical device ("" = retarget by restart)
     property string liveStructure: ""        // layout of the running chain ("" = unknown / not running)
     property string pendingStructure: ""
+    property string liveTarget: ""           // physical device the running chain was started with or moved to
+    property string pendingTarget: ""
     property bool active: false
     property string error: ""
 
@@ -50,24 +55,39 @@ QtObject {
         if (Quickshell.env("MONOLITH_NO_FX") === "1") { console.log("[" + tag + "] MONOLITH_NO_FX=1: skipped"); return }
         if (proc.running) { timer.restart(); return }
         const target = makeTarget()
-        const live = canLive
+        // a new physical device used to go live too and only reached the config file: the stream stayed on the old one
+        const retarget = canLive && target !== liveTarget ? target : ""
+        const live = canLive && (retarget === "" || streamNode !== "")
         error = ""
         pendingStructure = wanted ? makeStructure() : ""
+        pendingTarget = wanted ? target : ""
         const params = live ? "{ params = [ " + makeParams().map(p => JSON.stringify(p[0]) + " " + Number(p[1]).toFixed(6)).join(" ") + " ] }" : ""
-        console.log("[" + tag + "] apply: wanted=" + wanted + " mode=" + (live ? "live" : "full") + " target=" + (target || "<default>"))
+        console.log("[" + tag + "] apply: wanted=" + wanted + " mode=" + (live ? "live" : "full") + " target=" + (target || "<default>")
+            + (retarget !== "" ? " (was " + (liveTarget || "<default>") + ")" : ""))
         if (wanted && target === "") console.warn("[" + tag + "] no physical " + kind + " found; the chain follows the default")
         proc.command = ["sh", "-c", script, "sh", conf, wanted ? config(target) : "", wanted ? "1" : "0", nodeName, unit, kind, target, tag, description,
-                        live ? "live" : "full", paramNode, params]
+                        live ? "live" : "full", paramNode, params, streamNode, live ? retarget : ""]
         proc.running = true
     }
 
     readonly property string script: '
-        conf=$1 text=$2 on=$3 node=$4 unit=$5 kind=$6 target=$7 tag=$8 desc=$9 mode=${10} pnode=${11} params=${12}
+        conf=$1 text=$2 on=$3 node=$4 unit=$5 kind=$6 target=$7 tag=$8 desc=$9 mode=${10} pnode=${11} params=${12} snode=${13} retarget=${14}
+        nid() { pw-cli ls Node 2>/dev/null | awk -v n="$1" \'/^[[:space:]]*id [0-9]+,/ { id = $2; sub(",", "", id) } index($0, "node.name = \\"" n "\\"") { print id; exit }\'; }
         if [ "$mode" = live ]; then
-            id=$(pw-cli ls Node 2>/dev/null | awk -v n="$pnode" \'/^[[:space:]]*id [0-9]+,/ { id = $2; sub(",", "", id) } index($0, "node.name = \\"" n "\\"") { print id; exit }\')
+            id=$(nid "$pnode")
             if [ -n "$id" ] && out=$(pw-cli set-param "$id" Props "$params" 2>&1) && ! printf "%s" "$out" | grep -qi error; then
-                printf "%s" "$text" > "$conf"
-                echo "[$tag] live update on node $id ($pnode)"; exit 0
+                if [ -n "$retarget" ]; then
+                    sid=$(nid "$snode") out=""
+                    if [ -n "$sid" ] && out=$(pw-metadata "$sid" target.object "$retarget" 2>&1); then
+                        echo "[$tag] $snode (node $sid) moved to $retarget"
+                    else
+                        out="cannot move $snode (node ${sid:-not found}) to $retarget: $out"; id=""
+                    fi
+                fi
+                if [ -n "$id" ]; then
+                    printf "%s" "$text" > "$conf"
+                    echo "[$tag] live update on node $id ($pnode)"; exit 0
+                fi
             fi
             echo "[$tag] live update failed (node ${id:-not found}): $out; restarting the chain"
         fi
@@ -120,6 +140,7 @@ QtObject {
         onExited: code => {
             root.active = code === 0 && root.wanted
             root.liveStructure = root.active ? root.pendingStructure : ""
+            root.liveTarget = root.active ? root.pendingTarget : ""
             if (code !== 0) console.warn("[" + root.tag + "] apply failed with exit code", code)
         }
     }

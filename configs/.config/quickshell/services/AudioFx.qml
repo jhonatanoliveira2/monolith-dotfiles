@@ -214,6 +214,7 @@ Singleton {
         wanted: root.wanted
         makeTarget: () => { const s = root.wanted ? root.physicalSink() : Settings.audioFxTarget; if (root.wanted && s !== "") Settings.audioFxTarget = s; return s }
         makeArgs: sink => root.args(sink)
+        streamNode: "monolith_out_play"
         makeStructure: () => "stereo-eq10-8d"
         makeParams: () => root.params()
     }

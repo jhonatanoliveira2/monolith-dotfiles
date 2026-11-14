@@ -108,6 +108,7 @@ Singleton {
         makeTarget: () => { const s = root.wanted ? root.physicalSource() : Settings.micFxSource; if (root.wanted && s !== "") Settings.micFxSource = s; return s }
         makeArgs: src => root.args(src)
         paramNode: "monolith_mic_capture"
+        streamNode: "monolith_mic_capture"
         makeStructure: () => "noise=" + root.noise + " eq=" + Settings.micEq
         makeParams: () => {
             const p = []
