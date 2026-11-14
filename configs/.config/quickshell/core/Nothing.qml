@@ -23,9 +23,11 @@ Singleton {
     readonly property var overrides: Settings.nothing || ({})
     readonly property var effective: Object.assign({}, defaults, overrides)
     function get(k) { return overrides[k] !== undefined ? overrides[k] : defaults[k] }
+    // defaults the shell has when nothing.json does not set them
+    readonly property var fallbacks: ({ widgetOpacity: 0.85 })
     function set(k, v) {
         const o = Object.assign({}, overrides)
-        if (v === defaults[k]) delete o[k]; else o[k] = v
+        if (v === (defaults[k] !== undefined ? defaults[k] : fallbacks[k])) delete o[k]; else o[k] = v
         Settings.nothing = o
         if (wallpaperKeys.indexOf(k) >= 0) wallpaperSoon.restart()
     }
@@ -48,6 +50,12 @@ Singleton {
     readonly property int ledSize: Math.max(1, Number(get("ledSize")) || 6)
     readonly property int ledSpacing: Math.max(0, Number(get("ledSpacing")) || 0)
     readonly property string wallpaperStyle: get("wallpaperStyle") || "original"
+    // desktop widget cards: a light glass of their own (85 %), apart from Settings.widgetOpacity, which stays
+    // the default theme's; Settings > Widgets edits this one while the theme is on (an override, see set())
+    readonly property real widgetOpacity: {
+        const v = Number(get("widgetOpacity"))
+        return get("widgetOpacity") === undefined || isNaN(v) ? fallbacks.widgetOpacity : Math.max(0, Math.min(1, v))
+    }
 
     // wallpaper look changed: services/Wallpapers.qml re-applies the current still wallpaper
     readonly property var wallpaperKeys: ["enabled", "monochrome", "ledShape", "ledSize", "ledSpacing", "wallpaperStyle", "dither", "levels", "invert", "contrast", "brightness"]

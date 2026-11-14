@@ -18,7 +18,7 @@
 #   ~/.local/bin/monolith-dotmatrix      the wallpaper renderer (wallpaper-menu; needs python-numpy, python-pillow)
 #   cursor:    ~/.icons/Monolith-Dots, ~/.icons/default/index.theme, ~/.config/monolith/cursor, gsettings
 #   icons:     ~/.local/share/icons/Monolith-Dots-Icons, gsettings icon-theme
-#   nautilus:  ~/.config/gtk-4.0/gtk.css, the default one plus nix/nothing/nautilus.css (opaque, no glass)
+#   nautilus:  ~/.config/gtk-4.0/gtk.css, the default one plus nix/nothing/nautilus.css (OLED black at 85 %, light glass)
 #   fastfetch: ~/.config/fastfetch/nothing.jsonc + nothing-logo.txt, fish function `fastfetch`
 #   cava:      ~/.config/cava/config, ~/.local/bin/monolith-cava, fish function `cava`
 # Its record (what it installed, what it saved, the previous gsettings) is in

@@ -345,7 +345,7 @@ check "... and puts the previous icon-theme back" bash -c 'tail -n1 "$1" | grep 
 inst >"$TMP/nt-inst.out" 2>&1
 check "install.sh refreshes the theme when it is on" grep -qE "nothing-theme.sh on .*--refresh" "$NT_HOME"/.local/state/monolith-dotfiles/install-*.log
 check "... keeping the parts chosen before" bash -c 'grep -qx icons=0 "$1" && test ! -e "$2"' _ "$NT_STATE/parts" "$NT_HOME/.local/share/icons/Monolith-Dots-Icons"
-check "... and Nautilus stays opaque after install.sh deploys the default gtk.css" \
+check "... and the Nothing Nautilus stays after install.sh deploys the default gtk.css" \
     test "$(md5sum <"$NT_HOME/.config/gtk-4.0/gtk.css")" = "$NT_GTK"
 nt on --refresh --no-nautilus >/dev/null 2>&1
 check "--no-nautilus puts the default gtk.css back" cmp -s "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_HOME/.config/gtk-4.0/gtk.css"

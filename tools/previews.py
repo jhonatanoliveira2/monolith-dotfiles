@@ -15,7 +15,7 @@ Each preview is written to <out>/<name>.svg; default/ is the default theme, noth
   default/installer       scripts/install.sh: welcome and the theme question (Arch Linux / CachyOS)
   default/installer-nixos the NixOS installer's banner in the default look
   nothing/fastfetch       fastfetch of the Nothing theme on NixOS (nix/nothing/fastfetch.jsonc, snowflake as LEDs)
-  nothing/nautilus        Nautilus in the Nothing theme: opaque OLED black, MONOLITH Dots icons and cursor
+  nothing/nautilus        Nautilus in the Nothing theme: OLED black, MONOLITH Dots icons and cursor
   nothing/wallpaper       a wallpaper (assets/previews/src/night-peaks.jpg) as it is and as an LED dot matrix
   nothing/cava            monolith-cava, one frame drawn from a made-up spectrum
   nothing/installer-nixos the NixOS installer's banner in the Nothing look
@@ -326,7 +326,7 @@ def p_nautilus_nothing(tmp, out):
     body.append(f'<image x="{cx - 24}" y="{cy - 24}" width="48" height="48" href="data:image/png;base64,{pointer}"/>')
     body.append(f'<text x="{W - 20}" y="{H - 16}" text-anchor="end" fill="#333333" font-size="11" letter-spacing="2">15 ITEMS</text>')
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" '
-           f'aria-label="Nautilus in the Nothing theme: opaque, with the MONOLITH Dots icons and cursor">'
+           f'aria-label="Nautilus in the Nothing theme: OLED black, with the MONOLITH Dots icons and cursor">'
            f'<defs>{"".join(used.values())}</defs><g font-family="{FONT}">{"".join(body)}</g></svg>')
     write(os.path.join(out, "nothing", "nautilus.svg"), svg)
 

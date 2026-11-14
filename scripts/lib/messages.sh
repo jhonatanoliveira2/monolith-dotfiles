@@ -209,7 +209,7 @@ _m nt.cursor_skipped "Cursor left out: python-pillow is missing." "Cursor deixad
 _m nt.cursor_failed "Could not draw the cursor theme (see the log)." "Não foi possível desenhar o tema de cursor (veja o log)."
 _m nt.icons "Icons: MONOLITH Dots Icons." "Ícones: MONOLITH Dots Icons."
 _m nt.icons_failed "Could not draw the icon theme (see the log)." "Não foi possível desenhar o tema de ícones (veja o log)."
-_m nt.nautilus "Nautilus: opaque, in OLED black (no glass)." "Nautilus: opaco, em preto OLED (sem vidro)."
+_m nt.nautilus "Nautilus: OLED black at 85 % (light glass)." "Nautilus: preto OLED a 85 % (vidro leve)."
 _m nt.fastfetch "fastfetch: Nothing style (fastfetch with no arguments, in fish)." "fastfetch: estilo Nothing (fastfetch sem argumentos, no fish)."
 _m nt.cava "cava: LED columns (cava with no arguments, in fish; 'command cava' is the plain one)." "cava: colunas de LEDs (cava sem argumentos, no fish; 'command cava' é o comum)."
 _m nt.cava_missing "cava is not installed yet (sudo pacman -S cava)." "O cava ainda não está instalado (sudo pacman -S cava)."

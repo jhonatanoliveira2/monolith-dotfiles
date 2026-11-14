@@ -65,7 +65,7 @@ in
   nautilus = mkOption {
     type = types.bool;
     default = true;
-    description = "Nautilus opaque in OLED black (nix/nothing/nautilus.css after the default gtk-4.0/gtk.css), without the default theme's glass. Requires a rebuild.";
+    description = "Nautilus in OLED black at 85 % opacity, a light glass instead of the default theme's (nix/nothing/nautilus.css after the default gtk-4.0/gtk.css). Requires a rebuild.";
   };
   fastfetch = mkOption {
     type = types.bool;

@@ -74,7 +74,7 @@ LEDs e matriz de pontos, desligado a menos que você o escolha no instalador ou 
     <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch no NixOS, tema Nothing: o floco de neve em LEDs"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus no tema Nothing: opaco, ícones e cursor MONOLITH Dots"></td>
+    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus no tema Nothing: preto OLED a 85 %, ícones e cursor MONOLITH Dots"></td>
   </tr>
   <tr>
     <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>

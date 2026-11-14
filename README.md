@@ -74,7 +74,7 @@ LEDs and dot matrix, off unless you pick it in the installer or turn it on later
     <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch on NixOS, Nothing theme: the snowflake as LEDs"></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus in the Nothing theme: opaque, MONOLITH Dots icons and cursor"></td>
+    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus in the Nothing theme: OLED black at 85 %, MONOLITH Dots icons and cursor"></td>
   </tr>
   <tr>
     <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>

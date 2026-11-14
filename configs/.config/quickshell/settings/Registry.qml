@@ -220,7 +220,8 @@ Singleton {
         tog("widgets", "general", "widgetsAutoHide", ["Ocultar ao abrir um programa", "Hide when a program is open"], "widgets ocultar hide auto janela window programa",
             () => Settings.widgetsAutoHide, v => Settings.widgetsAutoHide = v),
         sld("widgets", "general", "widgetOpacity", ["Opacidade do fundo", "Background opacity"], "widgets opacidade opacity transparência transparency fundo",
-            0, 100, 5, "%", () => Math.round(Settings.widgetOpacity * 100), v => Settings.widgetOpacity = v / 100, { when: () => !Settings.opaque }),
+            0, 100, 5, "%", () => Math.round((Nothing.active ? Nothing.widgetOpacity : Settings.widgetOpacity) * 100),
+            v => { if (Nothing.active) Nothing.set("widgetOpacity", v / 100); else Settings.widgetOpacity = v / 100 }, { when: () => !Settings.opaque }),
 
         // ── notifications ──
         tog("notifications", "general", "ndnd", ["Não perturbe", "Do not disturb"], "dnd silêncio", () => Settings.dnd, v => Settings.dnd = v),

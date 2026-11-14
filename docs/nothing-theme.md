@@ -37,7 +37,7 @@ is exactly the standard MONOLITH one.
 | Login (greeter) | Doto clock, Space Mono, a row of LEDs instead of the password line (one lit per typed character, the characters themselves not drawn), red only for a failed login |
 | Lock screen, boot | hyprlock: Doto clock, Space Mono, upper-case labels, a pill password field, a darker backdrop, red only for a failed password; Plymouth: the boot progress as a row of 24 LEDs (a light sweeps them at reboot / power off); cava as columns of LEDs (`cava` in fish opens `monolith-cava`; `command cava` is the plain one, in greys) |
 | Battery | the charge as LEDs (a row; eight in a column on a side bar), red when low, a light scanning up while charging |
-| Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; every widget, saved or temporary, shows only on the workspace it was added on; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs |
+| Widgets | every widget of a size has the same width (small 256, medium 320, large 416 px), the clock centred in its card; every widget, saved or temporary, shows only on the workspace it was added on; the lyrics widget's audio spectrum (cava) is drawn as columns of LEDs; the cards are a light glass, 85 % opaque by default (Settings > Widgets > Background opacity, kept apart from the default theme's value) |
 | Cursor | **MONOLITH Dots**: a "+" of LEDs as the pointer and LED shapes for links, text, waiting (animated), moving and resizing; white LEDs with a dark rim and shadow, visible on light and dark backgrounds (Hyprland, GTK, Qt) |
 | Icons | **MONOLITH Dots Icons**: folders (with an emblem per kind: documents, downloads, music, pictures, videos, desktop, home...), file types, trash and devices as monochrome LED matrices, for Nautilus and every GTK app; the rest comes from Adwaita |
 | fastfetch | the NixOS snowflake as a matrix of LEDs, upper-case grey labels, dotted rules, memory and disk as rows of LEDs |
@@ -84,7 +84,7 @@ Set them in `/etc/nixos/configuration.nix` (or per user as `programs.monolith.no
 | `led.shape` | `"circle"` | runtime | `circle`, `rounded` or `square` (wallpapers and interface LEDs) |
 | `monochrome` | `true` | runtime | grey palette for the shell and grey wallpaper LEDs; off: the colour theme stays and LEDs take the picture's hues |
 | `cursor.enable`, `cursor.size` | `true`, `24` | rebuild | the LED cursor theme (Monolith-Dots) and its size; log in again to see it everywhere |
-| `icons`, `nautilus`, `fastfetch`, `cava` | `true`, `true`, `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons), Nautilus opaque in OLED black (no glass), the Nothing fastfetch config and cava as LEDs |
+| `icons`, `nautilus`, `fastfetch`, `cava` | `true`, `true`, `true`, `true` | rebuild | the LED icon theme (Monolith-Dots-Icons), Nautilus in OLED black at 85 % (a light glass), the Nothing fastfetch config and cava as LEDs |
 | `edgeGlow` | `true` | runtime | light along the screen edge on notifications |
 | `wallpaper.style` | `"dotmatrix"` | runtime | `dotmatrix` or `original` |
 | `wallpaper.dither` | `"none"` | runtime | `none` (LED size and brightness follow the picture), `floyd` (Floyd-Steinberg), `bayer` (ordered) |
@@ -210,7 +210,7 @@ It does in your home what the Home Manager module does on NixOS, from the same f
 | renderer | `~/.local/bin/monolith-dotmatrix` (needs `python-numpy`, `python-pillow`) | — |
 | cursor | MONOLITH Dots in `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, size: `--cursor-size 32` |
 | icons | MONOLITH Dots Icons in `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
-| nautilus | `~/.config/gtk-4.0/gtk.css`: the default one with `nix/nothing/nautilus.css` after it, so Nautilus is opaque in OLED black instead of the default theme's glass; `off` puts the default file back | `--no-nautilus` |
+| nautilus | `~/.config/gtk-4.0/gtk.css`: the default one with `nix/nothing/nautilus.css` after it, so Nautilus is OLED black at 85 % opacity (a light glass, no blur) instead of the default theme's darker glass; `off` puts the default file back | `--no-nautilus` |
 | fastfetch | `~/.config/fastfetch/nothing.jsonc`: the Arch logo as LEDs and the distribution's name; the fish function `fastfetch` uses it when called with no arguments | `--no-fastfetch` |
 | cava | `~/.config/cava/config` in greys, `~/.local/bin/monolith-cava`, the fish function `cava` (`command cava` is the plain one) | `--no-cava` |
 
