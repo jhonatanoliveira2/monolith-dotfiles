@@ -103,6 +103,17 @@ in
       default = true;
       description = "Install the optional programs of nix/packages.nix (RNNoise, cava, pavucontrol, btop, neovim...).";
     };
+    defaultApps = mkOption {
+      type = types.bool;
+      default = cfg.optionalPackages;
+      defaultText = lib.literalExpression "config.programs.monolith.optionalPackages";
+      description = ''
+        Default applications (xdg.mimeApps, ~/.config/mimeapps.list): images in Loupe, videos and audio in mpv,
+        PDFs in Papers, office documents in LibreOffice, text files, shell scripts and source code in micro (inside
+        apps.terminal), folders in Nautilus and web links in Firefox (when browserPackage is Firefox). The table is nix/default-apps.nix; every entry is a default, so one type can
+        be changed with xdg.mimeApps.defaultApplications."<type>".
+      '';
+    };
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = [ ];
@@ -213,6 +224,42 @@ in
       ++ cfg.extraPackages;
 
     fonts.fontconfig.enable = true;
+
+    # what a double-click in Nautilus (or xdg-open) opens each file with
+    xdg.mimeApps = mkIf cfg.defaultApps {
+      enable = true;
+      defaultApplications = lib.mapAttrs (_: lib.mkDefault) (
+        import ../default-apps.nix {
+          editor = "monolith-micro.desktop";
+          browser =
+            if cfg.browserPackage != null && lib.getName cfg.browserPackage == "firefox" then
+              "firefox.desktop"
+            else
+              null;
+        }
+      );
+    };
+    # text files and shell scripts: micro inside the session's terminal (apps.terminal, Ghostty by default), with
+    # "-e" as the shell does (Config.terminal). Its own entry instead of micro.desktop (Terminal=true), so it does
+    # not depend on GIO knowing the terminal; hidden from the launcher
+    xdg.desktopEntries.monolith-micro = mkIf cfg.defaultApps {
+      name = "Micro";
+      genericName = "Text Editor";
+      comment = "Edit text files and scripts in micro, in the terminal";
+      exec = "${cfg.apps.terminal or "ghostty"} -e ${lib.getExe pkgs.micro} %F";
+      icon = "micro";
+      terminal = false;
+      noDisplay = true;
+      categories = [
+        "Utility"
+        "TextEditor"
+      ];
+      mimeType = [
+        "text/plain"
+        "text/x-shellscript"
+        "application/x-shellscript"
+      ];
+    };
 
     xdg.configFile =
       # every file from the store, or from the checkout in dev mode (dev.nix; the module is its top folder)

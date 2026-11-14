@@ -20,6 +20,7 @@ pkgs: {
     nautilus
     materia-theme # gtk-theme Materia-dark (Nautilus transparency in gtk-4.0/gtk.css)
     dconf
+    zenity # Settings > Profile > Choose (the portal's file chooser, xdg-desktop-portal-gtk)
     nerd-fonts.jetbrains-mono
     material-icons
     # screenshots, clipboard, notifications

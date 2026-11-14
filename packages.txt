@@ -28,6 +28,8 @@ hyprlock                    # SUPER+Z binding and hypr/hyprlock.conf
 hypridle					# hyprland idle daemon
 quickshell                  # the shell: bar, menus, notifications
 xdg-desktop-portal-hyprland # hypr/xdph.conf (screen sharing portal)
+xdg-desktop-portal-gtk      # xdg-desktop-portal/hyprland-portals.conf: the file chooser (browsers, Flatpak, Settings)
+zenity                      # Settings > Profile > Choose (opens the portal's file chooser)
 lxqt-policykit              # autostart: /usr/bin/lxqt-policykit-agent
 qt6ct                       # environment.lua: QT_QPA_PLATFORMTHEME=qt6ct
 git

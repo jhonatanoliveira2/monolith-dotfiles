@@ -56,7 +56,8 @@ Singleton {
                                  "[ -e \"$HOME/.face.bak\" ] && mv -f \"$HOME/.face.bak\" \"$HOME/.face\"", "sh", dir])
         Settings.profileAvatar = ""
     }
-    // file chooser: zenity, kdialog or yad, whichever is installed
+    // file chooser: zenity (GTK 4 opens it through xdg-desktop-portal, so it is the same GTK dialog the browsers
+    // get, see xdg-desktop-portal/hyprland-portals.conf), else kdialog or yad
     function pick() {
         error = ""
         picker.running = true

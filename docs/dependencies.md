@@ -19,6 +19,7 @@ The installer does not run `pacman -Sy`. If a package cannot be found, update th
 | Package | Main use |
 |---|---|
 | `hyprland`, `hyprlock`, `hypridle`, `xdg-desktop-portal-hyprland` | Compositor, lock screen, idle handling and screen sharing |
+| `xdg-desktop-portal-gtk`, `zenity` | File chooser: the same GTK dialog for browsers, Flatpak apps and Settings > Profile > Choose (`xdg-desktop-portal/hyprland-portals.conf`) |
 | `quickshell`, `upower` | Desktop shell bar, menus and battery status |
 | `lxqt-policykit`, `qt6ct`, `dconf`, `materia-gtk-theme` | Graphical authorization and appearance settings |
 | `git`, `base-devel` | Setup dependencies and building packages when needed |

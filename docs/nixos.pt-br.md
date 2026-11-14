@@ -232,6 +232,7 @@ O Home Manager avulso também funciona: importe `monolith.homeManagerModules.def
 |---|---|---|
 | `enable` | `false` | configs, shell, utilitários e pacotes |
 | `optionalPackages` | `true` | o grupo opcional do `nix/packages.nix` (RNNoise, cava, pavucontrol, btop, neovim, e Loupe, mpv, Papers, LibreOffice e ffmpegthumbnailer para abrir arquivos pelo Nautilus...) |
+| `defaultApps` | `optionalPackages` | aplicativos padrão (`~/.config/mimeapps.list`, gerenciado pelo Home Manager): imagens no Loupe, vídeos e áudio no mpv, PDFs no Papers, documentos, planilhas e apresentações no LibreOffice, pastas no Nautilus, arquivos de texto, scripts shell e código no micro dentro do terminal (`apps.terminal`, Ghostty; um `monolith-micro.desktop` oculto), links no Firefox (quando `browserPackage` é o Firefox). A tabela é o `nix/default-apps.nix`; troque um tipo com `xdg.mimeApps.defaultApplications."image/png" = "gimp.desktop";` |
 | `extraPackages` | `[ ]` | mais pacotes |
 | `apps` | `{ browser = "firefox"; }` | programas dos atalhos (`terminal`, `fileManager`, `ide`, `browser`, `lockScreen`) |
 | `browserPackage` | `pkgs.firefox` | pacote de `apps.browser` (`null` se instalado de outro jeito, ex.: Zen pelo flake dele) |

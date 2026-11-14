@@ -19,6 +19,7 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 | Pacote | Uso principal |
 |---|---|
 | `hyprland`, `hyprlock`, `hypridle`, `xdg-desktop-portal-hyprland` | Compositor, bloqueio, inatividade e compartilhamento de tela |
+| `xdg-desktop-portal-gtk`, `zenity` | Seletor de arquivos: o mesmo diálogo GTK para navegadores, apps Flatpak e Configurações › Perfil › Escolher (`xdg-desktop-portal/hyprland-portals.conf`) |
 | `quickshell`, `upower` | Barra, menus e informações de bateria do shell gráfico |
 | `lxqt-policykit`, `qt6ct`, `dconf`, `materia-gtk-theme` | Autorização gráfica e preferências visuais |
 | `git`, `base-devel` | Dependências usadas no setup e compilação de pacotes quando necessário |
