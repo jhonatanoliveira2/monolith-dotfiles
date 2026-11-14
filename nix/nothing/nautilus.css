@@ -1,10 +1,10 @@
 /* ── MONOLITH: Nautilus no tema Nothing ──
  * Acrescentado ao fim do gtk-4.0/gtk.css do tema padrão (scripts/nothing-theme.sh no Arch,
  * nix/modules/home-nothing.nix no NixOS), então os seletores iguais vencem. Vidro leve: os painéis ficam
- * a 85 % de opacidade, em OLED black, com a barra lateral em "surface" e as linhas em "line"
- * (nix/nothing/tokens.json); o wallpaper aparece de leve atrás, sem blur (regra nautilus-no-blur do Hyprland).
- * Só os dois painéis pintam o fundo; a janela e o que fica dentro deles são transparentes, para os 85 %
- * não se somarem. Menus e popovers continuam opacos (são superfícies à parte).
+ * a 85 % de opacidade, num tom só: barra lateral e conteúdo em OLED black ("void"), separados só pela
+ * linha "line" (nix/nothing/tokens.json); o wallpaper aparece de leve atrás, sem blur (regra
+ * nautilus-no-blur do Hyprland). Só os dois painéis pintam o fundo; a janela e o que fica dentro deles são
+ * transparentes, para os 85 % não se somarem. Menus e popovers continuam opacos (são superfícies à parte).
  * O resto (seleção, vermelho só nas ações destrutivas) continua o do tema padrão. */
 .nautilus-window {
     --window-bg-color: #000000;
@@ -23,10 +23,7 @@
     background-color: transparent;
 }
 
-.nautilus-window .sidebar-pane {
-    background-color: rgba(14, 14, 14, 0.85);
-}
-
+.nautilus-window .sidebar-pane,
 .nautilus-window .content-pane {
     background-color: rgba(0, 0, 0, 0.85);
 }

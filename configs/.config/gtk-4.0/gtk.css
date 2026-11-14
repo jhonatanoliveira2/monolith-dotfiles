@@ -43,21 +43,24 @@
     --shade-color: rgba(0, 0, 0, 0.35);
 }
 
-/* ── Vidro: a janela é transparente e cada painel tem seu tom ── */
+/* ── Vidro: um tom só no fundo todo ──
+ * Os dois painéis (barra lateral e conteúdo) pintam a mesma cor; a janela e tudo o que fica dentro deles
+ * é transparente, para o alpha não se somar e a mesma área não ficar com tons diferentes. Só a linha
+ * fina (--sidebar-border-color) separa a barra lateral do conteúdo. */
 .nautilus-window {
     background-color: transparent;
 }
 
 .nautilus-window .sidebar-pane,
-.nautilus-window .sidebar,
-.nautilus-window .navigation-sidebar {
-    background-color: rgba(0, 0, 0, 0.55);
+.nautilus-window .content-pane {
+    background-color: rgba(17, 17, 17, 0.8);
 }
 
-.nautilus-window .content-pane,
+.nautilus-window .sidebar,
+.nautilus-window .navigation-sidebar,
 .nautilus-window .content-view,
 .nautilus-window .view {
-    background-color: rgba(17, 17, 17, 0.45);
+    background-color: transparent;
 }
 
 .nautilus-window headerbar,
