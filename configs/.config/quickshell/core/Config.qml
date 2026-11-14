@@ -17,7 +17,7 @@ Singleton {
     // Settings > Bar > "No transparency" makes every surface of the shell opaque
     property real barOpacity: Settings.opaque ? 1 : Settings.barOpacity
     property real menuOpacity: Settings.opaque ? 1 : Settings.menuOpacity
-    // (the Nothing theme has its own widget opacity, 85 % by default: Nothing.widgetOpacity)
+    // (the Nothing theme has its own widget opacity, 70 % by default: Nothing.widgetOpacity)
     property real widgetOpacity: Settings.opaque ? 1 : Nothing.active ? Nothing.widgetOpacity : Settings.widgetOpacity
     property string settingsMode: Settings.settingsMode   // "window" | "overlay"
     property int toastTimeout: Settings.toastTimeout   // ms (critical notifications stay until dismissed, see Settings.criticalSticky)
