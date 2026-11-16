@@ -63,20 +63,31 @@ MenuWindow {
         IconBtn { act: win.action("lock") }
         IconBtn { act: win.action("suspend") }
         // the distro logo, one turn every 6 s while the menu is open (still when animations are off; the
-        // speed does not follow the animation scale)
+        // speed does not follow the animation scale). It turns in place, like a gear: on its own centre of mass,
+        // not on the centre of the text box (a font glyph has room above, below and at the sides, so it used to
+        // orbit ~4 px around the axis)
         Item {
             width: 60; height: 70
             anchors.horizontalCenter: parent.horizontalCenter
-            Text {
-                id: logo
+            Item {
+                id: spinner
                 anchors.centerIn: parent
                 width: 42; height: 42
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                text: Theme.glyph.distro
-                color: Theme.white
-                font.family: Theme.font
-                font.pixelSize: 32
+                // centre of mass minus the centre of the ink box, as a fraction of the font size (measured from
+                // the Nerd Font glyphs of core/Distro.qml; the NixOS snowflake is symmetric)
+                readonly property var mass: ({ [0xf08c7]: [-0.005, 0.0655], [0xf385]: [-0.0925, 0.0145], [0xf31a]: [0.0396, -0.0326] })
+                readonly property var off: mass[Distro.glyph] || [0, 0]
+                TextMetrics { id: ink; font: logo.font; text: logo.text }
+                Text {
+                    id: logo
+                    text: Theme.glyph.distro
+                    color: Theme.white
+                    font.family: Theme.font
+                    font.pixelSize: 32
+                    // the ink's centre of mass on the spinner's centre, which the rotation turns around
+                    x: spinner.width / 2 - (ink.tightBoundingRect.x + ink.tightBoundingRect.width / 2 + spinner.off[0] * font.pixelSize)
+                    y: spinner.height / 2 - (baselineOffset + ink.tightBoundingRect.y + ink.tightBoundingRect.height / 2 + spinner.off[1] * font.pixelSize)
+                }
                 RotationAnimator on rotation {
                     from: 0; to: 360
                     duration: 6000
