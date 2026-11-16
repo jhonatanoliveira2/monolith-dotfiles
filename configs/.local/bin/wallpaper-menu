@@ -95,6 +95,40 @@ thumb_path() {
     key=$(printf '%s|%s' "$1" "$(stat -c '%Y-%s' -- "$1" 2>/dev/null)" | sha1sum | cut -d' ' -f1)
     printf '%s/thumbs/%s.jpg' "$CACHE_DIR" "$key"
 }
+# sha1_each <text>...: SHA1_EACH[i] = the sha1 of the i-th text (as `printf %s text | sha1sum`), with one sha1sum
+# for them all: each text goes in a numbered file (printf is a builtin, no process) and sha1sum reads the lot
+SHA1_EACH=()
+sha1_each() {
+    SHA1_EACH=()
+    (( $# )) || return 0
+    local dir i=0 t
+    local -a files=()
+    dir=$(mktemp -d) || return 1
+    for t in "$@"; do printf '%s' "$t" >"$dir/$i"; files+=("$dir/$i"); i=$(( i + 1 )); done
+    mapfile -t SHA1_EACH < <(sha1sum -- "${files[@]}")
+    rm -rf -- "$dir"
+    for i in "${!SHA1_EACH[@]}"; do SHA1_EACH[i]=${SHA1_EACH[i]%% *}; done
+}
+
+# thumbs_for <file>...: THUMB_OF[file] = thumb_path for each file, in this shell, with one stat and one sha1sum for
+# them all (same keys as thumb_path). A list asks for every preview several times, and each $(thumb_path) cost four
+# processes: with the shell picker rescanning on every opening, that was most of its time.
+declare -A THUMB_OF=()
+thumbs_for() {
+    local -a todo=() stats=() texts=()
+    local f i
+    for f in "$@"; do [[ -n ${THUMB_OF[$f]:-} ]] || todo+=("$f"); done
+    (( ${#todo[@]} )) || return 0
+    mapfile -t stats < <(stat -c '%Y-%s' -- "${todo[@]}" 2>/dev/null)
+    for i in "${!todo[@]}"; do
+        # a file stat could not read leaves the lines out of step: ask for that one alone, as thumb_path does
+        if (( ${#stats[@]} == ${#todo[@]} )); then texts+=("${todo[i]}|${stats[i]}")
+        else texts+=("${todo[i]}|$(stat -c '%Y-%s' -- "${todo[i]}" 2>/dev/null)"); fi
+    done
+    sha1_each "${texts[@]}"
+    (( ${#SHA1_EACH[@]} == ${#todo[@]} )) || { for f in "${todo[@]}"; do THUMB_OF[$f]=$(thumb_path "$f"); done; return 0; }
+    for i in "${!todo[@]}"; do THUMB_OF[${todo[i]}]="$CACHE_DIR/thumbs/${SHA1_EACH[i]}.jpg"; done
+}
 
 # make_thumb <file>: create the preview if it does not exist yet (safe to run in parallel).
 make_thumb() {
@@ -115,12 +149,14 @@ build_thumbs() {
     need ffmpeg || return 0
     local -a missing=()
     local f
-    for f in "$@"; do [[ -s $(thumb_path "$f") ]] || missing+=("$f"); done
+    thumbs_for "$@"
+    for f in "$@"; do [[ -s ${THUMB_OF[$f]} ]] || missing+=("$f"); done
     (( ${#missing[@]} )) || return 0
     (( ${#missing[@]} > 6 && ! QUIET )) && notify "Generating ${#missing[@]} previews (first run only)…"
     export -f make_thumb thumb_path
     export CACHE_DIR THUMB_W THUMB_H
-    printf '%s\0' "${missing[@]}" | xargs -0 -r -P "$(nproc 2>/dev/null || echo 4)" -I{} bash -c 'make_thumb "$1"' _ {}
+    # niced: one job per core would otherwise take the CPU from the compositor and the shell (its picker is open)
+    printf '%s\0' "${missing[@]}" | xargs -0 -r -P "$(nproc 2>/dev/null || echo 4)" -I{} nice -n 10 bash -c 'make_thumb "$1"' _ {}
     # forget previews that were not used for 90 days
     find "$CACHE_DIR/thumbs" -type f -atime +90 -delete 2>/dev/null
 }
@@ -179,12 +215,13 @@ choose_file() {
     local -a files=()
     mapfile -d '' -t files < <(collect_files "$kind" "$@")
     (( ${#files[@]} )) || { notify "No compatible files found."; return 1; }
+    thumbs_for "${files[@]}"
     build_thumbs "${files[@]}"
     idx=$(
         for f in "${files[@]}"; do
             label=${f##*/}
             label=${label%.*}
-            thumb=$(thumb_path "$f")
+            thumb=${THUMB_OF[$f]:-}
             if [[ -s $thumb ]]; then
                 printf '%s\0icon\x1f%s\n' "$label" "$thumb"
             else
@@ -262,6 +299,17 @@ dm_image() {
 dm_thumb_path() { # dm_thumb_path <preview> -> path of its dot-matrix preview
     printf '%s/dots/%s.png' "$CACHE_DIR" "$(printf '%s|%s' "${1##*/}" "$DM_THUMB_KEY" | sha1sum | cut -d' ' -f1)"
 }
+# dots_for <preview>...: DOTS_OF[preview] = dm_thumb_path for each, in this shell (one sha1sum for them all)
+declare -A DOTS_OF=()
+dots_for() {
+    local -a todo=() texts=()
+    local t i
+    for t in "$@"; do [[ -n ${DOTS_OF[$t]:-} ]] || { todo+=("$t"); texts+=("${t##*/}|$DM_THUMB_KEY"); }; done
+    (( ${#todo[@]} )) || return 0
+    sha1_each "${texts[@]}"
+    (( ${#SHA1_EACH[@]} == ${#todo[@]} )) || { for t in "${todo[@]}"; do DOTS_OF[$t]=$(dm_thumb_path "$t"); done; return 0; }
+    for i in "${!todo[@]}"; do DOTS_OF[${todo[i]}]="$CACHE_DIR/dots/${SHA1_EACH[i]}.png"; done
+}
 DM_THUMB_ARGS=() DM_THUMB_KEY=""
 dm_thumbs_load() {
     DM_THUMB_ARGS=("${DM_ARGS[@]}")
@@ -278,11 +326,12 @@ dm_thumbs_load() {
 build_dm_thumbs() {
     local -a jobs=()
     local t
-    for t in "$@"; do [[ -s $t && ! -s $(dm_thumb_path "$t") ]] && jobs+=("$t" "$(dm_thumb_path "$t")"); done
+    dots_for "$@"
+    for t in "$@"; do [[ -s $t && ! -s ${DOTS_OF[$t]} ]] && jobs+=("$t" "${DOTS_OF[$t]}"); done
     (( ${#jobs[@]} )) || return 0
     mkdir -p "$CACHE_DIR/dots"
     # xargs appends <preview> <out> after the look's options
-    printf '%s\0' "${jobs[@]}" | xargs -0 -r -n 2 -P "$(nproc 2>/dev/null || echo 4)" bash -c \
+    printf '%s\0' "${jobs[@]}" | xargs -0 -r -n 2 -P "$(nproc 2>/dev/null || echo 4)" nice -n 10 bash -c \
         'src=${*: -2:1} out=${*: -1}; monolith-dotmatrix "$src" -o "$out" --resolution "$0" "${@:1:$#-2}" 2>/dev/null' \
         "${THUMB_W}x${THUMB_H}" "${DM_THUMB_ARGS[@]}"
     find "$CACHE_DIR/dots" -type f -atime +90 -delete 2>/dev/null
@@ -402,17 +451,17 @@ case ${1:-} in
         QUIET=1
         if [[ ${2:-} == video ]]; then mapfile -d '' -t files < <(collect_files video "${LIVE_DIRS[@]}" "${LIVE_FILES[@]}")
         else mapfile -d '' -t files < <(collect_files image "$STATIC_DIR"); fi
-        (( ${#files[@]} )) && build_thumbs "${files[@]}"
+        (( ${#files[@]} )) && { thumbs_for "${files[@]}"; build_thumbs "${files[@]}"; }
         # Nothing theme with dot-matrix wallpapers: still previews as they will look (dm_thumbs_load above)
         dots=0
         if [[ ${2:-} != video ]] && (( ${#files[@]} )) && dm_load && dm_thumbs_load; then
             dots=1 thumbs=()
-            for f in "${files[@]}"; do thumbs+=("$(thumb_path "$f")"); done
+            for f in "${files[@]}"; do thumbs+=("${THUMB_OF[$f]}"); done
             build_dm_thumbs "${thumbs[@]}"
         fi
         for f in "${files[@]}"; do
-            t=$(thumb_path "$f"); [[ -s $t ]] || t=""
-            if (( dots )) && [[ -n $t ]]; then d=$(dm_thumb_path "$t"); [[ -s $d ]] && t=$d; fi
+            t=${THUMB_OF[$f]:-}; [[ -s $t ]] || t=""
+            if (( dots )) && [[ -n $t ]]; then d=${DOTS_OF[$t]:-}; [[ -s $d ]] && t=$d; fi
             printf '%s\t%s\n' "$f" "$t"
         done
         exit 0 ;;

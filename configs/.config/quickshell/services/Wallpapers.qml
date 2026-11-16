@@ -13,6 +13,10 @@ Singleton {
     property var images: []                   // [{ path, thumb, name }]
     property var videos: []
     property bool loading: false
+    property string listed: ""                // the last `--list` output
+    // emptied from outside (Settings: another folder, cleared cache): the next listing must fill it again
+    onImagesChanged: if (!images.length) listed = ""
+    onVideosChanged: if (!videos.length) listed = ""
     property string error: ""
     property string current: ""
     property string currentKind: ""
@@ -31,13 +35,18 @@ Singleton {
         // Nothing theme: the look in effect (Nix defaults + Settings overrides), so a change applies at once
         WALLPAPER_NOTHING: Nothing.available ? JSON.stringify(Nothing.effective) : null
     })
-    // the dot-matrix look changed (Settings > Themes > Nothing): show the current still wallpaper again
+    // the dot-matrix look changed (Settings > Themes > Nothing): show the current still wallpaper again, and list
+    // again in the background, so the picker's previews in the new look are rendered before it is opened
     Connections {
         target: Nothing
         function onWallpaperChanged() {
             if (root.currentKind === "image" && root.current) root.apply("static", root.current, root.currentOutputs || "ALL")
+            root.refresh()
         }
     }
+    // the first listing a little after login, in the background: the picker's first opening shows the grid at once
+    // instead of "loading" while the script runs (and, in the dot-matrix look, renders every missing preview)
+    Timer { interval: 5000; running: true; onTriggered: root.refresh() }
 
     // first run: apply the shipped default (copied to the static folder by install.sh) once, unless
     // wallpaper-menu already has a saved choice
@@ -53,8 +62,11 @@ Singleton {
     Connections { target: Settings; function onLoadedOnce() { root.applyDefault() } }
 
     // list both kinds (previews are generated on the first run, in parallel)
+    // asked while a listing runs (the picker opened during the one above): once more when it ends, as it may
+    // have started before a change (another look, a new file)
+    property bool again: false
     function refresh() {
-        if (loading) return
+        if (loading) { again = true; return }
         loading = true
         error = ""
         listProc.running = true
@@ -75,6 +87,10 @@ Singleton {
         command: ["sh", "-c", "echo @image; \"$1\" --list image; echo @video; \"$1\" --list video", "sh", Config.wallpaperMenu]
         stdout: StdioCollector {
             onStreamFinished: {
+                // the picker rescans on every opening: the same list keeps the arrays, so its grid is not built
+                // again (and its previews do not ease in a second time) a moment after it opened
+                if (text === root.listed) return
+                root.listed = text
                 const out = { image: [], video: [] }
                 let kind = "image"
                 for (const l of text.split("\n")) {
@@ -87,7 +103,10 @@ Singleton {
             }
         }
         stderr: StdioCollector { onStreamFinished: if (text.trim()) root.error = text.trim().split("\n").pop() }
-        onExited: root.loading = false
+        onExited: {
+            root.loading = false
+            if (root.again) { root.again = false; root.refresh() }
+        }
     }
     Process {
         id: defaultProc

@@ -51,9 +51,12 @@ local function shellBlur()
 end
 local blur = shellBlur()
 
+-- Not qs-frame (frame bar style): it is opaque but covers the whole screen, and Hyprland blurs the damaged part of
+-- a layer's whole box, so its blur cost a full-screen pass on every frame anything animated under or over it (the
+-- launcher, the wallpaper picker, windows) and showed nowhere.
 hl.layer_rule({
     name = "qs-bar",
-    match = { namespace = "^qs-(bar|frame|widgets)$" },
+    match = { namespace = "^qs-(bar|widgets)$" },
     blur = blur,
     ignore_alpha = 0.2,
 })

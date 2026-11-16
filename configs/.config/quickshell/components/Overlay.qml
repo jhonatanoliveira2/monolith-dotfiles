@@ -5,7 +5,7 @@ import "../core"
 
 // A full-screen overlay (app launcher, wallpaper picker): dimmed backdrop (a click outside closes it),
 // keyboard focus while open, Esc closes, and a card (OverlaySlot keeps it alive for the close animation). The
-// card's height animates when its content changes.
+// card's height animates when its content changes (not when the window gets its size).
 //  - flat / capsule bar: the card is centred, and rises, scales and fades in (and back out)
 //  - frame bar: the card is a drawer of the frame at the bottom centre, as the center menu is at the top: same
 //    opaque colour, joined to the bottom edge (or to the bar, on a bottom bar) by concave fillets, the frame's
@@ -94,10 +94,15 @@ PanelWindow {
             readonly property int holeX: win.inset("left")
             readonly property int holeW: win.width - holeX - win.inset("right")
             width: Math.min(win.cardWidth, win.drawer ? holeW - 2 * (win.fillet + Theme.frameRadius + 4) : win.width - 40)
-            height: Math.min(win.cardHeight, win.height - 40 - (win.drawer ? win.inset("top") + win.bottomOff : 0))
+            // only a change of content (cardHeight: the launcher's rows) animates. The room is applied at once: the
+            // layer surface starts at height 0 and gets the screen's from the compositor just after it is created,
+            // and animating that grew the card from nothing on every opening, laying out its content (the
+            // picker's grid, the launcher's list) again on each frame of the open animation.
+            property int wantedHeight: win.cardHeight
+            Behavior on wantedHeight { enabled: win.entered; NumberAnimation { duration: Theme.dur(180); easing.type: Easing.OutCubic } }
+            height: Math.max(0, Math.min(wantedHeight, win.height - 40 - (win.drawer ? win.inset("top") + win.bottomOff : 0)))
             x: win.drawer ? holeX + Math.round((holeW - width) / 2) : Math.round((stage.width - width) / 2)
             y: win.drawer ? stage.height - height : Math.round((stage.height - height) / 2)
-            Behavior on height { enabled: win.entered; NumberAnimation { duration: Theme.dur(180); easing.type: Easing.OutCubic } }
             readonly property int r: Theme.nothing ? 20 : Theme.menuRadius
             radius: r
             bottomLeftRadius: win.drawer ? 0 : r

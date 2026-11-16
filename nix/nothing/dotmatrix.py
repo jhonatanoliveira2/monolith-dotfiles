@@ -20,14 +20,23 @@ import argparse
 import os
 import sys
 
-import numpy as np
-from PIL import Image
+# numpy and Pillow are imported by load(), only when there is a picture to render: `--key`, which wallpaper-menu
+# runs twice on every listing of the shell's wallpaper picker, needs neither (they were ~70 ms of each run)
+np = Image = None
 
 SHAPES = ("circle", "square", "rounded")
 DITHERS = ("none", "floyd", "bayer")
 # version of the look: part of the cache key, so a change of the curve below renders every wallpaper again
 LOOK = "v5"
-BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
+BAYER4 = None
+
+
+def load():
+    global np, Image, BAYER4
+    import numpy
+    from PIL import Image as pil_image
+    np, Image = numpy, pil_image
+    BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]], dtype=np.float32)
 
 
 def colour(text):
@@ -220,6 +229,7 @@ def main():
     if not jobs:
         p.error("nothing to do: give -o OUT --resolution WxH, or --outdir DIR --output NAME:WxH")
 
+    load()
     try:
         source = Image.open(a.source)
         if getattr(source, "is_animated", False) or getattr(source, "n_frames", 1) > 1:
