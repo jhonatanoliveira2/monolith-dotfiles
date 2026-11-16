@@ -19,16 +19,23 @@ PanelWindow {
     readonly property string screenName: bar ? bar.screenName : ""
     readonly property int screenW: bar && bar.screen ? bar.screen.width : 1920
     readonly property int screenH: bar && bar.screen ? bar.screen.height : 1080
-    // topCenter (the center menu with a side bar): opens at the top centre whatever the bar's edge; in frame
-    // style it is a drawer of the frame, as in NIHIL Shell: same opaque colour, joined to the top edge by concave
-    // fillets, the frame's inner line running around it
+    // topCenter (the center menu with a side bar): opens at the top centre whatever the bar's edge; rightCenter
+    // (the session menu): at the middle of the right edge. In frame style both are drawers of the frame, as in
+    // NIHIL Shell: same opaque colour, joined to their edge (or to the bar, when the bar is on that edge) by
+    // concave fillets, the frame's inner line running around them
     property bool topCenter: false
-    readonly property bool drawer: topCenter && Theme.barStyle === "frame"
+    property bool rightCenter: false
+    readonly property bool pinnedEdge: topCenter || rightCenter
+    readonly property bool drawer: pinnedEdge && Theme.barStyle === "frame"
     readonly property int fillet: drawer ? 14 : 0
-    readonly property string edge: topCenter ? "top" : Settings.barPosition
-    readonly property bool vertical: !topCenter && Settings.barVertical
-    readonly property bool attached: topCenter ? drawer : Settings.menuStyle === "attached" || (Settings.menuStyle === "auto" && edge !== "top")
-    readonly property int off: topCenter ? (drawer ? Theme.frameEdge : Theme.frameEdge + 8) : Theme.barThickness + (attached ? 0 : Theme.gap)
+    readonly property string edge: topCenter ? "top" : rightCenter ? "right" : Settings.barPosition
+    readonly property bool sideways: edge === "left" || edge === "right"   // the drawer's fillets above and below it
+    readonly property bool vertical: !pinnedEdge && Settings.barVertical
+    readonly property bool attached: pinnedEdge ? drawer : Settings.menuStyle === "attached" || (Settings.menuStyle === "auto" && edge !== "top")
+    // a pinned menu sits on the frame's edge, or on the bar when the bar is on that edge
+    readonly property bool atBar: pinnedEdge && Settings.barPosition === edge
+    readonly property int off: pinnedEdge ? (atBar ? Theme.barThickness + (drawer ? 0 : Theme.gap) : drawer ? Theme.frameEdge : Theme.frameEdge + 8)
+                                          : Theme.barThickness + (attached ? 0 : Theme.gap)
     readonly property int limit: Math.min(maxHeight, screenH - (vertical ? 16 : Theme.barThickness + 30))
     default property Component contentComponent
 
@@ -41,15 +48,16 @@ PanelWindow {
     visible: shown || panel.opacity > 0.01
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    anchors { top: edge !== "bottom"; bottom: edge === "bottom"; left: !topCenter && edge !== "right"; right: !topCenter && edge === "right" }
+    // topCenter / rightCenter: anchored to one edge only, so the compositor centres them along it
+    anchors { top: edge !== "bottom" && !rightCenter; bottom: edge === "bottom"; left: !pinnedEdge && edge !== "right"; right: !topCenter && edge === "right" }
     margins {
         top: edge === "top" ? off : vertical ? Math.max(4, Math.min(Popups.anchorY - panel.height / 2, screenH - panel.height - 4)) : 0
         bottom: edge === "bottom" ? off : 0
-        left: topCenter ? 0 : edge === "left" ? off : vertical ? 0 : Math.max(4, Math.min(Popups.anchorX - panelWidth / 2, screenW - panelWidth - 4))
+        left: pinnedEdge ? 0 : edge === "left" ? off : vertical ? 0 : Math.max(4, Math.min(Popups.anchorX - panelWidth / 2, screenW - panelWidth - 4))
         right: edge === "right" ? off : 0
     }
-    implicitWidth: panelWidth + 2 * fillet
-    implicitHeight: panel.height
+    implicitWidth: panelWidth + (sideways ? 0 : 2 * fillet)
+    implicitHeight: panel.height + (sideways ? 2 * fillet : 0)
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -68,21 +76,26 @@ PanelWindow {
     Connections { target: Popups; function onPinnedChanged() { grab.active = win.shown && (!win.hoverKeep || Popups.pinned) } }
     Shortcut { sequence: "Escape"; enabled: win.shown; onActivated: Popups.close() }
 
-    // drawer: concave joints with the frame's top edge (outside the quarter circle: frame colour; its arc: the line)
+    // drawer: concave joints with the frame's edge, one on each side of the panel along it (outside the quarter
+    // circle: frame colour; its arc: the line). `after`: the joint right of (top edge) or below (right edge) the panel.
     component Joint: Item {
         id: jt
-        property bool atRight: false
+        property bool after: false
         readonly property int r: win.fillet
         readonly property int big: 2000
+        // centre of the hole: the joint's corner away from the edge and away from the panel
+        readonly property int cx: win.sideways ? 0 : after ? r : 0
+        readonly property int cy: win.sideways ? (after ? r : 0) : r
         visible: win.drawer
-        x: atRight ? panel.x + panel.width : panel.x - r
+        x: win.sideways ? panel.x + panel.width - r : after ? panel.x + panel.width : panel.x - r
+        y: win.sideways ? (after ? panel.y + panel.height : panel.y - r) : 0
         width: r; height: r
         clip: true
         opacity: panel.opacity
-        // a ring whose hole is the circle of radius r centred on the joint's outer bottom corner: the ring fills
-        // the square outside the quarter circle
+        // a ring whose hole is the circle of radius r centred on (cx, cy): the ring fills the square outside
+        // the quarter circle
         Rectangle {
-            x: (jt.atRight ? jt.r : 0) - jt.r - jt.big; y: -jt.big
+            x: jt.cx - jt.r - jt.big; y: jt.cy - jt.r - jt.big
             width: 2 * (jt.r + jt.big); height: width
             radius: jt.r + jt.big
             color: "transparent"
@@ -91,7 +104,7 @@ PanelWindow {
         }
         Rectangle {          // the frame's line along the arc (Nothing theme)
             visible: Theme.nothing
-            x: jt.atRight ? 0 : -jt.r
+            x: jt.cx - jt.r; y: jt.cy - jt.r
             width: 2 * jt.r; height: width
             radius: jt.r
             color: "transparent"
@@ -100,11 +113,12 @@ PanelWindow {
         }
     }
     Joint {}
-    Joint { atRight: true }
+    Joint { after: true }
 
     Rectangle {
         id: panel
-        x: win.fillet
+        x: win.sideways ? 0 : win.fillet
+        y: win.sideways ? win.fillet : 0
         width: win.panelWidth
         height: Math.min(loader.implicitHeight + win.pad * 2 + 2, win.limit)
         color: win.drawer ? Theme.barSolid : Theme.panelBg
@@ -118,16 +132,17 @@ PanelWindow {
         border.color: Theme.line
         clip: true
         // drawer (Nothing theme): the frame's inner line continues around the drawer. It starts where the joints'
-        // arcs end (one fillet below the top edge), so no straight piece sticks out above the curves.
+        // arcs end (one fillet away from the edge), so no straight piece sticks out past the curves.
         Item {
             visible: win.drawer && Theme.nothing
-            y: win.fillet
-            width: parent.width; height: parent.height - win.fillet
+            readonly property int ext: panel.r + win.fillet + 2
+            y: win.sideways ? 0 : win.fillet
+            width: parent.width - (win.sideways ? win.fillet : 0); height: parent.height - (win.sideways ? 0 : win.fillet)
             clip: true
             z: 10
             Rectangle {
-                y: -panel.r - win.fillet - 2
-                width: parent.width; height: parent.height + panel.r + win.fillet + 2
+                y: win.sideways ? 0 : -parent.ext
+                width: parent.width + (win.sideways ? parent.ext : 0); height: parent.height + (win.sideways ? 0 : parent.ext)
                 radius: panel.r
                 color: "transparent"
                 border.width: 1

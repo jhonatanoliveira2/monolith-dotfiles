@@ -72,6 +72,7 @@ Singleton {
     property alias barShadow: adapter.barShadow
     property alias barShadowStrength: adapter.barShadowStrength
     property alias centerMenu: adapter.centerMenu
+    property alias sessionMenu: adapter.sessionMenu
     property alias centerTab: adapter.centerTab
     property alias centerHistory: adapter.centerHistory
     property alias centerHistoryKeep: adapter.centerHistoryKeep
@@ -287,6 +288,7 @@ Singleton {
             property bool widgetsAutoHide: false   // hide the widgets while the monitor's workspace has windows
             property real widgetOpacity: 0.6       // widget card background, 0 (transparent) .. 1
             property bool centerMenu: true         // menus/CenterMenu.qml, opened by hovering the middle of the bar
+            property bool sessionMenu: true        // menus/SessionMenu.qml, opened by hovering the middle of the right edge
             property int centerTab: 0              // its last open tab
             property var centerHistory: []         // its command line history (latest last)
             property bool centerHistoryKeep: true  // off: the history lives in memory only (commands may hold secrets)

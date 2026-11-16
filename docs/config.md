@@ -111,6 +111,14 @@ Microphone, Widgets, Notifications, Network, Bluetooth, Power (laptops only), St
   with the clock and date, weather (wttr.in; set a city or leave it empty for automatic), CPU / RAM / GPU gauges
   and history, the player and the uptime. It closes when the pointer leaves it. It is created only while open,
   so it costs nothing when closed. `qs ipc call shell toggle center` opens it pinned.
+- **Session menu** (Settings → Bar → *Session menu*): resting the pointer on the middle of the screen's right
+  edge opens lock, suspend, reboot and power off, as icons, with the distro logo (Arch, NixOS...) spinning in the
+  middle (still when animations are off). Reboot and power off ask for a second click (the icon turns into
+  "?"). It closes when the pointer leaves it; `qs ipc call shell toggle session` opens it pinned.
+- **Frame style and drawers**: with the *Frame* bar style, the menus pinned to an edge come out of the frame as
+  drawers of the same colour, joined to it by rounded fillets (to the bar, when the bar is on that edge): the
+  center menu at the top centre (side bar), the session menu at the right centre, and the launcher and the
+  wallpaper picker at the bottom centre. In the other styles the launcher and the picker are centred cards.
 - **Desktop widgets** (Settings → Widgets): clock, system, weather and media widgets on the desktop, under the
   windows. **Arrange widgets** (or `qs ipc call widgets edit`) opens the editor: drag to move (snaps to an 8 px
   grid), × to remove, the toolbar adds more; Esc or **Done** leaves it. Positions are saved per monitor in

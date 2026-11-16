@@ -112,6 +112,14 @@ Menu `Super` → **Configurações** (ou `qs ipc call shell settings <página>`)
   relógio e data, clima (wttr.in; defina uma cidade ou deixe vazio para automático), medidores e histórico de
   CPU / RAM / GPU, o player e o tempo ligado. Fecha quando o mouse sai. Só existe enquanto está aberto, então
   não pesa quando fechado. `qs ipc call shell toggle center` abre fixo.
+- **Menu de energia** (Configurações → Barra → *Menu de energia*): parar o mouse no meio da borda direita da
+  tela abre bloquear, suspender, reiniciar e desligar, só em ícones, com o logo da distro (Arch, NixOS...)
+  girando no meio (parado quando as animações estão desligadas). Reiniciar e desligar pedem um segundo clique
+  (o ícone vira "?"). Fecha quando o mouse sai; `qs ipc call shell toggle session` abre fixo.
+- **Estilo moldura e gavetas**: com a barra no estilo *Moldura*, os menus presos a uma borda saem da moldura
+  como gavetas da mesma cor, unidas a ela por cantos côncavos (à barra, quando a barra está naquela borda): o
+  menu central no topo (barra lateral), o menu de energia no meio da direita, e o lançador e o seletor de
+  wallpaper embaixo, no centro. Nos outros estilos o lançador e o seletor são cartões centralizados.
 - **Widgets da área de trabalho** (Configurações → Widgets): relógio, sistema, clima e mídia na área de
   trabalho, por baixo das janelas. **Organizar widgets** (ou `qs ipc call widgets edit`) abre o editor: arraste
   para mover (encaixa numa grade de 8 px), × remove, a barra de cima adiciona; Esc ou **Concluir** sai. As

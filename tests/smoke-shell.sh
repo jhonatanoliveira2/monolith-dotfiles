@@ -78,7 +78,7 @@ for _ in $(seq 40); do ipc shell close && break; sleep 0.3; done
 if ! kill -0 "$QPID" 2>/dev/null; then ko "the shell exited at start"; else ok "shell started and answers IPC"; fi
 
 # every menu, both overlays, every Settings page, the widget editor and one widget of each kind
-for m in audio media network bluetooth power brightness notifications calendar center stats settings; do
+for m in audio media network bluetooth power brightness notifications calendar center stats settings session; do
     ipc shell toggle "$m"; sleep 0.7
 done
 ipc shell close

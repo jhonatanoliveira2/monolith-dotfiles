@@ -49,10 +49,13 @@ ShellRoot {
             MenuSlot { name: "center"; screen: scope.modelData; CenterMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "stats"; screen: scope.modelData; StatsMenu { screen: scope.modelData; bar: barWin } }
             MenuSlot { name: "settings"; screen: scope.modelData; SettingsMenu { screen: scope.modelData; bar: barWin } }
+            MenuSlot { name: "session"; screen: scope.modelData; SessionMenu { screen: scope.modelData; bar: barWin } }
             LazyLoader { active: Notifs.popups.length + Notifs.internal.length > 0; Toasts { screen: scope.modelData } }
             OsdWindow { screen: scope.modelData }
             EdgeGlow { screen: scope.modelData }
             LazyLoader { active: Settings.centerMenu && Settings.barVertical; CenterHotZone { screen: scope.modelData } }
+            // session menu (lock, suspend, reboot, power off): hover the middle of the right edge
+            LazyLoader { active: Settings.sessionMenu; CenterHotZone { screen: scope.modelData; menu: "session"; edge: "right"; length: 300 } }
             // full-screen overlays, on the monitor that was focused when they opened
             OverlaySlot { name: "launcher"; screen: scope.modelData; Launcher { screen: scope.modelData } }
             OverlaySlot { name: "wallpaper"; screen: scope.modelData; WallpaperPicker { screen: scope.modelData } }
