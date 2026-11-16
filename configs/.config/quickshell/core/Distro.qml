@@ -29,8 +29,8 @@ Singleton {
     readonly property bool cachyos: osId === "cachyos"
     readonly property bool nixos: osId === "nixos"
     readonly property bool archBased: osId === "arch" || like.indexOf("arch") >= 0
-    // Nerd Font logos: linux-cachyos, linux-nixos, linux-archlinux, linux-tux
-    readonly property int glyph: cachyos ? 0xf385 : nixos ? 0xf313 : archBased || osId === "" ? 0xf303 : 0xf31a
+    // Nerd Font logos: linux-cachyos, linux-nixos, md-arch (Arch and other Arch-based systems), linux-tux
+    readonly property int glyph: cachyos ? 0xf385 : nixos ? 0xf313 : archBased || osId === "" ? 0xf08c7 : 0xf31a
 
     // ── Nix integration (Home Manager module) ──
     FileView {

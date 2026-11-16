@@ -10,7 +10,7 @@ Singleton {
     id: root
 
     readonly property var catalog: [
-        { id: "logo", glyph: 0xf303 }, { id: "workspaces", glyph: 0xf24d }, { id: "player", glyph: 0xf001 },
+        { id: "logo", glyph: 0xf08c7 }, { id: "workspaces", glyph: 0xf24d }, { id: "player", glyph: 0xf001 },
         { id: "title", glyph: 0xf2d0 }, { id: "clock", glyph: 0xf017 }, { id: "tray", glyph: 0xf0ca },
         { id: "sysmon", glyph: 0xf2db }, { id: "network", glyph: 0xf1eb }, { id: "bluetooth", glyph: 0xf293 },
         { id: "battery", glyph: 0xf240 }, { id: "brightness", glyph: 0xf185 }, { id: "volume", glyph: 0xf028 },

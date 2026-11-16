@@ -33,7 +33,7 @@ Scope {
           d: ["Central com histórico e Não perturbe.", "Center with history and Do not disturb."] },
         { g: 0xf0ea2, k: "Super + M", t: ["Mídia", "Media"],
           d: ["Player atual, faixas recentes e busca no serviço de música.", "Current player, recent tracks and search in the music service."] },
-        { g: 0xf303, k: "Super + Esc", t: ["Menu rápido", "Quick menu"],
+        { g: 0xf08c7, k: "Super + Esc", t: ["Menu rápido", "Quick menu"],
           d: ["Interruptores, atalhos e sessão (bloquear, suspender, desligar).", "Switches, shortcuts and session (lock, suspend, power off)."] },
         { g: 0xf013, k: "Super + ,", t: ["Configurações", "Settings"],
           d: ["Tudo em um lugar; Ctrl+F busca qualquer opção.", "Everything in one place; Ctrl+F searches any option."] },

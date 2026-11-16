@@ -198,7 +198,7 @@ Column {
         Card {
             order: 4
             width: (parent.width - 8) / 3; height: 150
-            Txt { x: 12; y: 10; text: Theme.g(0xf303) + "  Monolith Shell"; color: Theme.white }
+            Txt { x: 12; y: 10; text: Theme.g(0xf08c7) + "  Monolith Shell"; color: Theme.white }
             Column {
                 x: 12; y: 40; width: parent.width - 24
                 spacing: 9
