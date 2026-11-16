@@ -147,6 +147,12 @@ Pelo terminal: `wallpaper-menu --set static ~/Pictures/Wallpapers/blue_sky.png` 
 `... ALL|DP-1,eDP-1`. Depois de mudar o visual nas Configurações, o wallpaper atual é convertido de novo
 sozinho; o `wallpaper-menu --restore` (autostart) faz o mesmo no login.
 
+O seletor de wallpaper do shell mostra as imagens **já como matrizes de LEDs**: cada prévia é convertida a
+partir da prévia comum, no tamanho dela (480×270), com o visual em uso (forma, pontilhado, cores, contraste,
+brilho), e os LEDs com metade do tamanho real para os pontos continuarem visíveis na grade. Ficam em cache em
+`~/.cache/wallpaper-menu/dots`, por visual (um visual novo as converte de novo na próxima abertura do seletor);
+o `wallpaper-menu --clear-cache` as apaga junto com as outras prévias. Os wallpapers animados mantêm a prévia comum.
+
 ### Converter à mão: `monolith-dotmatrix`
 
 Instalado no PATH pelo tema:

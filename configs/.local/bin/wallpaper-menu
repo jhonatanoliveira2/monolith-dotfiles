@@ -4,7 +4,7 @@
 #
 # Usage:  wallpaper-menu              open the rofi menu (run it again to close it)
 #         wallpaper-menu --restore    re-apply the last choice (put it in your autostart)
-#         wallpaper-menu --clear-cache   delete the generated previews
+#         wallpaper-menu --clear-cache   delete the generated previews (dot-matrix ones included)
 #         wallpaper-menu --clear-dotmatrix   delete the dot-matrix renderings (Nothing theme)
 #         wallpaper-menu --list <image|video>              path<TAB>preview per line (used by the shell picker)
 #         wallpaper-menu --set <static|live> <file> [ALL|out1,out2]   apply without a menu (used by the shell)
@@ -254,6 +254,41 @@ dm_image() {
     printf '%s\n' "$out"
 }
 
+# Nothing theme, shell picker: the previews of still wallpapers in the dot-matrix look (dm_load must have
+# succeeded). Each one is rendered from the ordinary preview, at the preview's size, with the look's shape,
+# dithering, colours, contrast and brightness. The LEDs are half their real size: at the real one, scaled down
+# like the picture (a quarter on a 1920 px screen), they would be under 2 px and the dots would vanish in the
+# grid. Cached in $CACHE_DIR/dots by preview and look, so a new look renders them again.
+dm_thumb_path() { # dm_thumb_path <preview> -> path of its dot-matrix preview
+    printf '%s/dots/%s.png' "$CACHE_DIR" "$(printf '%s|%s' "${1##*/}" "$DM_THUMB_KEY" | sha1sum | cut -d' ' -f1)"
+}
+DM_THUMB_ARGS=() DM_THUMB_KEY=""
+dm_thumbs_load() {
+    DM_THUMB_ARGS=("${DM_ARGS[@]}")
+    local i
+    for (( i = 0; i < ${#DM_THUMB_ARGS[@]} - 1; i++ )); do
+        case ${DM_THUMB_ARGS[i]} in
+            --size) DM_THUMB_ARGS[i+1]=$(( (DM_THUMB_ARGS[i+1] + 1) / 2 > 2 ? (DM_THUMB_ARGS[i+1] + 1) / 2 : 2 )) ;;
+            --spacing) (( DM_THUMB_ARGS[i+1] > 0 )) && DM_THUMB_ARGS[i+1]=$(( (DM_THUMB_ARGS[i+1] + 1) / 2 )) ;;
+        esac
+    done
+    DM_THUMB_KEY=$(monolith-dotmatrix --key "${DM_THUMB_ARGS[@]}")
+}
+# build_dm_thumbs <preview>...: render the missing ones, in parallel (a failure leaves the ordinary preview)
+build_dm_thumbs() {
+    local -a jobs=()
+    local t
+    for t in "$@"; do [[ -s $t && ! -s $(dm_thumb_path "$t") ]] && jobs+=("$t" "$(dm_thumb_path "$t")"); done
+    (( ${#jobs[@]} )) || return 0
+    mkdir -p "$CACHE_DIR/dots"
+    # xargs appends <preview> <out> after the look's options
+    printf '%s\0' "${jobs[@]}" | xargs -0 -r -n 2 -P "$(nproc 2>/dev/null || echo 4)" bash -c \
+        'src=${*: -2:1} out=${*: -1}; monolith-dotmatrix "$src" -o "$out" --resolution "$0" "${@:1:$#-2}" 2>/dev/null' \
+        "${THUMB_W}x${THUMB_H}" "${DM_THUMB_ARGS[@]}"
+    find "$CACHE_DIR/dots" -type f -atime +90 -delete 2>/dev/null
+    return 0
+}
+
 save_state() { # save_state <static|live> <outputs|ALL> [file]
     mkdir -p "${STATE_FILE%/*}"
     printf '%s\t%s\t%s\n' "$1" "$2" "${3:-}" >"$STATE_FILE"
@@ -360,7 +395,7 @@ restore_last() {
 # ─────────────────────────────────── main ────────────────────────────────
 case ${1:-} in
     -h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    --clear-cache) rm -rf -- "$CACHE_DIR/thumbs"; echo "previews removed"; exit 0 ;;
+    --clear-cache) rm -rf -- "$CACHE_DIR/thumbs" "$CACHE_DIR/dots"; echo "previews removed"; exit 0 ;;
     --clear-dotmatrix) rm -rf -- "$DM_CACHE"; echo "dot-matrix renderings removed"; exit 0 ;;
     --restore) need hyprctl && need jq || exit 1; restore_last ;;
     --list)
@@ -368,8 +403,16 @@ case ${1:-} in
         if [[ ${2:-} == video ]]; then mapfile -d '' -t files < <(collect_files video "${LIVE_DIRS[@]}" "${LIVE_FILES[@]}")
         else mapfile -d '' -t files < <(collect_files image "$STATIC_DIR"); fi
         (( ${#files[@]} )) && build_thumbs "${files[@]}"
+        # Nothing theme with dot-matrix wallpapers: still previews as they will look (dm_thumbs_load above)
+        dots=0
+        if [[ ${2:-} != video ]] && (( ${#files[@]} )) && dm_load && dm_thumbs_load; then
+            dots=1 thumbs=()
+            for f in "${files[@]}"; do thumbs+=("$(thumb_path "$f")"); done
+            build_dm_thumbs "${thumbs[@]}"
+        fi
         for f in "${files[@]}"; do
             t=$(thumb_path "$f"); [[ -s $t ]] || t=""
+            if (( dots )) && [[ -n $t ]]; then d=$(dm_thumb_path "$t"); [[ -s $d ]] && t=$d; fi
             printf '%s\t%s\n' "$f" "$t"
         done
         exit 0 ;;

@@ -148,6 +148,31 @@ check "run thumbs empties the folder" test ! -e "$XDG_CACHE_HOME/thumbnails/larg
 bash "$S/cleanup.sh" run nonsense >/dev/null 2>&1
 is "an unknown target is refused (exit 2)" "$?" "2"
 
+echo "== wallpaper-menu --list (Nothing theme: dot-matrix previews)"
+WM="$ROOT/configs/.local/bin/wallpaper-menu"
+if command -v ffmpeg >/dev/null 2>&1 && python3 -c 'import numpy, PIL' 2>/dev/null; then
+    fresh
+    export XDG_CONFIG_HOME="$TMP/config-$RANDOM"
+    mkdir -p "$HOME/walls" "$XDG_CONFIG_HOME/monolith"
+    ffmpeg -loglevel error -f lavfi -i testsrc2=size=640x360 -frames:v 1 "$HOME/walls/test.png"
+    printf '#!/bin/sh\nexec python3 %s "$@"\n' "$ROOT/nix/nothing/dotmatrix.py" >"$BIN/monolith-dotmatrix"; chmod +x "$BIN/monolith-dotmatrix"
+    wl() { PATH="$BIN:$PATH" WALLPAPER_STATIC_DIR="$HOME/walls" bash "$WM" --list image | cut -f2; }
+    t=$(wl)
+    [[ $t == */wallpaper-menu/thumbs/*.jpg && -s $t ]] && ok "no Nothing theme: the ordinary preview" || ko "no Nothing theme: the ordinary preview ($t)"
+    echo '{"version":1,"defaults":{"enabled":true,"wallpaperStyle":"dotmatrix"}}' >"$XDG_CONFIG_HOME/monolith/nothing.json"
+    d=$(wl)
+    [[ $d == */wallpaper-menu/dots/*.png && -s $d ]] && ok "dot-matrix wallpapers: a dot-matrix preview" || ko "dot-matrix wallpapers: a dot-matrix preview ($d)"
+    is "it has the preview's size" "$(python3 -c 'import sys; from PIL import Image; print("%dx%d" % Image.open(sys.argv[1]).size)' "$d")" "480x270"
+    is "the look from the shell (WALLPAPER_NOTHING) wins" "$(WALLPAPER_NOTHING='{"enabled":false}' wl)" "$t"
+    d2=$(WALLPAPER_NOTHING='{"enabled":true,"wallpaperStyle":"dotmatrix","ledShape":"square"}' wl)
+    [[ $d2 == */dots/*.png && $d2 != "$d" ]] && ok "another look, another preview" || ko "another look, another preview ($d2)"
+    PATH="$BIN:$PATH" bash "$WM" --clear-cache >/dev/null
+    check "--clear-cache removes the dot-matrix previews" test ! -e "$XDG_CACHE_HOME/wallpaper-menu/dots"
+    unset XDG_CONFIG_HOME
+else
+    echo "  skip  ffmpeg or python3 numpy / pillow missing"
+fi
+
 echo
 printf 'passed: %s   failed: %s\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

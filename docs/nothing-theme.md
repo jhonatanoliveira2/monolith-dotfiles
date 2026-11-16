@@ -145,6 +145,12 @@ From a terminal: `wallpaper-menu --set static ~/Pictures/Wallpapers/blue_sky.png
 `... ALL|DP-1,eDP-1`. After a change of look in Settings the current wallpaper is rendered again by itself;
 `wallpaper-menu --restore` (autostart) does the same at login.
 
+The shell's wallpaper picker shows the still wallpapers **already as LED matrices**: each preview is rendered
+from the ordinary one, at its size (480×270), with the look in effect (shape, dithering, colours, contrast,
+brightness), the LEDs at half their real size so the dots stay visible in the grid. They are cached in
+`~/.cache/wallpaper-menu/dots`, per look (a new look renders them again the next time the picker opens);
+`wallpaper-menu --clear-cache` removes them with the other previews. Live wallpapers keep their ordinary preview.
+
 ### Converting by hand: `monolith-dotmatrix`
 
 Installed on PATH by the theme:
