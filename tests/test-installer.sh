@@ -259,6 +259,57 @@ check "the installer reports CachyOS" grep -q "CachyOS detected" "$TMP/cachy.out
 MONOLITH_OS_RELEASE="$D/cachyos" bash "$ROOT/scripts/install.sh" --lang pt_BR --yes --no-deps --no-color --no-clear --dry-run </dev/null >"$TMP/cachy-pt.out" 2>&1
 check "the installer reports CachyOS (pt_BR)" grep -q "CachyOS detectado" "$TMP/cachy-pt.out"
 
+echo "== NVIDIA (scripts/lib/nvidia.sh)"
+N="$TMP/nvidia"
+mkdir -p "$N/bin"
+gpu() { # gpu <sysfs root> <pci address> <vendor> <device> [boot_vga]
+    local d="$1/bus/pci/devices/$2"
+    mkdir -p "$d"
+    printf '0x030000\n' >"$d/class"; printf '%s\n' "$3" >"$d/vendor"; printf '%s\n' "$4" >"$d/device"
+    printf '%s\n' "${5:-0}" >"$d/boot_vga"
+}
+kernel() { mkdir -p "$1/$2"; printf '%s\n' "$3" >"$1/$2/pkgbase"; } # kernel <modules dir> <version> <package>
+# stubs: nothing installed (pacman -T), what the repositories have (pacman -Si: $STUB_REPOS), no module, a name
+cat >"$N/bin/pacman" <<'STUB'
+#!/bin/bash
+case $1 in
+    -T) [[ " ${STUB_INSTALLED-} " == *" $2 "* ]] && exit 0; exit 127 ;;
+    -Si) [[ " ${STUB_REPOS-} " == *" $2 "* ]] && exit 0; exit 1 ;;
+esac
+exit 1
+STUB
+printf '#!/bin/sh\nexit 1\n' >"$N/bin/modinfo"
+printf '#!/bin/sh\necho "01:00.0 VGA compatible controller: NVIDIA Corporation GA106 [GeForce RTX 3060] (rev a1)"\n' >"$N/bin/lspci"
+chmod +x "$N/bin/"*
+nv() { # nv <sysfs> <modules dir> <code>
+    MONOLITH_SYSFS=$1 MONOLITH_MODULES_DIR=$2 PATH="$N/bin:$PATH" bash -c 'source "$0/scripts/lib/common.sh"
+        source "$0/scripts/lib/packages.sh"; PACMAN_AVAILABLE=1; source "$0/scripts/lib/nvidia.sh"; '"$3" "$ROOT"
+}
+gpu "$N/amd" 0000:0a:00.0 0x1002 0x7590 1
+check "no NVIDIA GPU: nothing detected" test "$(nv "$N/amd" "$N/none" 'nvidia_detect && echo yes || echo no')" = no
+gpu "$N/desk" 0000:01:00.0 0x10de 0x2503 1
+kernel "$N/mods-arch" 6.17.1-arch1-1 linux
+kernel "$N/mods-arch" 6.12.50-1-lts linux-lts
+kernel "$N/mods-arch" 6.17.1-zen1-1 linux-zen
+out=$(nv "$N/desk" "$N/mods-arch" 'nvidia_detect; echo "gpus=${NV_GPUS[*]} modern=$NV_MODERN hybrid=$NV_HYBRID name=${NV_NAMES[0]}"; nvidia_plan; echo "pkgs=${NV_PKGS[*]} legacy=$NV_LEGACY"')
+check "desktop RTX card: detected, Turing or newer, not hybrid" grep -qx "gpus=0000:01:00.0 modern=1 hybrid=0 name=GeForce RTX 3060" <<<"$out"
+check "Arch: prebuilt open modules per kernel, DKMS + headers for the others" \
+    grep -qx "pkgs=nvidia-open nvidia-open-lts linux-zen-headers nvidia-open-dkms nvidia-utils libva-nvidia-driver legacy=0" <<<"$out"
+kernel "$N/mods-cachy" 6.17.1-2-cachyos linux-cachyos
+out=$(STUB_REPOS="linux-cachyos-nvidia-open" nv "$N/desk" "$N/mods-cachy" 'nvidia_detect; nvidia_plan; echo "pkgs=${NV_PKGS[*]}"')
+check "CachyOS: the kernel's own prebuilt open modules" grep -qx "pkgs=linux-cachyos-nvidia-open nvidia-utils libva-nvidia-driver" <<<"$out"
+out=$(STUB_INSTALLED="nvidia-580xx-dkms" nv "$N/desk" "$N/mods-arch" 'nvidia_detect; nvidia_plan; echo "pkgs=${NV_PKGS[*]}"')
+check "a driver already installed is kept (no nvidia-utils over a legacy branch)" grep -qx "pkgs=libva-nvidia-driver" <<<"$out"
+gpu "$N/laptop" 0000:00:02.0 0x8086 0x9a49 1
+gpu "$N/laptop" 0000:01:00.0 0x10de 0x25a2 0
+out=$(nv "$N/laptop" "$N/mods-arch" 'nvidia_detect; echo "hybrid=$NV_HYBRID"; nvidia_plan; echo "pkgs=${NV_PKGS[*]}"')
+check "hybrid laptop: detected, prime-run added" bash -c 'grep -qx "hybrid=1" <<<"$1" && grep -q "nvidia-prime" <<<"$1"' _ "$out"
+gpu "$N/old" 0000:01:00.0 0x10de 0x1b80 1
+out=$(nv "$N/old" "$N/mods-arch" 'nvidia_detect; nvidia_plan; echo "modern=$NV_MODERN legacy=$NV_LEGACY pkgs=${NV_PKGS[*]}"')
+check "Pascal card: legacy driver suggested, nothing installed" grep -qx "modern=0 legacy=1 pkgs=" <<<"$out"
+mkdir -p "$N/desk/module/nvidia_drm/parameters"; printf 'N\n' >"$N/desk/module/nvidia_drm/parameters/modeset"
+check "a loaded nvidia-drm without modeset is seen" test "$(nv "$N/desk" "$N/mods-arch" 'nvidia_detect; echo "$NV_LOADED$NV_MODESET"')" = 1N
+
 echo "== Nothing theme (scripts/nothing-theme.sh)"
 new_env nothing
 NT_HOME=$MONOLITH_TARGET_HOME
@@ -312,6 +363,7 @@ done
 check "a font that fails its checksum is discarded" test ! -e "$NT_HOME/.local/share/fonts/monolith-nothing"
 check "... and reported" grep -q "did not match its checksum" "$TMP/nt-on.out"
 check "monolith-dotmatrix installed, executable" test -x "$NT_HOME/.local/bin/monolith-dotmatrix"
+check "the terminal at 80 % (nothing.ghostty, read by config.ghostty)" bash -c 'grep -qx "background-opacity = 0.8" "$1/.config/ghostty/nothing.ghostty" && grep -qx "config-file = ?nothing.ghostty" "$2"' _ "$NT_HOME" "$ROOT/configs/.config/ghostty/config.ghostty"
 check "monolith-cava installed, executable" test -x "$NT_HOME/.local/bin/monolith-cava"
 check "a cava config of the user's own is saved" grep -qx "my own cava config" "$NT_STATE/saved/.config/cava/config"
 check "the theme's cava config is in place" cmp -s "$ROOT/nix/nothing/cava.conf" "$NT_HOME/.config/cava/config"
@@ -359,6 +411,7 @@ check "off removes the renderer and the fish functions" test ! -e "$NT_HOME/.loc
 check "off puts the user's cava config back" grep -qx "my own cava config" "$NT_HOME/.config/cava/config"
 check "off puts the default gtk.css back" cmp -s "$ROOT/configs/.config/gtk-4.0/gtk.css" "$NT_HOME/.config/gtk-4.0/gtk.css"
 check "off leaves no theme folder" test ! -e "$NT_HOME/.icons/Monolith-Dots" -a ! -e "$NT_HOME/.config/fastfetch/nothing.jsonc"
+check "off removes nothing.ghostty (the terminal back to 55 %)" test ! -e "$NT_HOME/.config/ghostty/nothing.ghostty"
 nt off >"$TMP/nt-off2.out" 2>&1
 check "off when it is off: nothing to do" grep -q "is not on" "$TMP/nt-off2.out"
 

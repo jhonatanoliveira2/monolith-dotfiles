@@ -94,13 +94,15 @@ Singleton {
     // build-time wallpapers (rebuild): monitors rendered by Nix
     readonly property var builtOutputs: (data.wallpapers && data.wallpapers.outputs) || []
 
-    // The first time the theme is active its bar look is applied (on the left, in frame style - NIHIL Shell's
-    // layout); after that Settings > Bar is in charge, with or without the theme. Without the theme the shell
-    // keeps its own defaults (top, capsule).
+    // The first time the theme is active its look is applied: the bar on the left, in frame style (NIHIL Shell's
+    // layout), and the original Monolith colours instead of the dynamic palette (the shell's default) - the
+    // theme is greys on OLED black. After that Settings > Bar and Settings > Themes are in charge, with or
+    // without the theme. Without the theme the shell keeps its own defaults (top, capsule, dynamic palette).
     function applyLookOnce() {
         if (!Settings.loaded || !active || Settings.nothingLookDone) return
         Settings.barPosition = "left"
         Settings.barStyle = "frame"
+        Settings.themeMode = "default"
         Settings.nothingLookDone = true
     }
     onActiveChanged: applyLookOnce()

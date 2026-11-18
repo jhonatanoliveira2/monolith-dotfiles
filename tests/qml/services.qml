@@ -27,7 +27,7 @@ ShellRoot {
         interval: 800; running: true
         onTriggered: {
             console.log("RESULT wallpaperAtStart=" + root.wallpaperChanges)
-            console.log("RESULT nothing=" + Nothing.available + "/" + Nothing.active + " bar=" + Settings.barPosition + "/" + Settings.barStyle + " lookDone=" + Settings.nothingLookDone)
+            console.log("RESULT nothing=" + Nothing.available + "/" + Nothing.active + " bar=" + Settings.barPosition + "/" + Settings.barStyle + " lookDone=" + Settings.nothingLookDone + " colours=" + Settings.themeMode)
             console.log("RESULT singletons=" + root.singletons.filter(s => s !== null && s !== undefined).length + "/" + root.singletons.length)
             if (root.action === "ytm") {
                 Settings.ytmPort = Number(Quickshell.env("MONOLITH_TEST_PORT"))

@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # sysmon-stream.sh - one line every N seconds for the bar (default 3):
 #   cpu=<%> cputemp=<C> gpu=<%> gputemp=<C> ram=<%> ramused=<GiB> ramtotal=<GiB>      (-1 = unavailable)
-# Sensors are detected once; the loop uses bash builtins only (no forks), so it costs almost nothing.
+# Sensors are detected once; the loop uses bash builtins only (no forks, except nvidia-smi for an NVIDIA card).
 #   sysmon-stream.sh --probe     prints the sensors found (CPU, each GPU and its power state) and exits
 #
 # GPUs: every DRM device is handled on its own (laptops often have an integrated and a dedicated one).
 # A device in runtime suspend is skipped entirely: reading its sensors would wake it up. The values are the
 # busiest / hottest of the awake devices.
+# NVIDIA's driver has no gpu_busy_percent nor hwmon in sysfs: its load and temperature come from nvidia-smi (one
+# call per sample), only for a card that never sleeps - it draws the desktop (boot_vga) or its runtime power
+# management is off. The dedicated GPU of a hybrid laptop is left alone: polling it would keep it awake.
 export LC_ALL=C
 shopt -s nullglob
 INTERVAL=${1:-3}
@@ -17,7 +20,8 @@ for hw in /sys/class/hwmon/hwmon*; do
     case $name in coretemp | k10temp | zenpower | cpu_thermal) cpu_inputs+=("$hw"/temp*_input) ;; esac
 done
 
-gpu_dev=() gpu_busy=() gpu_temps=()
+gpu_dev=() gpu_busy=() gpu_temps=() gpu_nv=()
+smi=(nvidia-smi); command -v timeout >/dev/null 2>&1 && smi=(timeout 2 nvidia-smi)
 for card in /sys/class/drm/card[0-9] /sys/class/drm/card[0-9][0-9]; do
     dev=$card/device
     [[ -d $dev ]] || continue
@@ -26,7 +30,24 @@ for card in /sys/class/drm/card[0-9] /sys/class/drm/card[0-9][0-9]; do
     gpu_busy+=("$busy")
     temps=("$dev"/hwmon/hwmon*/temp*_input)
     gpu_temps+=("${temps[*]}")
+    nv=""     # PCI address, for nvidia-smi -i
+    if [[ $(readlink -f "$dev/driver") == */nvidia ]] && command -v nvidia-smi >/dev/null 2>&1; then
+        ctl="" first=""
+        { read -r ctl <"$dev/power/control"; } 2>/dev/null
+        { read -r first <"$dev/boot_vga"; } 2>/dev/null
+        [[ $ctl == on || $first == 1 ]] && nv=$(basename "$(readlink -f "$dev")")
+    fi
+    gpu_nv+=("$nv")
 done
+
+# nvidia_read <pci address>: sets v (load %) and t (temperature C); false when nvidia-smi gives nothing usable
+nvidia_read() {
+    local out
+    out=$("${smi[@]}" -i "$1" --query-gpu=utilization.gpu,temperature.gpu --format=csv,noheader,nounits 2>/dev/null) || return 1
+    v=${out%%,*} t=${out##*,}
+    v=${v// /} t=${t// /}
+    [[ $v =~ ^[0-9]+$ && $t =~ ^[0-9]+$ ]]
+}
 
 if [[ $1 == --probe ]]; then
     echo "cpu temperature inputs: ${cpu_inputs[*]:-none}"
@@ -34,8 +55,9 @@ if [[ $1 == --probe ]]; then
         d=${gpu_dev[i]} st=""
         { read -r st <"$d/power/runtime_status"; } 2>/dev/null
         echo "gpu $i: $(readlink -f "$d") driver=$(basename "$(readlink -f "$d/driver")") boot_vga=$(cat "$d/boot_vga" 2>/dev/null || echo -)"
-        echo "    power: ${st:-n/a}   busy: ${gpu_busy[i]:-none}   temps: ${gpu_temps[i]:-none}"
+        echo "    power: ${st:-n/a}   busy: ${gpu_busy[i]:-none}   temps: ${gpu_temps[i]:-none}   nvidia-smi: ${gpu_nv[i]:-no}"
         if [[ $st != suspend* && -n ${gpu_busy[i]} ]]; then echo "    busy now: $(cat "${gpu_busy[i]}")%"; fi
+        if [[ $st != suspend* && -n ${gpu_nv[i]} ]] && nvidia_read "${gpu_nv[i]}"; then echo "    nvidia now: $v% ${t}C"; fi
     done
     exit 0
 fi
@@ -66,6 +88,11 @@ while :; do
         state=""
         { read -r state <"${gpu_dev[i]}/power/runtime_status"; } 2>/dev/null
         [[ $state == suspend* ]] && continue
+        if [[ -n ${gpu_nv[i]} ]] && nvidia_read "${gpu_nv[i]}"; then
+            (( v > gpu )) && gpu=$v
+            (( t > gputemp )) && gputemp=$t
+            continue
+        fi
         if [[ -n ${gpu_busy[i]} ]] && { read -r v <"${gpu_busy[i]}"; } 2>/dev/null; then
             (( v > gpu )) && gpu=$v
         fi

@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/previews/logo.svg" alt="MONOLITH" width="560">
-</p>
+<h1 align="center">MONOLITH</h1>
 
 <p align="center">
   <em>Um desktop Hyprland monocromático: compositor, shell, terminal e ferramentas em um só repositório.</em>
@@ -40,47 +38,92 @@ sudo nix --extra-experimental-features "nix-command flakes" run github:jhonatano
 Os dois instaladores perguntam o tema: **padrão** ou **Nothing** (LEDs e matriz de pontos). Instalou a partir de uma
 branch antiga? [Atualizar a partir de uma branch antiga](docs/migracao.md).
 
-## Prévia
+## Atalhos
 
-### Tema padrão
-
-<table>
-  <tr>
-    <td colspan="2"><img src="assets/previews/default/nautilus.svg" alt="Nautilus no tema padrão: vidro escuro sobre o wallpaper, Monolith-Icons em cinza"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/default/fastfetch.svg" alt="fastfetch no NixOS, tema padrão"></td>
-    <td width="50%"><img src="assets/previews/default/installer-nixos.svg" alt="Instalador do NixOS, visual padrão"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/default/installer.svg" alt="Instalador do Arch: boas-vindas e escolha do tema"></td>
-  </tr>
-</table>
-
-### Tema Nothing (opcional)
-
-LEDs e matriz de pontos, desligado a menos que você o escolha no instalador ou o ligue depois
-([Tema Nothing](docs/nothing-theme.pt-br.md)).
+`SUPER` é o modificador principal. Toda combinação pode ser trocada em Configurações > Entrada ([Atalhos](docs/atalhos.md)).
 
 <details>
-<summary>Mostrar as prévias do tema Nothing</summary>
+<summary>Mostrar todos os atalhos</summary>
 <br>
 
-<table>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/wallpaper.svg" alt="Um wallpaper como é e em matriz de LEDs"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch no NixOS, tema Nothing: o floco de neve em LEDs"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus no tema Nothing: preto OLED a 85 %, ícones e cursor MONOLITH Dots"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>
-    <td width="50%"><img src="assets/previews/nothing/installer-nixos.svg" alt="Instalador do NixOS, visual Nothing"></td>
-  </tr>
-</table>
+**Apps e shell**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + Return` | Terminal (Ghostty) |
+| `SUPER + X` | Gerenciador de arquivos |
+| `SUPER + C` | Editor de código (VS Code / Cursor) |
+| `SUPER + TAB` | Navegador |
+| `SUPER + A` | Lançador de apps (rofi sem o shell) |
+| `SUPER + D` | Seletor de wallpaper (`wallpaper-menu` sem o shell) |
+| `SUPER + N` | Central de notificações |
+| `SUPER + M` | Player de mídia |
+| `SUPER + ,` | Configurações |
+| `SUPER + Escape` | Menu rápido (sistema e sessão) |
+| `SUPER + B` | Organizar os widgets da área de trabalho |
+
+**Captura**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + Delete` | Captura do monitor em foco (salva em `~/Pictures` e copiada) |
+| `SUPER + SHIFT + Delete` | Captura de uma área |
+| `SUPER + R` | Iniciar / parar a gravação da tela (`~/Videos`) |
+
+**Sessão**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + Z` | Bloquear (hyprlock) |
+| `SUPER + SHIFT + X` | Sair da sessão |
+
+**Janelas**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + Q` | Fechar |
+| `SUPER + Space` | Flutuar e centralizar (70 % do monitor) |
+| `SUPER + S` | Flutuar, sem centralizar |
+| `SUPER + F` | Tela cheia |
+| `SUPER + P` | Fixar em todos os workspaces |
+| `SUPER + J` | Alternar a direção da divisão |
+| `SUPER + G` | Grupo (abas) |
+| `SUPER + clique esquerdo` | Arrastar |
+| `SUPER + clique direito` | Redimensionar com o mouse |
+| `SUPER + ←/→/↑/↓` | Foco |
+| `SUPER + grave` | Janela urgente ou anterior |
+| `SUPER + SHIFT + ←/→/↑/↓` | Mover |
+| `SUPER + CTRL + H/J/K/L` | Trocar com a vizinha |
+| `SUPER + ALT + ←/→/↑/↓` | Redimensionar |
+
+**Workspaces e monitores**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + 1…0` | Ir para o workspace 1–10 |
+| `SUPER + SHIFT + 1…0` | Mover a janela para o workspace 1–10 |
+| `SUPER + CTRL + ←/→` | Workspace ocupado anterior / seguinte |
+| `SUPER + W` | Workspace especial |
+| `SUPER + SHIFT + W` | Mover a janela para o workspace especial |
+| `SUPER + ALT + W` | Mover a janela para o próximo monitor |
+
+**Zoom**
+
+| Atalho | Ação |
+|---|---|
+| `SUPER + roda para cima` / `SUPER + Numpad +` | Aproximar |
+| `SUPER + roda para baixo` / `SUPER + Numpad -` | Afastar |
+
+**Teclas de mídia e de hardware**
+
+| Tecla | Ação |
+|---|---|
+| Volume +/-, mudo | Volume da saída (com o indicador na tela) |
+| Mudo do microfone | Microfone |
+| Brilho +/- | Brilho da tela |
+| Luz do teclado +/- / liga-desliga | Luz do teclado |
+| Tocar, pausar, próxima, anterior | Player de mídia |
+| Liga-desliga do touchpad | Ligar / desligar o touchpad |
 
 </details>
 
@@ -92,5 +135,5 @@ LEDs e matriz de pontos, desligado a menos que você o escolha no instalador ou 
 [Contribuindo](CONTRIBUTING.md)
 
 <p align="center">
-  <sub><a href="LICENSE">MIT</a> · <a href="THIRD-PARTY-CREDITS.md">créditos de terceiros</a> · o tema Nothing não tem vínculo com a Nothing Technology Limited</sub>
+  <sub> <a href="LICENSE">MIT</a> · <a href="THIRD-PARTY-CREDITS.md">créditos de terceiros</a> </sub>
 </p>

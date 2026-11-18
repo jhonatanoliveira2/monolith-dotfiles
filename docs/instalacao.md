@@ -38,7 +38,31 @@ O instalador lê o `/etc/os-release` e informa o que encontrou: Arch Linux (`ID=
 - **Kernel e ferramentas do sistema.** Nada depende do pacote do kernel (`linux`, `linux-cachyos`, ...): o shell lê `/proc` e `/sys`. Partições com vários subvolumes btrfs (o padrão do CachyOS) aparecem uma vez na aba Performance, com o número de pontos de montagem extras.
 - **fish.** No CachyOS, o `~/.config/fish/config.fish` normalmente só carrega o `cachyos-fish-config`. O instalador o substitui pela versão do MONOLITH (o original vai para o snapshot de backup). Para manter os aliases do CachyOS, adicione `source /usr/share/cachyos-fish-config/cachyos-config.fish` dentro do bloco `status is-interactive`.
 - **Edição Hyprland.** Um `~/.config/hypr/hyprland.conf` existente não atrapalha: quando os dois arquivos existem, o Hyprland carrega o `hyprland.lua`.
+- **NVIDIA.** Com uma GPU NVIDIA, o instalador oferece o driver logo depois dos pacotes (`--no-nvidia` pula); veja [GPUs NVIDIA](#gpus-nvidia).
 - **Logo.** O shell mostra o logo da distribuição em uso (barra, menu rápido, tela de boas-vindas, dashboard). O logo do CachyOS vem do glifo `linux-cachyos` da Nerd Font (presente na `ttf-jetbrains-mono-nerd` 3.5).
+
+## GPUs NVIDIA
+
+Quando encontra uma placa NVIDIA (`/sys/bus/pci/devices`), o instalador a mostra e, depois de perguntar, instala com o `pacman`:
+
+| Caso | Pacotes |
+|---|---|
+| Turing (GTX 16xx / RTX 20xx) ou mais nova, ainda sem driver NVIDIA | os módulos abertos do kernel para cada kernel instalado: `nvidia-open` (`linux`), `nvidia-open-lts` (`linux-lts`), o pacote pronto do próprio kernel quando os repositórios têm (`linux-cachyos-nvidia-open` no CachyOS), senão `nvidia-open-dkms` com os `-headers` daquele kernel; mais `nvidia-utils` |
+| um driver NVIDIA já instalado (qualquer ramo, também o configurado pelo `chwd` do CachyOS) | fica como está |
+| sempre | `libva-nvidia-driver` (decodificação de vídeo, VA-API) |
+| notebook híbrido (outra GPU também) | `nvidia-prime` (`prime-run <app>` abre um app na GPU NVIDIA) |
+| anterior à Turing (Maxwell, Pascal, Volta) | nada: o driver legado está no AUR (`nvidia-580xx-dkms`, `nvidia-580xx-utils`); o comando é mostrado |
+
+Depois ele ativa `nvidia-suspend`, `nvidia-hibernate` e `nvidia-resume` (a suspensão mantém a memória de vídeo) e
+avisa quando o `nvidia-drm` está sem modeset (o Hyprland precisa de `nvidia_drm.modeset=1`, o padrão do
+`nvidia-utils`). Reinicie em seguida para carregar o driver.
+
+No login, `~/.config/hypr/modules/environment.lua` vê se a GPU NVIDIA desenha o desktop (a única GPU, ou aquela em
+que o firmware inicia) e então define `LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia` e
+`NVD_BACKEND=direct`. Num notebook híbrido não define nada: a GPU integrada desenha o desktop e a NVIDIA dorme até
+um app pedir por ela. `MONOLITH_NVIDIA=1` (ou `0`) no ambiente da sessão força as variáveis (ou as tira). O uso e a
+temperatura da GPU na barra vêm do `nvidia-smi`, só para uma placa que nunca dorme (consultar a GPU dedicada de um
+notebook híbrido a manteria acordada).
 
 ## Opções do instalador
 
@@ -53,6 +77,7 @@ O instalador lê o `/etc/os-release` e informa o que encontrou: Arch Linux (`ID=
 | `--no-aur` | Não chama auxiliar do AUR; exibe os comandos manuais. |
 | `--aur-helper NOME` | Seleciona o auxiliar do AUR (por padrão, `paru` e depois `yay`). |
 | `--force-symlinks` | Permite escrever por diretórios simbólicos dentro de `$HOME`. Use apenas após revisar os destinos. |
+| `--no-nvidia` | Nunca instala os pacotes do driver da NVIDIA (oferecidos quando uma GPU NVIDIA é encontrada). |
 | `--theme default\|nothing` | O tema, perguntado depois da tela de boas-vindas se não for passado: o tema padrão ou o [tema Nothing](nothing-theme.pt-br.md) (`scripts/nothing-theme.sh`). `default` desliga o tema Nothing se ele estava ligado; sem escolha (`--yes`) o tema em uso continua. `--nothing-theme` = `--theme nothing`. |
 | `--no-color`, `--no-clear` | Desativa cores ou a limpeza de tela. |
 | `--version`, `-h`, `--help` | Mostra a versão ou a ajuda. |

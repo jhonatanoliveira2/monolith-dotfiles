@@ -113,6 +113,8 @@ in
     xdg.configFile."fastfetch/nothing-logo.txt" = lib.mkIf cfg.fastfetch {
       source = devLink "fastfetch" "nix/nothing/fastfetch-logo.txt" ../nothing/fastfetch-logo.txt;
     };
+    # Ghostty at 80 % opacity: config.ghostty reads this file when it exists (config-file = ?nothing.ghostty)
+    xdg.configFile."ghostty/nothing.ghostty".source = devLink "ghostty" "nix/nothing/ghostty.conf" ../nothing/ghostty.conf;
     xdg.configFile."cava/config" = lib.mkIf cfg.cava { source = devLink "cava" "nix/nothing/cava.conf" ../nothing/cava.conf; };
     # `cava` with no arguments in a terminal opens the LED version; with arguments (or `command cava`) the
     # plain one, which uses the grey config above

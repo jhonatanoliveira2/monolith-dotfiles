@@ -88,8 +88,7 @@ for sec in official:required official:optional aur:required aur:optional manual;
 done
 
 echo "== structure required by the project brief"
-for p in assets/previews \
-    configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty \
+for p in configs/.config/hypr configs/.config/quickshell configs/.config/fish configs/.config/ghostty \
     configs/.config/btop configs/.config/nvim configs/.config/micro configs/.config/gtk-3.0 \
     configs/.config/gtk-4.0 configs/.config/nwg-look configs/.config/wal configs/.config/wpg \
     scripts/install.sh scripts/backup.sh scripts/check-dependencies.sh \

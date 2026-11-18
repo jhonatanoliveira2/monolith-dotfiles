@@ -15,6 +15,7 @@ Este guia trata do **NixOS**; Arch Linux e CachyOS usam o instalador em shell ([
 - [Instalação](#instalação)
 - [Opções](#opções)
 - [Boot, splash e login](#boot-splash-e-login)
+- [NVIDIA](#nvidia)
 - [Observações](#observações)
 - [Modo de desenvolvimento](#modo-de-desenvolvimento)
 - [Verificação e problemas](#verificação-e-problemas)
@@ -284,6 +285,34 @@ Com LUKS nada mais é necessário: o initrd é sempre baseado em systemd (o stag
 
 Os scripts e imagens do splash são gerados de `branding/` por `branding/build.sh`, que pode ser executado à mão
 para pré-visualizar (precisa de `rsvg-convert`, `magick`, `grub-mkfont` e do SVG do floco do `nixos-icons`).
+
+## NVIDIA
+
+`monolith.nvidia.enable = true;` configura o driver da NVIDIA: `services.xserver.videoDrivers = [ "nvidia" ]` (que
+também carrega o driver no Wayland), os módulos abertos do kernel (`nvidia.open`), KMS (`nvidia-drm.modeset=1`,
+o Hyprland precisa), suspensão que mantém a memória de vídeo, VA-API (`nvidia-vaapi-driver`) e, com os IDs de
+barramento `prime` de um notebook híbrido, o PRIME offload: a GPU integrada desenha o desktop, a NVIDIA desliga
+quando não está em uso (`powerManagement.finegrained`) e `nvidia-offload <app>` abre um app nela.
+
+| Opção | Padrão | O que faz |
+|---|---|---|
+| `nvidia.enable` | `false` | o driver da NVIDIA, como acima |
+| `nvidia.open` | `true` | módulos abertos do kernel (Turing / GTX 16xx e mais novas); `false` para placas mais antigas |
+| `nvidia.package` | `nvidiaPackages.stable` | ramo do driver (`config.boot.kernelPackages.nvidiaPackages.<nome>`) |
+| `nvidia.prime.nvidiaBusId`, `intelBusId`, `amdgpuBusId` | `""` | notebook híbrido: PRIME offload (`PCI:1:0:0`, em decimal); o instalador guiado preenche |
+
+O instalador guiado encontra a placa na ISO, pergunta e escreve essas opções (num notebook, os IDs das duas GPUs).
+Ele também tira o `nouveau` do initrd e libera os pacotes não livres do driver:
+
+```nix
+nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "nvidia-x11" "nvidia-settings" "nvidia-persistenced" ];
+```
+
+Ponha seus outros pacotes não livres nessa mesma lista (um segundo `allowUnfreePredicate` substitui o primeiro).
+Placas anteriores à Turing (GTX 10xx e mais antigas) recebem `nvidia.open = false;`; se o build disser que a placa não
+é suportada pelo driver atual, escolha um ramo legado em `nvidia.package` (veja a página NVIDIA da wiki do NixOS). As
+variáveis da NVIDIA para o Hyprland (`LIBVA_DRIVER_NAME`, `__GLX_VENDOR_LIBRARY_NAME`, `NVD_BACKEND`) são definidas no
+login por `hypr/modules/environment.lua` quando a GPU NVIDIA desenha o desktop, como no Arch.
 
 ## Observações
 

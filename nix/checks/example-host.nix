@@ -1,6 +1,6 @@
 # Minimal machine used by `nix flake check` (checks.<system>.example-eval): evaluates the whole MONOLITH stack
 # (desktop, boot, greeter, Home Manager for two users, one in development mode) without building or booting.
-{ ... }:
+{ lib, ... }:
 {
   system.stateVersion = "25.11";
   fileSystems."/" = {
@@ -31,7 +31,22 @@
       enable = true;
       defaultUser = "alice";
     };
+    # a hybrid laptop (AMD integrated + NVIDIA), as the guided installer writes it
+    nvidia = {
+      enable = true;
+      prime = {
+        amdgpuBusId = "PCI:6:0:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+    };
   };
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
+    builtins.elem (lib.getName pkg) [
+      "nvidia-x11"
+      "nvidia-settings"
+      "nvidia-persistenced"
+    ];
 
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;

@@ -46,7 +46,3 @@ Os testes usam ambientes temporários e nunca tocam a sua sessão. Se alterar o 
 2. Faça alterações focadas e escreva mensagens de commit no imperativo.
 3. Teste o que mudou e descreva resultados reais.
 4. Abra uma [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) para relatar um problema ou uma contribuição no repositório para propor a alteração.
-
-## Prévias
-
-As prévias do README ficam em `assets/previews/` e são geradas a partir dos programas reais por `python3 tools/previews.py` (precisa de fastfetch, fish, `script` e Python com Pillow e numpy; `--only default/nautilus` refaz uma só). `default/` tem o tema padrão e `nothing/` o tema Nothing, opcional; a foto da prévia do wallpaper Nothing é `assets/previews/src/night-peaks.jpg`. As prévias do fastfetch sempre mostram o NixOS (linhas de distribuição, kernel e pacotes fixas). Elas não mostram o nome do usuário nem o hostname; confira o resultado antes de enviar, e tire dados pessoais de qualquer imagem nova.

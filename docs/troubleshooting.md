@@ -27,6 +27,8 @@ ls -t ~/.local/state/monolith-dotfiles/*.log | head -1
 
 **Hyprland does not start or ignores the configuration.** Check the Hyprland version and confirm it supports the Lua `hyprland.lua` configuration. Review the compositor log and validate the modules under `~/.config/hypr/`.
 
+**Black screen or Hyprland does not start on an NVIDIA GPU.** Check that the driver is loaded and runs with modeset: `cat /sys/module/nvidia_drm/parameters/modeset` must print `Y` (otherwise add `nvidia_drm.modeset=1` to the kernel command line). Run `./scripts/install.sh` again to have the driver offered ([NVIDIA GPUs](installation.md#nvidia-gpus)). On a desktop where the NVIDIA card draws the screen but the firmware starts on the integrated GPU, set `MONOLITH_NVIDIA=1` in the session's environment.
+
 **The session starts without a bar or menus.** The desktop uses Quickshell. Confirm that the `quickshell` package is installed and `~/.config/quickshell/shell.qml` was deployed. Run `./scripts/check-dependencies.sh` to find missing dependencies and files.
 
 **Network, Bluetooth, audio or brightness controls do not respond.** Confirm that the relevant packages are installed and required services are active. The controls are configured under `configs/.config/quickshell/`.

@@ -110,6 +110,24 @@ check "early KMS modules written" has gpu '    boot.gpuModules = [ "amdgpu" "i91
 check "early KMS inside the monolith block" bash -c "grep -A1 'boot.enable = true;' '$TMP/gpu/configuration.nix' | grep -q gpuModules"
 check "no GPU line without modules" bash -c "! grep -q gpuModules '$TMP/uefi/configuration.nix'"
 
+fresh nvidia
+check "NVIDIA desktop run succeeds" env MI_NVIDIA=open bash "$INST" --customize-only "$TMP/nvidia"
+check "NVIDIA: nvidia.enable on, inside the monolith block" \
+    bash -c "sed -n '/^  monolith = {/,/^  };/p' '$TMP/nvidia/configuration.nix' | grep -q '^    nvidia.enable = true;'"
+check "NVIDIA desktop: open modules (no nvidia.open line), no PRIME" bash -c "! grep -qE 'nvidia.open|nvidia.prime' '$TMP/nvidia/configuration.nix'"
+check "NVIDIA: its unfree packages are allowed" has nvidia 'nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "nvidia-x11" "nvidia-settings" "nvidia-persistenced" ];'
+check "NVIDIA: the template takes lib" has nvidia '{ lib, pkgs, ... }:'
+fresh nvidia-laptop
+check "NVIDIA hybrid laptop run succeeds" env MI_NVIDIA=open MI_NVBUS=PCI:1:0:0 MI_NVIGPU='amdgpuBusId = "PCI:6:0:0";' MI_GPU=amdgpu \
+    bash "$INST" --customize-only "$TMP/nvidia-laptop"
+check "NVIDIA hybrid laptop: PRIME bus IDs written" has nvidia-laptop '    nvidia.prime = { nvidiaBusId = "PCI:1:0:0"; amdgpuBusId = "PCI:6:0:0"; }; # hybrid laptop: nvidia-offload <app>'
+check "NVIDIA hybrid laptop: the integrated GPU keeps early KMS" has nvidia-laptop 'boot.gpuModules = [ "amdgpu" ];'
+fresh nvidia-old
+check "NVIDIA pre-Turing run succeeds" env MI_NVIDIA=closed bash "$INST" --customize-only "$TMP/nvidia-old"
+check "NVIDIA pre-Turing: closed modules" has nvidia-old '    nvidia.open = false;'
+check "no NVIDIA: no driver, unfree stays a comment" bash -c "! grep -qE '^ *(nvidia.enable|nixpkgs.config)' '$TMP/uefi/configuration.nix'"
+check "the ISO detection drops nouveau from the initrd" grep -q 'm == nouveau' "$INST"
+
 fresh nothing
 check "Nothing theme run succeeds" env MI_THEME=nothing bash "$INST" --customize-only "$TMP/nothing"
 check "Nothing theme: nothingTheme.enable on, inside the monolith block" \

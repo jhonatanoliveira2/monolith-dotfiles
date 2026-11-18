@@ -3,6 +3,7 @@
 #   monolith.boot.enable      GRUB theme (when GRUB is the bootloader), Plymouth splash, silent boot, recovery entry
 #   monolith.greeter.enable   Quickshell greeter on greetd (text greeter fallback)
 #   monolith.nothingTheme     "Nothing" dot-matrix / LED theme (off by default: monolith.nothingTheme.enable = true)
+#   monolith.nvidia           NVIDIA driver: open kernel modules, KMS, suspend, VA-API, PRIME offload (nvidia.nix)
 # The per-user part (configs, packages) is the Home Manager module, shared automatically when Home Manager
 # runs as a NixOS module; `monolith.homeUsers` turns it on for the listed users.
 { self, meta }:
@@ -12,5 +13,6 @@
     (import ./boot.nix { inherit meta; })
     (import ./greeter.nix { inherit meta; })
     ./nothing.nix
+    ./nvidia.nix
   ];
 }

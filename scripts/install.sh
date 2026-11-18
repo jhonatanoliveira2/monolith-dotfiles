@@ -24,10 +24,12 @@ source "$SCRIPT_DIR/lib/ui.sh"
 source "$SCRIPT_DIR/lib/packages.sh"
 # shellcheck source=lib/distro.sh
 source "$SCRIPT_DIR/lib/distro.sh"
+# shellcheck source=lib/nvidia.sh
+source "$SCRIPT_DIR/lib/nvidia.sh"
 
 TOTAL_STEPS=7
 OPT_LANG="" OPT_YES=0 OPT_DRY=0 OPT_NO_DEPS=0 OPT_OPTIONAL=0 OPT_NO_OPTIONAL=0 OPT_NO_AUR=0
-OPT_AUR_HELPER="" OPT_NO_COLOR=0 OPT_NO_CLEAR=0 OPT_FORCE_SYMLINKS=0 OPT_THEME=""
+OPT_AUR_HELPER="" OPT_NO_COLOR=0 OPT_NO_CLEAR=0 OPT_FORCE_SYMLINKS=0 OPT_THEME="" OPT_NO_NVIDIA=0
 
 # plan + journal (used for rollback)
 declare -a PLAN_NEW=() PLAN_DIFF=() PLAN_SAME=()
@@ -50,6 +52,7 @@ Usage: ./scripts/install.sh [options]
   --no-aur             never use an AUR helper (print the manual commands instead)
   --aur-helper NAME    use this AUR helper (default: paru, then yay)
   --force-symlinks     allow writing through symlinked directories under \$HOME
+  --no-nvidia          never install the NVIDIA driver packages (an NVIDIA GPU is detected otherwise)
   --theme default|nothing  the theme (asked otherwise): the default one or the Nothing theme
                        (LED / dot matrix; scripts/nothing-theme.sh); default turns Nothing off if it was on
   --nothing-theme      the same as --theme nothing
@@ -74,6 +77,7 @@ parse_args() {
             --aur-helper) OPT_AUR_HELPER=${2:?}; shift 2 ;;
             --aur-helper=*) OPT_AUR_HELPER=${1#*=}; shift ;;
             --force-symlinks) OPT_FORCE_SYMLINKS=1; shift ;;
+            --no-nvidia) OPT_NO_NVIDIA=1; shift ;;
             --nothing-theme) OPT_THEME=nothing; shift ;;
             --theme) OPT_THEME=${2:?--theme needs a value}; shift 2 ;;
             --theme=*) OPT_THEME=${1#*=}; shift ;;
@@ -386,6 +390,77 @@ step_packages() {
         else
             warn_later "$(t pkg.declined)"
         fi
+    fi
+}
+
+# NVIDIA GPU (scripts/lib/nvidia.sh): the driver (open kernel modules) for each installed kernel, its libraries,
+# VA-API and prime-run on a hybrid laptop, after asking; then the units that keep the video memory across a
+# suspend. A driver already installed is kept. Hyprland's NVIDIA variables are set at login by
+# hypr/modules/environment.lua, which detects the GPU itself.
+configure_nvidia() {
+    (( OPT_NO_NVIDIA )) && return 0
+    nvidia_detect || return 0
+    local i
+    for i in "${!NV_GPUS[@]}"; do ui_info "$(t nv.found "${NV_NAMES[i]}" "${NV_GPUS[i]}")"; done
+    log INFO "nvidia: gpus=${NV_GPUS[*]} modern=$NV_MODERN hybrid=$NV_HYBRID loaded=$NV_LOADED modeset=${NV_MODESET:-none}"
+    if (( OPT_NO_DEPS || ! PACMAN_AVAILABLE )); then
+        ui_dim "$(t nv.skipped)"
+        return 0
+    fi
+    nvidia_plan
+    log INFO "nvidia: missing=${NV_PKGS[*]-} legacy=$NV_LEGACY"
+    if (( NV_LEGACY )); then
+        warn_later "$(t nv.legacy)"
+        ui_warn "$(t nv.legacy)"
+        ui_dim "paru -S --needed nvidia-580xx-dkms nvidia-580xx-utils"
+    fi
+    local installed=0
+    if (( ${#NV_PKGS[@]} )); then
+        ui_dim "${NV_PKGS[*]}"
+        if ! command -v sudo >/dev/null 2>&1; then
+            warn_later "$(t pkg.no_sudo)"
+            ui_dim "sudo pacman -S --needed ${NV_PKGS[*]}"
+        elif ui_confirm "$(t nv.confirm)" y; then
+            local -a cmd=(sudo pacman -S --needed)
+            (( OPT_YES )) && cmd+=(--noconfirm)
+            if run_cmd "${cmd[@]}" "${NV_PKGS[@]}"; then
+                ui_ok "$(t nv.installed)"
+                installed=1
+            else
+                warn_later "$(t nv.failed)"
+                ui_warn "$(t nv.failed)"
+            fi
+        else
+            warn_later "$(t nv.declined)"
+        fi
+    elif (( ! NV_LEGACY )); then
+        ui_ok "$(t nv.ready)"
+    fi
+    nvidia_sleep_units
+    if (( NV_LOADED )) && [[ $NV_MODESET == N ]]; then
+        warn_later "$(t nv.modeset)"
+        ui_warn "$(t nv.modeset)"
+    fi
+    (( installed || ! NV_LOADED )) && ! (( NV_LEGACY )) && ui_dim "$(t nv.reboot)"
+    (( NV_HYBRID )) && ui_dim "$(t nv.hybrid)"
+    return 0
+}
+
+# Suspend / hibernate keep what is in the video memory only through nvidia-utils' units; enable the ones that
+# are installed and still off. The real system only (not with MONOLITH_TARGET_HOME, the tests).
+nvidia_sleep_units() {
+    [[ -z ${MONOLITH_TARGET_HOME-} ]] && command -v systemctl >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1 || return 0
+    local u state
+    local -a off=()
+    for u in nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service; do
+        state=$(systemctl is-enabled "$u" 2>/dev/null) || true
+        [[ $state == disabled ]] && off+=("$u")
+    done
+    (( ${#off[@]} )) || return 0
+    if run_cmd sudo systemctl enable "${off[@]}"; then
+        ui_ok "$(t nv.sleep)"
+    else
+        warn_later "$(t nv.sleep_failed)"
     fi
 }
 
@@ -802,6 +877,7 @@ main() {
     step_preflight
     step_dependency_report
     step_packages
+    configure_nvidia
     step_plan
     step_backup
     step_deploy

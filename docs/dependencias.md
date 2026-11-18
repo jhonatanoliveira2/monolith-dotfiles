@@ -59,6 +59,18 @@ O instalador não executa `pacman -Sy`. Se um pacote não for encontrado, atuali
 
 O manifesto é a referência final para a categoria de cada pacote e pode mudar conforme o projeto evolui.
 
+## NVIDIA (só com GPU NVIDIA)
+
+Não estão no `packages.txt`: o `install.sh` escolhe conforme a máquina ([GPUs NVIDIA](instalacao.md#gpus-nvidia)).
+
+| Pacote | Uso |
+|---|---|
+| `nvidia-open`, `nvidia-open-lts`, `<kernel>-nvidia-open` ou `nvidia-open-dkms` + `<kernel>-headers` | Driver: módulos abertos do kernel (Turing e mais novas) |
+| `nvidia-utils` | Bibliotecas do driver, `nvidia-smi` (uso e temperatura da GPU na barra) |
+| `libva-nvidia-driver` | Decodificação de vídeo (VA-API) |
+| `nvidia-prime` | Notebooks híbridos: `prime-run <app>` |
+| `nvidia-580xx-dkms`, `nvidia-580xx-utils` (AUR) | Driver legado para placas Maxwell, Pascal e Volta; sugerido, não instalado |
+
 ## Conferir o sistema
 
 ```bash

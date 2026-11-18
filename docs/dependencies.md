@@ -59,6 +59,18 @@ The installer does not run `pacman -Sy`. If a package cannot be found, update th
 
 The manifest is the final reference for each package category and may change as the project evolves.
 
+## NVIDIA (only with an NVIDIA GPU)
+
+Not in `packages.txt`: `install.sh` picks them for the machine ([NVIDIA GPUs](installation.md#nvidia-gpus)).
+
+| Package | Use |
+|---|---|
+| `nvidia-open`, `nvidia-open-lts`, `<kernel>-nvidia-open` or `nvidia-open-dkms` + `<kernel>-headers` | Driver: open kernel modules (Turing and newer) |
+| `nvidia-utils` | Driver libraries, `nvidia-smi` (GPU load and temperature in the bar) |
+| `libva-nvidia-driver` | Video decoding (VA-API) |
+| `nvidia-prime` | Hybrid laptops: `prime-run <app>` |
+| `nvidia-580xx-dkms`, `nvidia-580xx-utils` (AUR) | Legacy driver for Maxwell, Pascal and Volta cards; suggested, not installed |
+
 ## Check your system
 
 ```bash

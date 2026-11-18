@@ -43,6 +43,8 @@ is exactly the standard MONOLITH one.
 | fastfetch | the NixOS snowflake as a matrix of LEDs, upper-case grey labels, dotted rules, memory and disk as rows of LEDs |
 | Surfaces | a faint grid of unlit LEDs behind cards and desktop widgets; Settings headings with an LED marker |
 | Notifications | app name as an upper-case label with an LED, Space Grotesk text; optional **edge glow**: a segment of light runs around the inside of the screen edge when the shell starts (login, restart) and on each toast, twice and red for critical ones |
+| Terminal | Ghostty at 80 % opacity (the default theme: 55 %), from `~/.config/ghostty/nothing.ghostty`, which `config.ghostty` reads when it exists |
+| First login | the original Monolith colours (Settings > Themes) instead of the dynamic palette, and the theme's own default wallpaper, `orange_horizon_snowy_ridge.jpg` (the default theme: `blue_sky.png`); both once, Settings changes them afterwards |
 | Wallpapers | still wallpapers shown as LED matrices at each monitor's native resolution (the original files are never changed); live (video) wallpapers are left alone |
 
 Contrast and brightness of the wallpapers can be raised by hand (`monolith-dotmatrix --contrast` /
@@ -214,6 +216,7 @@ It does in your home what the Home Manager module does on NixOS, from the same f
 | tokens and defaults | `~/.config/monolith/nothing.json` (the shell changes at once) | — |
 | fonts | Doto, Space Grotesk, Space Mono in `~/.local/share/fonts/monolith-nothing` (the same google/fonts revision and sha256 as Nix; a file that does not match is discarded) | — |
 | renderer | `~/.local/bin/monolith-dotmatrix` (needs `python-numpy`, `python-pillow`) | — |
+| terminal | `~/.config/ghostty/nothing.ghostty`: `background-opacity = 0.8` (`config.ghostty` reads it with `config-file = ?nothing.ghostty`) | — |
 | cursor | MONOLITH Dots in `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, size: `--cursor-size 32` |
 | icons | MONOLITH Dots Icons in `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
 | nautilus | `~/.config/gtk-4.0/gtk.css`: the default one with `nix/nothing/nautilus.css` after it, so Nautilus is OLED black at 85 % opacity (a light glass, no blur) instead of the default theme's darker glass; `off` puts the default file back | `--no-nautilus` |

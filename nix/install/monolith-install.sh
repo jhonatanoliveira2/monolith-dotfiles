@@ -45,7 +45,7 @@ TEMPLATE_DIR=${MONOLITH_TEMPLATE:-}      # set by the Nix package (templates/nix
 MNT=/mnt
 STATE=$MNT/var/lib/monolith-install      # on the new root: answers for a resume, the copy of a shared ESP
 MIN_GIB=20
-DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS=""
+DRY=0 LANGX="" CUSTOMIZE_ONLY="" LUKS=0 SWAP_GIB=0 BOOTMODE=uefi GPUMODS="" NVIDIA="" NV_BUS="" NV_IGPU=""
 TARGET=disk ESPMNT=/boot ROOTPART="" ESPPART="" ESPNEW=0   # TARGET=parts: existing partitions
 DUALBOOT=0 BIOSMBR=1 ESPDEV="" ROOTDEV="" ORIG_ORDER="" CHAIN="" ESPUUID="" ERASEWORD=0 LOADER=""
 CLASSIFY_DIR="" CHAIN_DIR=""
@@ -250,6 +250,21 @@ customize() {
     boot.gpuModules = [ ${list}]; # GPU driver in the initrd: splash from the first second" "$c"
         grep -qF "boot.gpuModules = [ $list]" "$c" || die "template: gpuModules not set"
     fi
+    if [[ -n $NVIDIA ]]; then   # NVIDIA driver (monolith.nvidia): open kernel modules from Turing on, PRIME on a hybrid laptop
+        local nv
+        nv=$(mktemp)
+        {
+            printf '    nvidia.enable = true; # NVIDIA GPU found by the installer (docs/nixos.md#nvidia)\n'
+            [[ $NVIDIA == closed ]] && printf '    nvidia.open = false; # older than Turing (GTX 16xx): may need a legacy nvidia.package (docs/nixos.md#nvidia)\n'
+            [[ -n $NV_IGPU ]] && printf '    nvidia.prime = { nvidiaBusId = "%s"; %s }; # hybrid laptop: nvidia-offload <app>\n' "$NV_BUS" "$NV_IGPU"
+        } >"$nv"
+        sed -i "/    boot.enable = true;/r $nv" "$c"
+        rm -f "$nv"
+        grep -qE '^    nvidia.enable = true;' "$c" || die "template: nvidia.enable not set"
+        # the driver's userspace is unfree
+        sed -i 's|^  # nixpkgs.config.allowUnfreePredicate = .*|  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "nvidia-x11" "nvidia-settings" "nvidia-persistenced" ]; # add more by name|' "$c"
+        grep -qF '"nvidia-x11"' "$c" || die "template: unfree NVIDIA packages not allowed"
+    fi
     if [[ $DESKTOP == nothing ]]; then   # the Nothing theme: shell, greeter, Plymouth, cursor, icons (docs/nothing-theme.md)
         sed -i 's|^    # nothingTheme.enable = true;|    nothingTheme.enable = true; # chosen in the installer (false = the default theme)|' "$c"
         grep -qE '^    nothingTheme.enable = true;' "$c" || die "template: nothingTheme.enable not set"
@@ -396,7 +411,7 @@ if [[ -n $CUSTOMIZE_ONLY ]]; then
     ESPMNT=${MI_ESPMNT:-/boot} DUALBOOT=${MI_DUALBOOT:-0} BIOSMBR=${MI_MBR:-1} CHAIN=${MI_CHAIN-} ESPUUID=${MI_ESPUUID-}
     USERNAME=${MI_USER:-maria} FULLNAME=${MI_NAME:-Maria Silva} HOST=${MI_HOST:-estacao} TZONE=${MI_TZ:-Europe/Lisbon}
     LOCALE=${MI_LOCALE:-pt_PT.UTF-8} XKB=${MI_XKB:-pt} KEYMAP=${MI_KEYMAP:-pt-latin1} STATEVER=${MI_STATE:-26.05} GPUMODS=${MI_GPU-}
-    DESKTOP=${MI_THEME:-default}
+    DESKTOP=${MI_THEME:-default} NVIDIA=${MI_NVIDIA-} NV_BUS=${MI_NVBUS:-PCI:1:0:0} NV_IGPU=${MI_NVIGPU-}
     customize "$CUSTOMIZE_ONLY"
     exit 0
 fi
@@ -458,6 +473,41 @@ for drv in /sys/class/drm/card[0-9]*/device/driver; do
         [[ " $GPUMODS " == *" $d "* ]] || GPUMODS+="${GPUMODS:+ }$d" ;;
     esac
 done
+# NVIDIA GPU: the NVIDIA driver (monolith.nvidia) instead of nouveau, which then stays out of the initrd; when
+# another GPU is the one the firmware starts on (a hybrid laptop), the bus IDs for PRIME offload (decimal)
+nv_pci() { # 0000:01:00.0 -> PCI:1:0:0
+    local a=${1#*:} bus dev fn
+    bus=${a%%:*} a=${a#*:} dev=${a%%.*} fn=${a#*.}
+    printf 'PCI:%d:%d:%d' "$((16#$bus))" "$((16#$dev))" "$((16#$fn))"
+}
+nv_modern=1
+for pdev in /sys/bus/pci/devices/*; do
+    { read -r class <"$pdev/class"; read -r vendor <"$pdev/vendor"; } 2>/dev/null || continue
+    [[ $class == 0x03* ]] || continue
+    first=0; [[ $(cat "$pdev/boot_vga" 2>/dev/null) == 1 ]] && first=1
+    case $vendor in
+        0x10de)
+            [[ -z $NV_BUS ]] && NV_BUS=$(nv_pci "${pdev##*/}")
+            id=$(cat "$pdev/device" 2>/dev/null || echo 0)
+            ((id >= 0x1e00)) || nv_modern=0 ;;   # Turing (GTX 16xx) and newer: open kernel modules
+        0x8086) ((first)) && NV_IGPU="intelBusId = \"$(nv_pci "${pdev##*/}")\";" ;;
+        0x1002) ((first)) && NV_IGPU="amdgpuBusId = \"$(nv_pci "${pdev##*/}")\";" ;;
+    esac
+done
+if [[ -n $NV_BUS ]]; then
+    if yes_no "$(t "GPU NVIDIA encontrada. Usar o driver da NVIDIA (recomendado para o Hyprland)?" "NVIDIA GPU found. Use the NVIDIA driver (recommended for Hyprland)?")" y; then
+        if ((nv_modern)); then NVIDIA=open; else NVIDIA=closed; fi
+        read -r -a mods <<<"$GPUMODS"
+        GPUMODS=""
+        for m in "${mods[@]}"; do [[ $m == nouveau ]] || GPUMODS+="${GPUMODS:+ }$m"; done
+        ok "NVIDIA: $(t "driver da NVIDIA" "NVIDIA driver") ($( [[ $NVIDIA == open ]] && t "módulos abertos" "open modules" || t "placa anterior à Turing" "card older than Turing"))$( [[ -n $NV_IGPU ]] && printf ', PRIME offload (nvidia-offload)')"
+        [[ $NVIDIA == closed ]] && warn "$(t "Placas anteriores à Turing (GTX 10xx e mais antigas) podem precisar de um ramo legado do driver: veja docs/nixos.md." "Cards older than Turing (GTX 10xx and older) may need a legacy driver branch: see docs/nixos.md.")"
+    else
+        NV_BUS="" NV_IGPU=""
+    fi
+else
+    NV_IGPU=""
+fi
 [[ -n $GPUMODS ]] && ok "$(t "Vídeo" "Graphics"): $GPUMODS ($(t "carregado no initrd" "loaded in the initrd"))"
 STATEVER=$(nixos-version 2>/dev/null | cut -c1-5)
 [[ $STATEVER =~ ^[0-9]{2}\.[0-9]{2}$ ]] || STATEVER=25.11
@@ -919,6 +969,7 @@ if ((!RESUME)); then
   $(t "Teclado" "Keyboard"):        $XKB / $KEYMAP
   Swap:           $SWAP_GIB GiB
   $(t "Tema" "Theme"):          $( [[ $DESKTOP == nothing ]] && t "Nothing (LEDs)" "Nothing (LEDs)" || t "padrão" "default")
+  $(t "Vídeo" "Graphics"):         $( [[ -n $NVIDIA ]] && printf 'NVIDIA%s' "$( [[ -n $NV_IGPU ]] && printf ' + PRIME offload')" || printf '%s' "${GPUMODS:-$(t "padrão do kernel" "kernel default")}")
   NixOS:          $STATEVER, MONOLITH ($FLAKE_REF)
 
 EOF

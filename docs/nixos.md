@@ -14,6 +14,7 @@ This guide covers **NixOS**; Arch Linux and CachyOS use the shell installer ([in
 - [Installing](#installing)
 - [Options](#options)
 - [Boot, splash and login](#boot-splash-and-login)
+- [NVIDIA](#nvidia)
 - [Notes](#notes)
 - [Development mode](#development-mode)
 - [Checking and troubleshooting](#checking-and-troubleshooting)
@@ -205,6 +206,10 @@ Standalone Home Manager works too: import `monolith.homeManagerModules.default` 
 | `homeUsers` | `[ ]` | users that get `programs.monolith.enable` (Home Manager NixOS module) |
 | `battery.chargeLimit` | `null` | initial charge limit in %; Settings > Battery changes it later |
 | `gpuScreenRecorder` | `true` | SUPER+R recording with the needed capabilities |
+| `nvidia.enable` | `false` | NVIDIA driver, see [NVIDIA](#nvidia) |
+| `nvidia.open` | `true` | open kernel modules (Turing / GTX 16xx and newer); `false` for older cards |
+| `nvidia.package` | `nvidiaPackages.stable` | driver branch (`config.boot.kernelPackages.nvidiaPackages.<name>`) |
+| `nvidia.prime.nvidiaBusId`, `intelBusId`, `amdgpuBusId` | `""` | hybrid laptop: PRIME offload (`PCI:1:0:0`, decimal); the guided installer fills them |
 | `boot.enable` | `false` | the boot experience below |
 | `boot.silent` | `true` | `quiet` and low log levels (messages stay in the journal) |
 | `boot.plymouth.enable` | `true` | MONOLITH splash, also for LUKS passwords |
@@ -279,6 +284,27 @@ password through the splash.
 
 The splash scripts and images are built from `branding/` by `branding/build.sh`, which can be run by hand to
 preview them (needs `rsvg-convert`, `magick`, `grub-mkfont` and the snowflake SVG from `nixos-icons`).
+
+## NVIDIA
+
+`monolith.nvidia.enable = true;` sets up the NVIDIA driver: `services.xserver.videoDrivers = [ "nvidia" ]` (it also
+loads the driver on Wayland), the open kernel modules (`nvidia.open`), KMS (`nvidia-drm.modeset=1`, Hyprland
+needs it), suspend that keeps the video memory, VA-API (`nvidia-vaapi-driver`) and, with the `prime` bus IDs of a
+hybrid laptop, PRIME offload: the integrated GPU draws the desktop, the NVIDIA one turns off while unused
+(`powerManagement.finegrained`) and `nvidia-offload <app>` runs an app on it.
+
+The guided installer finds the card on the ISO, asks, and writes these options (for a laptop, the bus IDs of both
+GPUs). It also takes `nouveau` out of the initrd and allows the driver's unfree packages:
+
+```nix
+nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "nvidia-x11" "nvidia-settings" "nvidia-persistenced" ];
+```
+
+Add your other unfree packages to that same list (a second `allowUnfreePredicate` replaces the first). Cards older
+than Turing (GTX 10xx and earlier) get `nvidia.open = false;`; when the build says the card is not supported by the
+current driver, pick a legacy branch in `nvidia.package` (see the NVIDIA page of the NixOS wiki). Hyprland's NVIDIA
+variables (`LIBVA_DRIVER_NAME`, `__GLX_VENDOR_LIBRARY_NAME`, `NVD_BACKEND`) are set at login by
+`hypr/modules/environment.lua` when the NVIDIA GPU draws the desktop, as on Arch.
 
 ## Notes
 

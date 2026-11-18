@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 let
   user = "alice"; # your user name
 in
@@ -45,13 +45,15 @@ in
     greeter.enable = true; # Quickshell greeter on greetd
     greeter.defaultUser = user;
     # battery.chargeLimit = 80;
+    # NVIDIA GPU (docs/nixos.md#nvidia; the installer sets it when it finds one): also allow its unfree packages below
+    # nvidia.enable = true;
     # "Nothing" theme (dot matrix / LEDs, docs/nothing-theme.md): off unless enabled here
     # nothingTheme.enable = true;
     # nothingTheme.wallpaper.outputs.eDP-1 = { width = 1920; height = 1200; }; # rendered at build time
   };
 
   # unfree programs (vscode, discord, steam...) are refused until listed here by name
-  # nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (pkg.pname or pkg.name) [ "vscode" ];
+  # nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "vscode" ];
 
   home-manager = {
     useGlobalPkgs = true;

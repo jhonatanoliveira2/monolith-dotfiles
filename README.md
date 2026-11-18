@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/previews/logo.svg" alt="MONOLITH" width="560">
-</p>
+<h1 align="center">MONOLITH</h1>
 
 <p align="center">
   <em>A monochrome Hyprland desktop: compositor, shell, terminal and tools in one repository.</em>
@@ -40,47 +38,92 @@ sudo nix --extra-experimental-features "nix-command flakes" run github:jhonatano
 Both installers ask for the theme: **default** or **Nothing** (LEDs and dot matrix). Installed from an old branch?
 [Updating from an old branch](docs/migrating.md).
 
-## Preview
+## Keybinds
 
-### Default theme
-
-<table>
-  <tr>
-    <td colspan="2"><img src="assets/previews/default/nautilus.svg" alt="Nautilus in the default theme: dark glass over the wallpaper, grey Monolith-Icons"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/default/fastfetch.svg" alt="fastfetch on NixOS, default theme"></td>
-    <td width="50%"><img src="assets/previews/default/installer-nixos.svg" alt="NixOS installer, default look"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/default/installer.svg" alt="Arch installer: welcome and theme choice"></td>
-  </tr>
-</table>
-
-### Nothing theme (optional)
-
-LEDs and dot matrix, off unless you pick it in the installer or turn it on later
-([Nothing theme](docs/nothing-theme.md)).
+`SUPER` is the main modifier. Every combo can be changed in Settings > Input ([Keybinds](docs/keybinds.md)).
 
 <details>
-<summary>Show the Nothing theme previews</summary>
+<summary>Show all the keybinds</summary>
 <br>
 
-<table>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/wallpaper.svg" alt="A wallpaper as it is and as an LED dot matrix"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/fastfetch.svg" alt="fastfetch on NixOS, Nothing theme: the snowflake as LEDs"></td>
-  </tr>
-  <tr>
-    <td colspan="2"><img src="assets/previews/nothing/nautilus.svg" alt="Nautilus in the Nothing theme: OLED black at 85 %, MONOLITH Dots icons and cursor"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/previews/nothing/cava.svg" alt="monolith-cava"></td>
-    <td width="50%"><img src="assets/previews/nothing/installer-nixos.svg" alt="NixOS installer, Nothing look"></td>
-  </tr>
-</table>
+**Apps and shell**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + Return` | Terminal (Ghostty) |
+| `SUPER + X` | File manager |
+| `SUPER + C` | Code editor (VS Code / Cursor) |
+| `SUPER + TAB` | Browser |
+| `SUPER + A` | App launcher (rofi without the shell) |
+| `SUPER + D` | Wallpaper picker (`wallpaper-menu` without the shell) |
+| `SUPER + N` | Notification centre |
+| `SUPER + M` | Media player |
+| `SUPER + ,` | Settings |
+| `SUPER + Escape` | Quick menu (system and session) |
+| `SUPER + B` | Arrange the desktop widgets |
+
+**Capture**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + Delete` | Screenshot of the focused monitor (saved to `~/Pictures` and copied) |
+| `SUPER + SHIFT + Delete` | Screenshot of an area |
+| `SUPER + R` | Start / stop a screen recording (`~/Videos`) |
+
+**Session**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + Z` | Lock (hyprlock) |
+| `SUPER + SHIFT + X` | Exit the session |
+
+**Windows**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + Q` | Close |
+| `SUPER + Space` | Float and centre (70 % of the monitor) |
+| `SUPER + S` | Float, without centring |
+| `SUPER + F` | Fullscreen |
+| `SUPER + P` | Pin on every workspace |
+| `SUPER + J` | Toggle the split direction |
+| `SUPER + G` | Group (tabs) |
+| `SUPER + Left click` | Drag |
+| `SUPER + Right click` | Resize with the mouse |
+| `SUPER + ←/→/↑/↓` | Focus |
+| `SUPER + grave` | Urgent or previous window |
+| `SUPER + SHIFT + ←/→/↑/↓` | Move |
+| `SUPER + CTRL + H/J/K/L` | Swap with the neighbour |
+| `SUPER + ALT + ←/→/↑/↓` | Resize |
+
+**Workspaces and monitors**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + 1…0` | Go to workspace 1–10 |
+| `SUPER + SHIFT + 1…0` | Move the window to workspace 1–10 |
+| `SUPER + CTRL + ←/→` | Previous / next occupied workspace |
+| `SUPER + W` | Special workspace |
+| `SUPER + SHIFT + W` | Move the window to the special workspace |
+| `SUPER + ALT + W` | Move the window to the next monitor |
+
+**Zoom**
+
+| Keybind | Action |
+|---|---|
+| `SUPER + wheel up` / `SUPER + Numpad +` | Zoom in |
+| `SUPER + wheel down` / `SUPER + Numpad -` | Zoom out |
+
+**Media and hardware keys**
+
+| Key | Action |
+|---|---|
+| Volume up / down, mute | Output volume (with the on-screen display) |
+| Microphone mute | Microphone |
+| Brightness up / down | Screen brightness |
+| Keyboard backlight up / down / on-off | Keyboard backlight |
+| Play, pause, next, previous | Media player |
+| Touchpad toggle | Turn the touchpad on / off |
 
 </details>
 
@@ -92,5 +135,5 @@ LEDs and dot matrix, off unless you pick it in the installer or turn it on later
 [Contributing](CONTRIBUTING.en.md)
 
 <p align="center">
-  <sub><a href="LICENSE">MIT</a> · <a href="THIRD-PARTY-CREDITS.md">third-party credits</a> · the Nothing theme is not affiliated with Nothing Technology Limited</sub>
+  <sub> <a href="LICENSE">MIT</a> · <a href="THIRD-PARTY-CREDITS.md">third-party credits</a> </sub>
 </p>

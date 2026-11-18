@@ -16,6 +16,7 @@
 #   ~/.config/monolith/nothing.json      tokens and defaults: the shell reads it (core/Nothing.qml) and changes at once
 #   ~/.local/share/fonts/monolith-nothing  Doto, Space Grotesk, Space Mono (SIL OFL, checked against fixed sha256)
 #   ~/.local/bin/monolith-dotmatrix      the wallpaper renderer (wallpaper-menu; needs python-numpy, python-pillow)
+#   ~/.config/ghostty/nothing.ghostty    the terminal at 80 % opacity (read by config.ghostty, config-file = ?...)
 #   cursor:    ~/.icons/Monolith-Dots, ~/.icons/default/index.theme, ~/.config/monolith/cursor, gsettings
 #   icons:     ~/.local/share/icons/Monolith-Dots-Icons, gsettings icon-theme
 #   nautilus:  ~/.config/gtk-4.0/gtk.css, the default one plus nix/nothing/nautilus.css (OLED black at 85 %, light glass)
@@ -67,7 +68,7 @@ P_CURSOR=1 P_ICONS=1 P_NAUTILUS=1 P_FASTFETCH=1 P_CAVA=1 CURSOR_SIZE=24
 declare -A SET_BY_FLAG=()
 WARN=0 TMP=""
 
-usage() { sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while (( $# )); do
     case $1 in
@@ -262,6 +263,7 @@ part_base() {
     put base .local/bin/monolith-dotmatrix "$SRC/dotmatrix.py" 755
     tokens_json >"$TMP/nothing.json"
     put base .config/monolith/nothing.json "$TMP/nothing.json"
+    put base .config/ghostty/nothing.ghostty "$SRC/ghostty.conf"
     ui_ok "$(t nt.base)"
 }
 

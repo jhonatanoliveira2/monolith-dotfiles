@@ -95,16 +95,16 @@ n=$(( $(grep -c "^singleton " "$SHELL_DIR/core/qmldir") + $(grep -c "^singleton 
 [[ $(result singletons) == "$n/$n" ]] && ok "all $n singletons are instantiated" || ko "all $n singletons are instantiated ($(result singletons))"
 
 echo "== Nothing theme is optional (same configs/ on Arch and NixOS)"
-[[ $(result nothing) == "false/false bar=top/capsule lookDone=false" ]] && ok "without nothing.json: theme unavailable, the standard bar (top, capsule)" || ko "without nothing.json: theme unavailable, the standard bar (top, capsule) [$(result nothing)]"
+[[ $(result nothing) == "false/false bar=top/capsule lookDone=false colours=dynamic" ]] && ok "without nothing.json: theme unavailable, the standard bar (top, capsule) and the dynamic palette" || ko "without nothing.json: theme unavailable, the standard bar (top, capsule) and the dynamic palette [$(result nothing)]"
 new_home
 mkdir -p "$HOME_DIR/.config/monolith"
 printf '{ "defaults": { "enabled": true }, "palette": {} }\n' >"$HOME_DIR/.config/monolith/nothing.json"
 run_harness services
 check "with nothing.json: loads without QML errors" no_qml_errors
-[[ $(result nothing) == "true/true bar=left/frame lookDone=true" ]] && ok "with nothing.json: theme active, its bar look applied" || ko "with nothing.json: theme active, its bar look applied [$(result nothing)]"
-jq '.barPosition = "bottom"' "$STATE/settings.json" >"$TMP/s.json" && cp "$TMP/s.json" "$STATE/settings.json"
+[[ $(result nothing) == "true/true bar=left/frame lookDone=true colours=default" ]] && ok "with nothing.json: theme active, its bar look and the original colours applied" || ko "with nothing.json: theme active, its bar look and the original colours applied [$(result nothing)]"
+jq '.barPosition = "bottom" | .themeMode = "dynamic"' "$STATE/settings.json" >"$TMP/s.json" && cp "$TMP/s.json" "$STATE/settings.json"
 run_harness services
-[[ $(result nothing) == "true/true bar=bottom/frame lookDone=true" ]] && ok "the look is applied once: a later choice in Settings stays" || ko "the look is applied once: a later choice in Settings stays [$(result nothing)]"
+[[ $(result nothing) == "true/true bar=bottom/frame lookDone=true colours=dynamic" ]] && ok "the look is applied once: a later choice in Settings stays" || ko "the look is applied once: a later choice in Settings stays [$(result nothing)]"
 printf '{ "defaults": { "enabled": false } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
 run_harness services
 [[ $(result nothing) == true/false* ]] && ok "theme present but disabled: not active" || ko "theme present but disabled: not active [$(result nothing)]"
@@ -118,6 +118,45 @@ mkdir -p "$HOME_DIR/.config/monolith"
 printf '{ "defaults": { "enabled": true } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
 run_harness services MONOLITH_TEST=nothingoff
 [[ $(result nothingfile) == false/1 ]] && ok "nothing.json removed while running (nothing-theme.sh off): theme gone, the wallpaper shown again" || ko "nothing.json removed while running: theme gone, the wallpaper shown again [$(result nothingfile)]"
+
+echo "== default wallpaper of each theme (services/Wallpapers.qml)"
+# a fake wallpaper-menu in the test home: records what --set applies and writes the state file as the real one does
+walls_home() { # walls_home [nothing]: both shipped wallpapers, the fake script, the Nothing theme when asked
+    new_home
+    mkdir -p "$HOME_DIR/Pictures/Wallpapers" "$HOME_DIR/.local/bin"
+    : >"$HOME_DIR/Pictures/Wallpapers/blue_sky.png"; : >"$HOME_DIR/Pictures/Wallpapers/orange_horizon_snowy_ridge.jpg"
+    cat >"$HOME_DIR/.local/bin/wallpaper-menu" <<'SH'
+#!/bin/sh
+[ "$1" = --set ] || exit 0
+echo "${3##*/} $4" >>"$HOME/wm.log"
+mkdir -p "$HOME/.local/state/wallpaper-menu" && printf '%s\t%s\t%s\n' "$2" "$4" "$3" >"$HOME/.local/state/wallpaper-menu/last"
+SH
+    chmod +x "$HOME_DIR/.local/bin/wallpaper-menu"
+    if [[ ${1-} == nothing ]]; then
+        mkdir -p "$HOME_DIR/.config/monolith"
+        printf '{ "defaults": { "enabled": true } }\n' >"$HOME_DIR/.config/monolith/nothing.json"
+    fi
+}
+applied() { tr '\n' ';' <"$HOME_DIR/wm.log" 2>/dev/null; }
+walls_home
+run_harness services
+[[ $(applied) == "blue_sky.png ALL;" ]] && ok "first login, default theme: blue_sky.png" || ko "first login, default theme: blue_sky.png [$(applied)]"
+walls_home nothing
+run_harness services
+[[ $(applied) == "orange_horizon_snowy_ridge.jpg ALL;" ]] && ok "first login, Nothing theme: its own default wallpaper" || ko "first login, Nothing theme: its own default wallpaper [$(applied)]"
+walls_home
+printf '{ "wpDefaultDone": true }\n' >"$STATE/settings.json"
+mkdir -p "$HOME_DIR/.local/state/wallpaper-menu"
+printf 'static\tDP-1\t%s\n' "$HOME_DIR/Pictures/Wallpapers/blue_sky.png" >"$HOME_DIR/.local/state/wallpaper-menu/last"
+run_harness services MONOLITH_TEST=nothingfile
+[[ $(applied) == "orange_horizon_snowy_ridge.jpg DP-1;"* ]] && ok "Nothing theme turned on: the default theme's wallpaper becomes the Nothing one" || ko "Nothing theme turned on: the default theme's wallpaper becomes the Nothing one [$(applied)]"
+walls_home
+printf '{ "wpDefaultDone": true }\n' >"$STATE/settings.json"
+mkdir -p "$HOME_DIR/.local/state/wallpaper-menu"
+: >"$HOME_DIR/Pictures/Wallpapers/mine.png"
+printf 'static\tALL\t%s\n' "$HOME_DIR/Pictures/Wallpapers/mine.png" >"$HOME_DIR/.local/state/wallpaper-menu/last"
+run_harness services MONOLITH_TEST=nothingfile
+[[ $(applied) != *orange* ]] && ok "Nothing theme turned on: a wallpaper you chose stays" || ko "Nothing theme turned on: a wallpaper you chose stays [$(applied)]"
 
 echo "== YouTube Music token"
 if command -v python3 >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then

@@ -46,7 +46,3 @@ The tests use temporary environments and never touch your session. If you change
 2. Keep changes focused and write imperative commit messages.
 3. Test what changed and report the actual results.
 4. Open an [issue](https://github.com/jhonatanoliveira2/monolith-dotfiles/issues) to report a problem or a repository contribution to propose a change.
-
-## Previews
-
-The README's previews live in `assets/previews/` and are generated from the real programs by `python3 tools/previews.py` (needs fastfetch, fish, `script` and Python with Pillow and numpy; `--only default/nautilus` redoes one). `default/` holds the default theme and `nothing/` the optional Nothing theme; the photo of the Nothing wallpaper preview is `assets/previews/src/night-peaks.jpg`. The fastfetch previews always show NixOS (fixed distribution, kernel and package rows). They never show the user's name or hostname; check the result before sending, and remove personal data from any new image.

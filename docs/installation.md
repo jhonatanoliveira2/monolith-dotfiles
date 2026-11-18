@@ -39,7 +39,31 @@ The installer reads `/etc/os-release` and reports what it found: Arch Linux (`ID
 - **Kernel and system tools.** Nothing depends on the kernel package (`linux`, `linux-cachyos`, ...): the shell reads `/proc` and `/sys`. Partitions with several btrfs subvolumes (the CachyOS default) are shown once in the Performance tab, with the number of extra mount points.
 - **fish.** On CachyOS, `~/.config/fish/config.fish` normally just loads `cachyos-fish-config`. The installer replaces it with the MONOLITH version (the original goes into the backup snapshot). To keep the CachyOS aliases, add `source /usr/share/cachyos-fish-config/cachyos-config.fish` inside the `status is-interactive` block.
 - **Hyprland edition.** An existing `~/.config/hypr/hyprland.conf` does not get in the way: when both files exist, Hyprland loads `hyprland.lua`.
+- **NVIDIA.** With an NVIDIA GPU the installer offers its driver right after the packages (`--no-nvidia` skips it); see [NVIDIA GPUs](#nvidia-gpus).
 - **Logo.** The shell shows the logo of the distribution it runs on (bar, quick menu, welcome screen, dashboard). The CachyOS logo comes from the `linux-cachyos` glyph of the Nerd Font (present in `ttf-jetbrains-mono-nerd` 3.5).
+
+## NVIDIA GPUs
+
+When an NVIDIA card is found (`/sys/bus/pci/devices`), the installer shows it and, after asking, installs with `pacman`:
+
+| Case | Packages |
+|---|---|
+| Turing (GTX 16xx / RTX 20xx) or newer, no NVIDIA driver yet | the open kernel modules of each installed kernel: `nvidia-open` (`linux`), `nvidia-open-lts` (`linux-lts`), the kernel's own prebuilt package when the repositories have one (`linux-cachyos-nvidia-open` on CachyOS), else `nvidia-open-dkms` with that kernel's `-headers`; plus `nvidia-utils` |
+| an NVIDIA driver already installed (any branch, also one set up by CachyOS's `chwd`) | kept as it is |
+| always | `libva-nvidia-driver` (video decoding, VA-API) |
+| hybrid laptop (another GPU too) | `nvidia-prime` (`prime-run <app>` runs an app on the NVIDIA GPU) |
+| older than Turing (Maxwell, Pascal, Volta) | nothing: the legacy driver is in the AUR (`nvidia-580xx-dkms`, `nvidia-580xx-utils`); the command is printed |
+
+It then enables `nvidia-suspend`, `nvidia-hibernate` and `nvidia-resume` (suspend keeps the video memory) and warns
+when `nvidia-drm` runs without modeset (Hyprland needs `nvidia_drm.modeset=1`, the default of `nvidia-utils`).
+Reboot afterwards to load the driver.
+
+At login, `~/.config/hypr/modules/environment.lua` sees whether the NVIDIA GPU draws the desktop (the only GPU, or
+the one the firmware starts on) and then sets `LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia` and
+`NVD_BACKEND=direct`. On a hybrid laptop it sets nothing: the integrated GPU draws the desktop and the NVIDIA one
+sleeps until an app asks for it. `MONOLITH_NVIDIA=1` (or `0`) in the session's environment forces the variables on
+(or off). The bar's GPU load and temperature come from `nvidia-smi`, only for a card that never sleeps (polling the
+dedicated GPU of a hybrid laptop would keep it awake).
 
 ## Installer options
 
@@ -54,6 +78,7 @@ The installer reads `/etc/os-release` and reports what it found: Arch Linux (`ID
 | `--no-aur` | Does not call an AUR helper; prints manual commands. |
 | `--aur-helper NAME` | Selects the AUR helper (defaults to `paru`, then `yay`). |
 | `--force-symlinks` | Allows writes through symlinked directories under `$HOME`. Review their targets first. |
+| `--no-nvidia` | Never installs the NVIDIA driver packages (offered otherwise when an NVIDIA GPU is found). |
 | `--theme default\|nothing` | The theme, otherwise asked after the welcome screen: the default theme or the [Nothing theme](nothing-theme.md) (`scripts/nothing-theme.sh`). `default` turns the Nothing theme off if it was on; without a choice (`--yes`) the theme in use stays. `--nothing-theme` = `--theme nothing`. |
 | `--no-color`, `--no-clear` | Disables colours or screen clearing. |
 | `--version`, `-h`, `--help` | Shows the version or help. |

@@ -39,6 +39,8 @@ ls -t ~/.local/state/monolith-dotfiles/*.log | head -1
 
 **Ícones aparecem como quadrados.** Instale as fontes indicadas em `packages.txt` e reinicie o aplicativo afetado.
 
+**Tela preta ou o Hyprland não inicia numa GPU NVIDIA.** Confira se o driver está carregado e com modeset: `cat /sys/module/nvidia_drm/parameters/modeset` deve mostrar `Y` (senão, adicione `nvidia_drm.modeset=1` à linha de comando do kernel). Rode `./scripts/install.sh` de novo para o driver ser oferecido ([GPUs NVIDIA](instalacao.md#gpus-nvidia)). Num desktop em que a placa NVIDIA desenha a tela mas o firmware inicia na GPU integrada, defina `MONOLITH_NVIDIA=1` no ambiente da sessão.
+
 ## Recuperar arquivos
 
 ```bash

@@ -84,6 +84,21 @@ _m pkg.aur_failed "Some AUR packages failed to install; continuing with the conf
 _m pkg.conflict "%s skipped: it conflicts with the installed %s, which is kept." "%s ignorado: conflita com %s, já instalado, que é mantido."
 _m pkg.confirm_helper "No AUR helper is installed, but %s is in your repositories. Install it with pacman?" "Nenhum auxiliar do AUR instalado, mas o %s está nos seus repositórios. Instalar com o pacman?"
 
+# ---- NVIDIA (configure_nvidia, scripts/lib/nvidia.sh) -----------------------------------
+_m nv.found "NVIDIA GPU: %s (%s)." "GPU NVIDIA: %s (%s)."
+_m nv.skipped "NVIDIA packages not checked (no package installation): see docs/installation.md." "Pacotes da NVIDIA não verificados (sem instalação de pacotes): veja docs/instalacao.md."
+_m nv.confirm "Install the NVIDIA driver (open kernel modules) and its packages with pacman?" "Instalar o driver da NVIDIA (módulos abertos do kernel) e os pacotes dele com o pacman?"
+_m nv.installed "NVIDIA packages installed." "Pacotes da NVIDIA instalados."
+_m nv.failed "The NVIDIA packages failed to install; continuing with the configuration." "Os pacotes da NVIDIA falharam; continuando com a configuração."
+_m nv.declined "NVIDIA driver not installed: Hyprland may not start on this GPU." "Driver da NVIDIA não instalado: o Hyprland pode não iniciar nesta GPU."
+_m nv.ready "NVIDIA driver already installed." "Driver da NVIDIA já instalado."
+_m nv.legacy "This NVIDIA card is older than Turing (GTX 16xx): it needs the legacy driver from the AUR, not installed automatically." "Esta placa NVIDIA é anterior à Turing (GTX 16xx): precisa do driver legado do AUR, que não é instalado automaticamente."
+_m nv.modeset "nvidia-drm runs without modeset: add nvidia_drm.modeset=1 to the kernel command line (Hyprland needs it)." "O nvidia-drm está sem modeset: adicione nvidia_drm.modeset=1 à linha de comando do kernel (o Hyprland precisa)."
+_m nv.reboot "Reboot to load the NVIDIA driver." "Reinicie para carregar o driver da NVIDIA."
+_m nv.hybrid "Hybrid laptop: the desktop runs on the integrated GPU; start a game or app on the NVIDIA one with prime-run <app>." "Notebook híbrido: o desktop roda na GPU integrada; abra um jogo ou app na NVIDIA com prime-run <app>."
+_m nv.sleep "NVIDIA suspend / hibernate units enabled." "Unidades de suspensão / hibernação da NVIDIA ativadas."
+_m nv.sleep_failed "Could not enable nvidia-suspend / nvidia-hibernate / nvidia-resume: enable them with systemctl." "Não foi possível ativar nvidia-suspend / nvidia-hibernate / nvidia-resume: ative-os com o systemctl."
+
 # ---- plan -------------------------------------------------------------------------------
 _m plan.new "New files" "Arquivos novos"
 _m plan.changed "Files to replace" "Arquivos a substituir"

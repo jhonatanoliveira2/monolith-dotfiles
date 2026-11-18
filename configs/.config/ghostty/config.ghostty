@@ -3,3 +3,7 @@ background = 000000
 command = fish 
 
 custom-shader = shaders/ghostty/cursor_tail.glsl
+
+# Nothing theme: its own values (background-opacity = 0.8) in nothing.ghostty, written by scripts/nothing-theme.sh
+# or Home Manager while the theme is on. Optional (the "?"), read after this file, so its values win.
+config-file = ?nothing.ghostty

@@ -39,11 +39,11 @@ The `SUPER+D` shortcut opens the Rofi menu configured in `hypr/rofi/wallpaper-me
 | Static | `~/Pictures/Wallpapers` | `awww` |
 | `.mp4` video | `~/Videos/wallpaper-live` | `mpvpaper` |
 
-The installer creates these destinations and copies the wallpapers shipped with the project. The menu uses `ffmpeg` to generate cached previews; `wallpaper-menu --clear-cache` clears the cache.
+The installer creates these destinations and copies the wallpapers shipped with the project (`wallpapers/static`). On the first login the shell applies the default wallpaper of the theme in use: `blue_sky.png` in the default theme, `orange_horizon_snowy_ridge.jpg` in the Nothing theme. Turning the Nothing theme on or off later swaps one for the other while it is still shown; a wallpaper you chose stays. The menu uses `ffmpeg` to generate cached previews; `wallpaper-menu --clear-cache` clears the cache.
 
 ### Colour themes
 
-Settings > Themes switches between the original Monolith theme, preset themes and a dynamic palette. The dynamic palette comes from the wallpaper changed most recently, on any monitor: `~/.local/bin/monolith-theme` runs `wpgtk` in its own folder (`~/.cache/monolith-theme`), so it never sets wallpapers or touches `~/.config/wpg`. For videos it reads one representative frame when the video is chosen. The choice and the palette are saved in `~/.local/state/quickshell-monolith/settings.json`; `fish/conf.d/monolith-theme.fish` applies the same colours to Fish, in new and open sessions. `monolith-theme check` lists the dependencies and `monolith-theme clear-cache` removes the generated palettes.
+Settings > Themes switches between the original Monolith theme, preset themes and a dynamic palette (the default; the Nothing theme starts with the original Monolith theme). The dynamic palette comes from the wallpaper changed most recently, on any monitor: `~/.local/bin/monolith-theme` runs `wpgtk` in its own folder (`~/.cache/monolith-theme`), so it never sets wallpapers or touches `~/.config/wpg`. For videos it reads one representative frame when the video is chosen. The choice and the palette are saved in `~/.local/state/quickshell-monolith/settings.json`; `fish/conf.d/monolith-theme.fish` applies the same colours to Fish, in new and open sessions. `monolith-theme check` lists the dependencies and `monolith-theme clear-cache` removes the generated palettes.
 
 ## Import exclusions
 

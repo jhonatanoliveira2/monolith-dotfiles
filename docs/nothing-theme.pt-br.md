@@ -44,6 +44,8 @@ shell é exatamente o MONOLITH padrão.
 | fastfetch | o floco do NixOS como uma matriz de LEDs, rótulos cinza em maiúsculas, linhas pontilhadas, memória e disco como fileiras de LEDs |
 | Superfícies | uma grade discreta de LEDs apagados atrás dos cards e dos widgets da área de trabalho; títulos das Configurações com marcador de LEDs |
 | Notificações | nome do app em maiúsculas com um LED, texto em Space Grotesk; **brilho de borda** opcional: um trecho de luz percorre a borda interna da tela quando o shell inicia (login, reinício) e a cada notificação, duas vezes e em vermelho nas críticas |
+| Terminal | Ghostty com 80 % de opacidade (no tema padrão: 55 %), por `~/.config/ghostty/nothing.ghostty`, que o `config.ghostty` lê quando existe |
+| Primeiro login | as cores originais do Monolith (Configurações › Temas) em vez da paleta dinâmica, e o wallpaper padrão do próprio tema, `orange_horizon_snowy_ridge.jpg` (no tema padrão: `blue_sky.png`); os dois uma vez só, depois as Configurações mandam |
 | Wallpapers | wallpapers estáticos exibidos como matriz de LEDs na resolução nativa de cada monitor (os arquivos originais nunca são alterados); wallpapers animados (vídeo) ficam como estão |
 
 O contraste e o brilho dos wallpapers podem ser aumentados à mão (`monolith-dotmatrix --contrast` /
@@ -216,6 +218,7 @@ Ele faz na sua home o que o módulo do Home Manager faz no NixOS, a partir dos m
 | tokens e padrões | `~/.config/monolith/nothing.json` (o shell muda na hora) | — |
 | fontes | Doto, Space Grotesk, Space Mono em `~/.local/share/fonts/monolith-nothing` (a mesma revisão do google/fonts e os mesmos sha256 do Nix; um arquivo que não confere é descartado) | — |
 | conversor | `~/.local/bin/monolith-dotmatrix` (precisa de `python-numpy`, `python-pillow`) | — |
+| terminal | `~/.config/ghostty/nothing.ghostty`: `background-opacity = 0.8` (o `config.ghostty` o lê com `config-file = ?nothing.ghostty`) | — |
 | cursor | MONOLITH Dots em `~/.icons`, `~/.config/monolith/cursor` (Hyprland), gsettings `cursor-theme` / `cursor-size` | `--no-cursor`, tamanho: `--cursor-size 32` |
 | ícones | MONOLITH Dots Icons em `~/.local/share/icons`, gsettings `icon-theme` | `--no-icons` |
 | nautilus | `~/.config/gtk-4.0/gtk.css`: o padrão com o `nix/nothing/nautilus.css` depois dele, então o Nautilus fica em preto OLED a 85 % de opacidade (vidro leve, sem blur) em vez do vidro mais escuro do tema padrão; o `off` devolve o arquivo padrão | `--no-nautilus` |

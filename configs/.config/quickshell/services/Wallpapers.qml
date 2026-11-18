@@ -48,18 +48,36 @@ Singleton {
     // instead of "loading" while the script runs (and, in the dot-matrix look, renders every missing preview)
     Timer { interval: 5000; running: true; onTriggered: root.refresh() }
 
-    // first run: apply the shipped default (copied to the static folder by install.sh) once, unless
-    // wallpaper-menu already has a saved choice
-    readonly property string defaultWallpaper: "blue_sky.png"
+    // first run: apply the shipped default of the theme in use (wallpapers/static, copied to the static folder by
+    // install.sh / Home Manager) once, unless wallpaper-menu already has a saved choice. It waits for nothing.json
+    // to be read (Nothing.settled), so a first login in the Nothing theme gets its own default.
+    readonly property string defaultPlain: "blue_sky.png"
+    readonly property string defaultNothing: "orange_horizon_snowy_ridge.jpg"
+    readonly property string defaultWallpaper: Nothing.active ? defaultNothing : defaultPlain
+    function staticDir() { return (Settings.wpStaticDir.trim() || "~/Pictures/Wallpapers").replace(/^~/, Quickshell.env("HOME")) }
     function applyDefault() {
-        if (!Settings.loaded || Settings.wpDefaultDone) return
+        if (!Settings.loaded || !Nothing.settled || Settings.wpDefaultDone) return
         Settings.wpDefaultDone = true
-        const dir = (Settings.wpStaticDir.trim() || "~/Pictures/Wallpapers").replace(/^~/, Quickshell.env("HOME"))
-        defaultProc.command = ["sh", "-c", "[ -s \"$1\" ] || [ ! -f \"$2\" ] || echo \"$2\"", "sh", stateFile.path, dir + "/" + defaultWallpaper]
+        defaultProc.outputs = "ALL"
+        defaultProc.command = ["sh", "-c", "[ -s \"$1\" ] || [ ! -f \"$2\" ] || echo \"$2\"", "sh", stateFile.path, staticDir() + "/" + defaultWallpaper]
+        defaultProc.running = true
+    }
+    // the theme turned on or off (scripts/nothing-theme.sh, a rebuild): the other theme's default, still shown,
+    // becomes this theme's default; a wallpaper you chose yourself stays
+    function followTheme() {
+        if (!Nothing.settled || currentKind !== "image" || !current) return
+        if (current.split("/").pop() !== (Nothing.active ? defaultPlain : defaultNothing)) return
+        defaultProc.outputs = currentOutputs || "ALL"
+        defaultProc.command = ["sh", "-c", "[ ! -f \"$1\" ] || echo \"$1\"", "sh", staticDir() + "/" + defaultWallpaper]
         defaultProc.running = true
     }
     Component.onCompleted: applyDefault()
     Connections { target: Settings; function onLoadedOnce() { root.applyDefault() } }
+    Connections {
+        target: Nothing
+        function onSettledChanged() { root.applyDefault() }
+        function onActiveChanged() { root.followTheme() }
+    }
 
     // list both kinds (previews are generated on the first run, in parallel)
     // asked while a listing runs (the picker opened during the one above): once more when it ends, as it may
@@ -110,7 +128,8 @@ Singleton {
     }
     Process {
         id: defaultProc
-        stdout: StdioCollector { onStreamFinished: if (text.trim()) root.apply("static", text.trim(), "ALL") }
+        property string outputs: "ALL"
+        stdout: StdioCollector { onStreamFinished: if (text.trim()) root.apply("static", text.trim(), defaultProc.outputs) }
     }
     Process {
         id: setProc
